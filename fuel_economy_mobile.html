@@ -788,8 +788,8 @@
       <input type="text" id="assign-search" placeholder="Search vehicle, site or branch…" autocomplete="off">
       <div style="display:flex;gap:6px;margin-top:10px">
         <button class="atab-mini" type="button" data-afilter="all">All</button>
-        <button class="atab-mini active" type="button" data-afilter="unassigned">Unassigned</button>
-        <button class="atab-mini" type="button" data-afilter="assigned">Assigned</button>
+        <button class="atab-mini active" type="button" data-afilter="unassigned">Raipur Team</button>
+        <button class="atab-mini" type="button" data-afilter="assigned">Site Managers</button>
       </div>
       <button class="atab-add" type="button" id="auto-assign-btn" style="margin-top:10px">⚡ Auto-assign by Branch</button>
     </div>
@@ -2203,11 +2203,19 @@ async function loadAssignments(){
   }
 }
  
+// Helper: id of the Raipur Team account (default assignee). Looked up on the fly
+// because the id can change between deployments and isn't worth caching globally.
+function getRaipurTeamId(){
+  const rt = allManagers.find(m => m.name === 'Raipur Team');
+  return rt ? rt.id : null;
+}
+ 
 function renderAssignments(){
   const wrap = document.getElementById('assignments-list');
   const q = (document.getElementById('assign-search').value || '').trim().toLowerCase();
   const assignMap = {};
   allAssignments.forEach(a => { assignMap[a.vehicle] = a.manager_id; });
+  const raipurId = getRaipurTeamId();
  
   let list = allVehiclesAdmin.map(v => ({
     ...v,
@@ -2215,8 +2223,15 @@ function renderAssignments(){
     branch: vehicleBranches[v.vehicle] || ''
   }));
  
-  if(assignFilter === 'unassigned') list = list.filter(v => !v.manager_id);
-  else if(assignFilter === 'assigned') list = list.filter(v => v.manager_id);
+  // Filter semantics after Raipur Team becomes the default assignee:
+  //   • "unassigned" pill = vehicles in Raipur Team's pool (not yet given to a site manager)
+  //   • "assigned" pill   = vehicles given to a specific site manager
+  //   • A vehicle with NO row at all (rare — only if the trigger didn't fire) is treated as Raipur Team's
+  if(assignFilter === 'unassigned'){
+    list = list.filter(v => !v.manager_id || v.manager_id === raipurId);
+  } else if(assignFilter === 'assigned'){
+    list = list.filter(v => v.manager_id && v.manager_id !== raipurId);
+  }
  
   if(q){
     list = list.filter(v =>
@@ -2231,31 +2246,49 @@ function renderAssignments(){
     return;
   }
  
-  // Build manager options HTML once
-  const mgrOpts = '<option value="">— Unassigned —</option>' +
-    allManagers.filter(m => !m.is_admin && m.active).map(m =>
-      `<option value="${m.id}">${escapeHtml(m.name)}</option>`
-    ).join('');
+  // Manager dropdown options:
+  //   – Raipur Team listed first as the default
+  //   – All active site managers (non-admin) below
+  const raipur = allManagers.find(m => m.name === 'Raipur Team');
+  const siteMgrs = allManagers.filter(m => !m.is_admin && m.active);
+  const mgrOpts =
+    (raipur ? `<option value="${raipur.id}">→ Raipur Team (default)</option>` : '<option value="">— Unassigned —</option>')
+    + siteMgrs.map(m => `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
  
-  wrap.innerHTML = list.map(v => `
-    <div class="assign-card${!v.manager_id?' unassigned':''}">
-      <div style="flex:1;min-width:0">
-        <div class="veh">${escapeHtml(v.vehicle)}</div>
-        <div class="meta">${escapeHtml(v.site_name||'(no site)')}${v.branch?' · '+escapeHtml(v.branch):''}</div>
-      </div>
-      <select onchange="assignVehicle('${escapeAttr(v.vehicle)}', this.value)">
-        ${mgrOpts.replace(`value="${v.manager_id}"`, `value="${v.manager_id}" selected`)}
-      </select>
-    </div>
-  `).join('');
+  wrap.innerHTML = list.map(v => {
+    const isWithRaipur = !v.manager_id || v.manager_id === raipurId;
+    // Make sure the dropdown reflects the current assignment
+    const selectedVal = v.manager_id || (raipur ? raipur.id : '');
+    const opts = mgrOpts.replace(`value="${selectedVal}"`, `value="${selectedVal}" selected`);
+    return `
+      <div class="assign-card${isWithRaipur?' unassigned':''}">
+        <div style="flex:1;min-width:0">
+          <div class="veh">${escapeHtml(v.vehicle)}</div>
+          <div class="meta">${escapeHtml(v.site_name||'(no site)')}${v.branch?' · '+escapeHtml(v.branch):''}</div>
+        </div>
+        <select onchange="assignVehicle('${escapeAttr(v.vehicle)}', this.value)">${opts}</select>
+      </div>`;
+  }).join('');
 }
  
 window.assignVehicle = async function(vehicle, managerId){
+  // After the migration, EVERY vehicle should have an assignment row. The
+  // dropdown's default option points to Raipur Team's id, never empty string.
+  // We only fall back to delete+null if Raipur Team doesn't exist (unmigrated DB).
   try{
     if(!managerId){
-      // Unassign
-      const { error } = await sb.from('vehicle_assignments').delete().eq('vehicle', vehicle);
-      if(error) throw error;
+      // Defensive — shouldn't happen with the new dropdown, but handle it
+      const raipurId = getRaipurTeamId();
+      if(raipurId){
+        const { error } = await sb.from('vehicle_assignments').upsert({
+          vehicle, manager_id: raipurId, assigned_at: new Date().toISOString()
+        }, {onConflict:'vehicle'});
+        if(error) throw error;
+        managerId = String(raipurId);
+      } else {
+        const { error } = await sb.from('vehicle_assignments').delete().eq('vehicle', vehicle);
+        if(error) throw error;
+      }
     } else {
       const { error } = await sb.from('vehicle_assignments').upsert({
         vehicle, manager_id: +managerId, assigned_at: new Date().toISOString()
@@ -2266,6 +2299,8 @@ window.assignVehicle = async function(vehicle, managerId){
     // Update local cache
     allAssignments = allAssignments.filter(a => a.vehicle !== vehicle);
     if(managerId) allAssignments.push({vehicle, manager_id: +managerId});
+    // Re-render so the row's "with Raipur Team" amber styling updates
+    renderAssignments();
   }catch(e){
     toast('Save failed: '+e.message,'bad');
     renderAssignments();
@@ -2273,23 +2308,27 @@ window.assignVehicle = async function(vehicle, managerId){
 };
  
 async function autoAssignByBranch(){
-  // For each unassigned vehicle, find a manager whose branch matches
+  // For each vehicle currently in Raipur Team's pool (or truly unassigned), find a
+  // site manager whose branch matches and reassign.
   const assignMap = {};
   allAssignments.forEach(a => { assignMap[a.vehicle] = a.manager_id; });
+  const raipurId = getRaipurTeamId();
   const branchToMgr = {};
   allManagers.filter(m => !m.is_admin && m.active && m.branch).forEach(m => {
     if(!branchToMgr[m.branch]) branchToMgr[m.branch] = m.id;
   });
   const toAssign = [];
   allVehiclesAdmin.forEach(v => {
-    if(assignMap[v.vehicle]) return;
+    const cur = assignMap[v.vehicle];
+    // Eligible for auto-assign: no current assignment OR currently with Raipur Team
+    if(cur && cur !== raipurId) return;
     const branch = vehicleBranches[v.vehicle];
     if(branch && branchToMgr[branch]){
       toAssign.push({vehicle: v.vehicle, manager_id: branchToMgr[branch], assigned_at: new Date().toISOString()});
     }
   });
   if(!toAssign.length){ toast('Nothing to auto-assign — add managers with branches first','warn'); return; }
-  if(!confirm(`Auto-assign ${toAssign.length} vehicle${toAssign.length===1?'':'s'} to matching branch managers?`)) return;
+  if(!confirm(`Auto-assign ${toAssign.length} vehicle${toAssign.length===1?'':'s'} from Raipur Team to matching branch managers?`)) return;
   try{
     const { error } = await sb.from('vehicle_assignments').upsert(toAssign, {onConflict:'vehicle'});
     if(error) throw error;
