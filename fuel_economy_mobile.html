@@ -845,7 +845,61 @@ const SUPABASE_URL = 'https://nmupuithswsfqidrpxbc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tdXB1aXRoc3dzZnFpZHJweGJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMDY0MzAsImV4cCI6MjA5Mjc4MjQzMH0.lfTE0kqfa4Fg0EwPpZBrv9XLVlPGJgobfS-NltcFCBM';
 const QUEUE_KEY = 'tasr_fuel_mobile_queue_v1';
  
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* ---------- Custom XHR fetch ----------
+   Some embedded preview environments (Claude artifact pane, certain code
+   playgrounds, in-app HTML viewers) patch `window.fetch` and try to forward
+   the Response to the parent window via postMessage. Supabase responses
+   include a Headers object, which is NOT structured-cloneable, so the
+   request explodes with `DataCloneError: Headers object could not be cloned`.
+ 
+   XMLHttpRequest goes through a different code path that those sandboxes
+   don't intercept. Functionally identical to fetch for our single-shot
+   REST calls. Native browsers behave the same way; this is a no-op there.
+*/
+function xhrFetch(input, init){
+  return new Promise((resolve, reject)=>{
+    const url    = typeof input === 'string' ? input : input.url;
+    const method = ((init && init.method) || (typeof input === 'object' && input.method) || 'GET').toUpperCase();
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+ 
+    // Headers can come as a Headers instance, plain object, or array of pairs
+    const hdrs = (init && init.headers) || (typeof input === 'object' && input.headers) || null;
+    if(hdrs){
+      if(typeof hdrs.forEach === 'function')          hdrs.forEach((v,k)=> xhr.setRequestHeader(k,v));
+      else if(Array.isArray(hdrs))                    hdrs.forEach(([k,v])=> xhr.setRequestHeader(k,v));
+      else                                            Object.entries(hdrs).forEach(([k,v])=> xhr.setRequestHeader(k,v));
+    }
+ 
+    // AbortSignal support (Supabase passes one for timeouts on some calls)
+    const signal = (init && init.signal) || null;
+    if(signal){
+      if(signal.aborted){ xhr.abort(); reject(new DOMException('Aborted','AbortError')); return; }
+      signal.addEventListener('abort', ()=>{ xhr.abort(); reject(new DOMException('Aborted','AbortError')); });
+    }
+ 
+    xhr.responseType = 'text';
+    xhr.onload = ()=>{
+      const headers = new Headers();
+      (xhr.getAllResponseHeaders() || '').split(/\r?\n/).forEach(line=>{
+        const i = line.indexOf(':');
+        if(i > 0) headers.set(line.substring(0,i).trim(), line.substring(i+1).trim());
+      });
+      resolve(new Response(xhr.responseText, {
+        status: xhr.status, statusText: xhr.statusText, headers
+      }));
+    };
+    xhr.onerror   = ()=> reject(new TypeError('Network request failed'));
+    xhr.ontimeout = ()=> reject(new TypeError('Network request timed out'));
+ 
+    const body = (init && init.body) || (typeof input === 'object' && input.body) || null;
+    xhr.send(body || null);
+  });
+}
+ 
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  global: { fetch: xhrFetch }
+});
  
 /* ========== SESSION / AUTH ========== */
 const SESSION_KEY = 'tasr_session_v1';
@@ -2380,3 +2434,5 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+
+
