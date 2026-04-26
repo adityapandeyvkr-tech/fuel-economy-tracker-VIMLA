@@ -736,11 +736,8 @@
     <button class="atab" type="button" data-atab="mileage">⛽ Mileage</button>
   </div>
  
-  <!-- Managers tab -->
+  <!-- Managers tab (full admin only — Raipur Team can't reach this tab) -->
   <div id="atab-managers" class="atab-content">
-    <div id="managers-readonly-banner" class="readonly-banner" hidden>
-      🔒 You can view managers but cannot create users or change PINs. Ask the Admin for changes.
-    </div>
     <button class="atab-add" type="button" id="add-manager-btn">+ Add New Manager</button>
     <div id="managers-list">
       <div class="loading"><div class="spinner"></div></div>
@@ -930,7 +927,7 @@ function showPage(name){
     switchBtn.hidden = true;
   } else if(name === 'entry'){
     const role = session.isAdmin
-      ? (session.canManageUsers ? 'Admin · Field' : 'Raipur Team · Field')
+      ? (session.canManageUsers ? 'Admin · Field' : `${session.managerName} · Field`)
       : `${session.managerName}${session.branch?' · '+session.branch:''}`;
     sub.textContent = role;
     logoutBtn.hidden = false;
@@ -945,7 +942,9 @@ function showPage(name){
     // Reset to Today sub-tab whenever entering entry view
     setEntrySubTab('today');
   } else if(name === 'admin'){
-    sub.textContent = session.canManageUsers ? '🔒 Admin Panel' : '🔒 Admin · Read-only';
+    sub.textContent = session.canManageUsers
+      ? '🔒 Admin Panel'
+      : `🔒 ${session.managerName}`;
     logoutBtn.hidden = false;
     // Always show "Field Entry" switch for admins
     switchBtn.hidden = false;
@@ -1909,13 +1908,28 @@ const MILEAGE_DISTANCE_BASED = new Set(['MH34BZ0942','MH32BZ0277','MH34BZ4289'])
  
 async function initAdminPage(){
   setSync('good','☁ Synced');
-  // Show first tab
-  switchAdminTab('managers');
+  const canManage = !!(session && session.canManageUsers);
+ 
+  // Tab visibility by role:
+  //   • Full Admin  (canManageUsers=true)  → all 4 tabs
+  //   • Raipur Team (canManageUsers=false) → ONLY ⛽ Mileage
+  document.querySelectorAll('.atab').forEach(b => {
+    const tab = b.dataset.atab;
+    const restricted = (tab === 'managers' || tab === 'assignments' || tab === 'audit');
+    b.hidden = restricted && !canManage;
+  });
+  // If only one tab is left visible, hide the tab bar entirely (cleaner for Raipur Team)
+  const visibleTabCount = Array.from(document.querySelectorAll('.atab')).filter(b => !b.hidden).length;
+  document.querySelector('.admin-tabs').hidden = (visibleTabCount <= 1);
+ 
+  // Default landing tab
+  switchAdminTab(canManage ? 'managers' : 'mileage');
+ 
   // Wire tab buttons
   document.querySelectorAll('.atab').forEach(b=>{
     b.onclick = ()=> switchAdminTab(b.dataset.atab);
   });
-  // Wire add buttons
+  // Wire add buttons (these elements always exist; their parent tabs may be hidden)
   document.getElementById('add-manager-btn').onclick = ()=> openManagerModal(null);
   document.getElementById('auto-assign-btn').onclick = autoAssignByBranch;
   document.getElementById('audit-load-btn').onclick = loadAuditLog;
@@ -1952,11 +1966,20 @@ async function initAdminPage(){
   // Default mileage dates: last 30 days
   document.getElementById('mil-from').value = monthAgo.toISOString().slice(0,10);
   document.getElementById('mil-to').value = today.toISOString().slice(0,10);
-  // Initial loads
-  await loadManagers();
+  // Initial loads — only fetch managers for full admin (Raipur Team default tab is Mileage,
+  // which switchAdminTab() already triggered above)
+  if(canManage) await loadManagers();
 }
  
 async function switchAdminTab(name){
+  // Guard: don't switch to a tab that's hidden for the current role
+  const target = document.querySelector(`.atab[data-atab="${name}"]`);
+  if(target && target.hidden){
+    // Fall back to first visible tab
+    const firstVisible = document.querySelector('.atab:not([hidden])');
+    if(firstVisible) name = firstVisible.dataset.atab;
+    else return;
+  }
   document.querySelectorAll('.atab').forEach(b=>{
     b.classList.toggle('active', b.dataset.atab === name);
   });
@@ -1987,26 +2010,11 @@ async function loadManagers(){
  
 function renderManagers(counts){
   const wrap = document.getElementById('managers-list');
-  // Show read-only banner + hide Add button for Raipur Team / non-can_manage_users admins
-  const canManage = !!(session && session.canManageUsers);
-  const banner = document.getElementById('managers-readonly-banner');
-  const addBtn = document.getElementById('add-manager-btn');
-  if(banner) banner.hidden = canManage;
-  if(addBtn) addBtn.hidden = !canManage;
- 
   if(!allManagers.length){
     wrap.innerHTML = '<div class="ent-empty">No managers yet — tap "+ Add"</div>';
     return;
   }
-  wrap.innerHTML = allManagers.map(m=>{
-    const actions = canManage
-      ? `<div class="actions">
-          <button class="mgr-edit" onclick="openManagerModal(${m.id})">✏ Edit</button>
-          <button class="mgr-pin" onclick="changePinModal(${m.id})">🔑 PIN</button>
-          ${session.managerId !== m.id ? `<button class="mgr-del" onclick="deleteManager(${m.id})">✕ Del</button>` : ''}
-        </div>`
-      : '';
-    return `
+  wrap.innerHTML = allManagers.map(m=>`
     <div class="mgr-card">
       <div class="top">
         <div class="nm">${escapeHtml(m.name)}</div>
@@ -2018,9 +2026,13 @@ function renderManagers(counts){
         ${!m.is_admin?'<b>Vehicles:</b> '+(counts[m.id]||0)+'<br>':''}
         ${m.active?'':'<span style="color:#dc2626">Inactive</span>'}
       </div>
-      ${actions}
-    </div>`;
-  }).join('');
+      <div class="actions">
+        <button class="mgr-edit" onclick="openManagerModal(${m.id})">✏ Edit</button>
+        <button class="mgr-pin" onclick="changePinModal(${m.id})">🔑 PIN</button>
+        ${session.managerId !== m.id ? `<button class="mgr-del" onclick="deleteManager(${m.id})">✕ Del</button>` : ''}
+      </div>
+    </div>
+  `).join('');
 }
  
 window.openManagerModal = function(id){
@@ -2434,5 +2446,8 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+ 
+
+
 
 
