@@ -491,6 +491,44 @@
   .mil-summary .num{font-size:14.5px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
   .mil-summary .lbl{font-size:9px;text-transform:uppercase;letter-spacing:.05em;opacity:.7;margin-top:2px}
  
+  /* === ROLE TOGGLE (Admin checkbox in manager modal) === */
+  .role-toggle{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:10px 12px;background:#f8fafc;border-radius:9px;
+    border:1.5px solid var(--line);cursor:pointer;user-select:none;
+    transition:background .15s, border-color .15s;
+    margin:0;
+  }
+  .role-toggle:active{background:#f1f5f9}
+  .role-toggle:has(.rt-input:checked){
+    background:#fef3c7;border-color:#fcd34d;
+  }
+  .rt-text{display:flex;flex-direction:column;min-width:0;flex:1}
+  .rt-title{
+    font-size:13px;font-weight:700;color:var(--ink);
+    text-transform:none;letter-spacing:0;
+  }
+  .rt-sub{
+    font-size:10.5px;color:var(--muted);margin-top:1px;
+    text-transform:none;letter-spacing:0;font-weight:500;
+  }
+  .rt-input{
+    position:absolute;opacity:0;width:0;height:0;pointer-events:none;
+  }
+  .rt-switch{
+    width:42px;height:24px;background:#cbd5e1;border-radius:99px;
+    position:relative;transition:background .2s;flex-shrink:0;
+  }
+  .rt-switch::after{
+    content:'';position:absolute;top:2px;left:2px;
+    width:20px;height:20px;background:#fff;border-radius:50%;
+    transition:transform .2s;
+    box-shadow:0 1px 3px rgba(0,0,0,.2);
+  }
+  .rt-input:checked ~ .rt-switch{background:#d97706}
+  .rt-input:checked ~ .rt-switch::after{transform:translateX(18px)}
+  .rt-input:focus-visible ~ .rt-switch{box-shadow:0 0 0 3px rgba(13,133,133,.25)}
+ 
   /* === MODAL === */
   .modal{
     position:fixed;inset:0;z-index:1000;
@@ -2051,8 +2089,13 @@ window.openManagerModal = function(id){
       <input id="m-pin" type="password" inputmode="numeric" maxlength="6" placeholder="••••">
     </div>`:''}
     <div class="field">
-      <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px">
-        <input id="m-admin" type="checkbox" ${m?.is_admin?'checked':''}> Admin role
+      <label class="role-toggle">
+        <span class="rt-text">
+          <span class="rt-title">Admin role</span>
+          <span class="rt-sub">${m?.is_admin ? 'Currently admin · tap to demote' : 'Tap to grant admin access'}</span>
+        </span>
+        <input id="m-admin" class="rt-input" type="checkbox" ${m?.is_admin?'checked':''}>
+        <span class="rt-switch" aria-hidden="true"></span>
       </label>
     </div>
     <div class="modal-actions">
@@ -2446,8 +2489,5 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
- 
-
-
 
 
