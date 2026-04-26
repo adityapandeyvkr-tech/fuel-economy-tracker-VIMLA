@@ -207,13 +207,40 @@
   .cal-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:middle;margin-right:4px}
  
   /* ========== TABLES ========== */
-  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .table-wrap{
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+    max-height:calc(100vh - 230px);
+    border-radius:8px;
+    /* Performance: promote to its own GPU layer so scroll repaints are cheaper
+       and the sticky-column work doesn't trigger layout outside this container */
+    transform:translateZ(0);
+    will-change:scroll-position;
+    contain:paint;
+  }
+  /* Layout-isolate each table row so changes (hover, edits) don't reflow neighbors */
+  .pivot.pivot3 tbody tr,
+  .pivot.pivot-mileage tbody tr{
+    contain:layout style;
+  }
   table{width:100%;border-collapse:collapse;font-size:13px}
   th{
     background:var(--panel-2);padding:10px 12px;text-align:left;
     font-weight:700;color:var(--ink-2);font-size:11px;letter-spacing:.04em;text-transform:uppercase;
-    border-bottom:1px solid var(--line);position:sticky;top:0;
+    border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;
     white-space:nowrap;
+  }
+  /* Two-row pivot headers (Page 2 + Page 4) — second row sits below the first */
+  .pivot thead tr:nth-child(2) th{
+    top:34px;
+  }
+  /* Sticky-left header cells (corners) need highest z-index — sticks both top + left */
+  .pivot thead th.sticky-branch,
+  .pivot thead th.sticky-veh,
+  .pivot thead th.sticky-site,
+  .pivot thead th.sticky-diff,
+  .pivot thead th.sticky-rem{
+    z-index:8;
   }
   td{padding:9px 12px;border-bottom:1px solid var(--line);color:var(--ink);vertical-align:middle}
   tr:hover td{background:var(--primary-3)}
@@ -243,6 +270,34 @@
     position:sticky;left:270px;z-index:3;background:var(--bg-2);color:#fff;min-width:170px;
   }
   .pivot.pivot3 td.sticky-site{background:#fff;z-index:1;padding:4px 6px}
+  /* New summary columns: DIFF (computed) + REMARK (free text) */
+  .pivot.pivot3 .sticky-diff{
+    position:sticky;left:440px;z-index:3;background:var(--bg-2);color:#fff;min-width:90px;text-align:right;
+  }
+  .pivot.pivot3 td.sticky-diff{
+    background:#fff;z-index:1;text-align:right;font-weight:700;
+    font-variant-numeric:tabular-nums;font-size:12.5px;padding:6px 10px;
+  }
+  .pivot.pivot3 td.sticky-diff.diff-pos{color:#92400e;background:#fffbeb}
+  .pivot.pivot3 td.sticky-diff.diff-neg{color:#991b1b;background:#fef2f2}
+  .pivot.pivot3 td.sticky-diff.diff-zero{color:#065f46;background:#f0fdf4}
+  .pivot.pivot3 td.sticky-diff.diff-empty{color:#cbd5e1;font-weight:400}
+ 
+  .pivot.pivot3 .sticky-rem{
+    position:sticky;left:530px;z-index:3;background:var(--bg-2);color:#fff;min-width:170px;
+    border-right:2px solid var(--line);
+  }
+  .pivot.pivot3 td.sticky-rem{
+    background:#fff;z-index:1;padding:4px 6px;
+    border-right:2px solid var(--line);
+  }
+  .pivot.pivot3 td.sticky-rem input{
+    width:100%;padding:6px 9px;font-size:12px;
+    border:1px solid transparent;border-radius:6px;background:#fbfcfe;
+    font-family:inherit;color:var(--ink);
+  }
+  .pivot.pivot3 td.sticky-rem input:hover{border-color:var(--line);background:#fff}
+  .pivot.pivot3 td.sticky-rem input:focus{outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 2px rgba(10,110,110,.12)}
   /* Branch group separator: thin top border on first row of each branch group */
   .pivot.pivot3 tbody tr.branch-start td{border-top:2px solid var(--primary)}
   .pivot.pivot3 tbody tr.branch-start:first-child td{border-top:none}
@@ -387,6 +442,33 @@
   .pivot.pivot-mileage .mile-empty{
     color:#cbd5e1;font-weight:400;font-size:14px;letter-spacing:0;
   }
+ 
+  /* ===================================================
+     STICKY TABLE HEADERS (Page 2, 3, 4)
+     Headers stick to top of .table-wrap (the scrolling container).
+     z-index higher than rows but lower than corner cells.
+  ===================================================== */
+  .pivot thead th,
+  .report-tbl thead th{
+    position:sticky;
+    top:0;
+    z-index:4;
+  }
+  /* Page 4 Mileage has TWO header rows — second sticks below the first */
+  .pivot.pivot-mileage thead tr:nth-child(2) th{
+    top:36px;
+  }
+  /* Corners — sticky in BOTH axes need the highest z-index */
+  .pivot thead th.sticky-branch,
+  .pivot thead th.sticky-veh,
+  .pivot thead th.sticky-site{
+    z-index:6;
+  }
+  .report-tbl thead th.rcol-1,
+  .report-tbl thead th.rcol-date{
+    z-index:6;
+  }
+ 
   .veh-pill{
     display:inline-block;background:#fff;color:#1e40af;padding:3px 9px;
     border:1px solid #bfdbfe;border-radius:5px;font-size:11px;font-weight:700;
@@ -1086,6 +1168,7 @@ let state = {
   records: [],          // {date, vehicle, km, hmr, fuel, kmpl, branch, data:{colName:value}}
   sites: {},            // {vehicle: siteName}      — editable
   models: {},           // {vehicle: model}         — editable, overrides upload's Object Model
+  remarks: {},          // {vehicle: text}          — free-text per-vehicle notes (Page 2)
   siteFills: {},        // {`${v}|${d}`: number}    — manual SITE FILL entries
   siteHMRs: {},         // {`${v}|${d}`: number}    — manual Site HMR entered with Site Fill
   fillOverrides: {},    // {`${v}|${d}`: number}    — overrides upload's Fill (Online Fill correction)
@@ -1100,6 +1183,7 @@ function loadState(){
     if(s.records) state.records = s.records;
     if(s.sites) state.sites = s.sites;
     if(s.models) state.models = s.models;
+    if(s.remarks) state.remarks = s.remarks;
     if(s.siteFills) state.siteFills = s.siteFills;
     if(s.siteHMRs) state.siteHMRs = s.siteHMRs;
     if(s.fillOverrides) state.fillOverrides = s.fillOverrides;
@@ -1182,10 +1266,11 @@ const cloud = {
     })).sort((a,b)=> a.date.localeCompare(b.date) || a.vehicle.localeCompare(b.vehicle));
  
     // Vehicles
-    state.sites = {}; state.models = {};
+    state.sites = {}; state.models = {}; state.remarks = {};
     (veh.data || []).forEach(v => {
       if(v.site_name) state.sites[v.vehicle] = v.site_name;
       if(v.model) state.models[v.vehicle] = v.model;
+      if(v.remark) state.remarks[v.vehicle] = v.remark;
     });
  
     // Cell overrides
@@ -1223,12 +1308,13 @@ const cloud = {
     this.pushing = true;
     try{
       // Vehicles upsert
-      const allV = new Set([...Object.keys(state.sites), ...Object.keys(state.models)]);
+      const allV = new Set([...Object.keys(state.sites), ...Object.keys(state.models), ...Object.keys(state.remarks)]);
       state.records.forEach(r => allV.add(r.vehicle));
       const vehRows = [...allV].map(v => ({
         vehicle: v,
         site_name: state.sites[v] || null,
-        model: state.models[v] || null
+        model: state.models[v] || null,
+        remark: state.remarks[v] || null
       }));
       if(vehRows.length){
         const { error } = await this.client.from('vehicles').upsert(vehRows, {onConflict: 'vehicle'});
@@ -1389,10 +1475,12 @@ const cloud = {
       if(!o) return;
       delete state.sites[o.vehicle];
       delete state.models[o.vehicle];
+      delete state.remarks[o.vehicle];
     } else {
       if(!n) return;
       if(n.site_name) state.sites[n.vehicle] = n.site_name; else delete state.sites[n.vehicle];
       if(n.model) state.models[n.vehicle] = n.model; else delete state.models[n.vehicle];
+      if(n.remark) state.remarks[n.vehicle] = n.remark; else delete state.remarks[n.vehicle];
     }
     saveLocal();
     this._scheduleRefresh('vehicle metadata');
@@ -2007,6 +2095,8 @@ function renderVehicles(){
   html += `<th rowspan="2" class="sticky-branch">Branch</th>`;
   html += `<th rowspan="2" class="sticky-veh">Vehicle</th>`;
   html += `<th rowspan="2" class="sticky-site">Site Name</th>`;
+  html += `<th rowspan="2" class="sticky-diff" title="Sum of Online Fill − Sum of Site Fill across the visible date range">Diff (L)</th>`;
+  html += `<th rowspan="2" class="sticky-rem">Remark</th>`;
   dates.forEach(d=>{
     html += `<th colspan="3" class="date-grp">${fmtShortDate(d)}</th>`;
   });
@@ -2023,10 +2113,32 @@ function renderVehicles(){
     const branch = vehBranch[v] || '';
     const isNewBranchGroup = (branch !== prevBranch);
     prevBranch = branch;
+ 
+    // Compute Diff = Σ Online Fill − Σ Site Fill across visible dates
+    let onlineSum = 0, siteSum = 0, anyData = false;
+    dates.forEach(d=>{
+      const r = vehMap[v][d];
+      const k = `${v}|${d}`;
+      const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k] : ((r && r.data && 'Fill' in r.data) ? r.data['Fill'] : null);
+      const siteFill   = (k in state.siteFills)     ? state.siteFills[k]     : null;
+      if(onlineFill != null && !isNaN(+onlineFill)){ onlineSum += +onlineFill; anyData = true; }
+      if(siteFill != null && !isNaN(+siteFill)){ siteSum += +siteFill; anyData = true; }
+    });
+    const diff = onlineSum - siteSum;
+    let diffCls = 'diff-empty', diffStr = '—';
+    if(anyData){
+      if(Math.abs(diff) < 0.05) { diffCls = 'diff-zero'; diffStr = '0'; }
+      else if(diff > 0) { diffCls = 'diff-pos'; diffStr = '+' + fmtNum(diff, 1); }
+      else { diffCls = 'diff-neg'; diffStr = fmtNum(diff, 1); }
+    }
+    const diffTitle = anyData ? `Online Σ ${fmtNum(onlineSum,1)} − Site Σ ${fmtNum(siteSum,1)} = ${fmtNum(diff,1)} L` : 'No data in range';
+ 
     html += `<tr${isNewBranchGroup ? ' class="branch-start"' : ''}>`;
     html += `<td class="sticky-branch">${branch ? escapeHtml(branch) : '<span style="color:var(--muted)">—</span>'}</td>`;
     html += `<td class="sticky-veh"><span class="veh-pill">${escapeHtml(v)}</span></td>`;
     html += `<td class="sticky-site"><input type="text" class="site-name-inp" data-vehicle="${escapeAttr(v)}" value="${escapeAttr(state.sites[v]||'')}" onchange="updateSiteNameInline(this)" placeholder="—" /></td>`;
+    html += `<td class="sticky-diff ${diffCls}" title="${escapeAttr(diffTitle)}">${diffStr}</td>`;
+    html += `<td class="sticky-rem"><input type="text" class="rem-inp" data-vehicle="${escapeAttr(v)}" value="${escapeAttr(state.remarks[v]||'')}" onchange="updateRemark(this)" placeholder="Add note…" /></td>`;
     dates.forEach(d=>{
       const r = vehMap[v][d];
       const k = `${v}|${d}`;
@@ -2034,14 +2146,22 @@ function renderVehicles(){
       const siteFill   = (k in state.siteFills)     ? state.siteFills[k]     : null;
       const siteHMR    = (k in state.siteHMRs)      ? state.siteHMRs[k]      : null;
       const noRec = !r ? ' no-rec' : '';
-      html += `<td class="num metric-cell cell-fill${noRec}"><input type="number" step="0.01" class="fill-inp" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(onlineFill) ?? ''}" oninput="updateFillOverride(this)" placeholder="—" /></td>`;
-      html += `<td class="num metric-cell cell-sfill${noRec}"><input type="number" step="0.01" class="site-fill-inp" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(siteFill) ?? ''}" oninput="updateSiteFill(this)" placeholder="—" /></td>`;
-      html += `<td class="num metric-cell cell-shmr${noRec}"><input type="number" step="0.01" class="site-hmr-inp" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(siteHMR) ?? ''}" oninput="updateSiteHMR(this)" placeholder="—" /></td>`;
+      html += `<td class="num metric-cell cell-fill${noRec}"><input type="number" step="0.01" class="fill-inp" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(onlineFill) ?? ''}" onchange="updateFillOverride(this)" placeholder="—" /></td>`;
+      html += `<td class="num metric-cell cell-sfill${noRec}"><input type="number" step="0.01" class="site-fill-inp" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(siteFill) ?? ''}" onchange="updateSiteFill(this)" placeholder="—" /></td>`;
+      html += `<td class="num metric-cell cell-shmr${noRec}"><input type="number" step="0.01" class="site-hmr-inp" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(siteHMR) ?? ''}" onchange="updateSiteHMR(this)" placeholder="—" /></td>`;
     });
     html += '</tr>';
   });
   html += '</tbody></table></div>';
   body.innerHTML = html;
+}
+ 
+function updateRemark(input){
+  const v = input.dataset.vehicle;
+  const t = (input.value || '').trim();
+  if(t) state.remarks[v] = t;
+  else delete state.remarks[v];
+  saveState();
 }
  
 function updateSite(vehicle, site){
@@ -2199,7 +2319,7 @@ function editNAWorkHour(span, v, d){
   const td = span.parentNode;
   const k = `${v}|${d}`;
   const cur = (k in state.workHourOverrides) ? state.workHourOverrides[k] : '';
-  td.innerHTML = `<input type="number" step="0.1" class="wh-inp" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(cur) ?? ''}" oninput="updateWorkHourOverride(this)" placeholder="—" />`;
+  td.innerHTML = `<input type="number" step="0.1" class="wh-inp" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(cur) ?? ''}" onchange="updateWorkHourOverride(this)" placeholder="—" />`;
   const inp = td.querySelector('input');
   if(inp){ inp.focus(); inp.select(); }
 }
@@ -2417,10 +2537,10 @@ function renderDateReport(recs, date){
       <td><input type="text" class="site-name-inp" data-vehicle="${escapeAttr(r.vehicle)}" value="${escapeAttr(state.sites[r.vehicle]||'')}" onchange="updateSiteNameInline(this)" placeholder="—" /></td>
       <td><input type="text" class="model-inp" data-vehicle="${escapeAttr(r.vehicle)}" value="${escapeAttr(getRecField(r,'Object Model')||'')}" onchange="updateModelInline(this)" placeholder="—" /></td>
       <td class="num">${fmtCell(getRecField(r,'Distance'))}</td>
-      <td class="num">${(()=>{const wh = getEffectiveWorkHour(r); return wh === 'NA' ? `<span class="cell-na" title="Click to enter manually" onclick="editNAWorkHour(this,'${escapeAttr(r.vehicle)}','${r.date}')">NA</span>` : `<input type="number" step="0.1" class="wh-inp" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}" value="${r1(wh) ?? ''}" oninput="updateWorkHourOverride(this)" placeholder="—" />`;})()}</td>
+      <td class="num">${(()=>{const wh = getEffectiveWorkHour(r); return wh === 'NA' ? `<span class="cell-na" title="Click to enter manually" onclick="editNAWorkHour(this,'${escapeAttr(r.vehicle)}','${r.date}')">NA</span>` : `<input type="number" step="0.1" class="wh-inp" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}" value="${r1(wh) ?? ''}" onchange="updateWorkHourOverride(this)" placeholder="—" />`;})()}</td>
       <td class="num">${fmtCell(getRecField(r,'Start Fuel Level'))}</td>
       <td class="num">${fmtCell(getRecField(r,'Max Speed'))}</td>
-      <td class="num cell-fill"><input type="number" step="0.01" class="fill-inp" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}" value="${r1(fill) ?? ''}" oninput="updateFillOverride(this)" placeholder="—" /></td>
+      <td class="num cell-fill"><input type="number" step="0.01" class="fill-inp" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}" value="${r1(fill) ?? ''}" onchange="updateFillOverride(this)" placeholder="—" /></td>
       <td class="num cell-sfill cell-sfill-display" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}">${fmtCell(sf)}</td>
       <td class="num cell-diff ${diffSign(diff)}" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}">${fmtCell(diff)}</td>
       <td class="num">${fmtCell(getRecField(r,'End Fuel Level'))}</td>
@@ -2492,10 +2612,10 @@ function renderVehicleReport(recs, vehicle, fromD, toD){
       <td><input type="text" class="site-name-inp" data-vehicle="${escapeAttr(r.vehicle)}" value="${escapeAttr(state.sites[r.vehicle]||'')}" onchange="updateSiteNameInline(this)" placeholder="—" /></td>
       <td><input type="text" class="model-inp" data-vehicle="${escapeAttr(r.vehicle)}" value="${escapeAttr(getRecField(r,'Object Model')||'')}" onchange="updateModelInline(this)" placeholder="—" /></td>
       <td class="num">${fmtCell(getRecField(r,'Distance'))}</td>
-      <td class="num">${(()=>{const wh = getEffectiveWorkHour(r); return wh === 'NA' ? `<span class="cell-na" title="Click to enter manually" onclick="editNAWorkHour(this,'${escapeAttr(r.vehicle)}','${r.date}')">NA</span>` : `<input type="number" step="0.1" class="wh-inp" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}" value="${r1(wh) ?? ''}" oninput="updateWorkHourOverride(this)" placeholder="—" />`;})()}</td>
+      <td class="num">${(()=>{const wh = getEffectiveWorkHour(r); return wh === 'NA' ? `<span class="cell-na" title="Click to enter manually" onclick="editNAWorkHour(this,'${escapeAttr(r.vehicle)}','${r.date}')">NA</span>` : `<input type="number" step="0.1" class="wh-inp" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}" value="${r1(wh) ?? ''}" onchange="updateWorkHourOverride(this)" placeholder="—" />`;})()}</td>
       <td class="num">${fmtCell(getRecField(r,'Start Fuel Level'))}</td>
       <td class="num">${fmtCell(getRecField(r,'Max Speed'))}</td>
-      <td class="num cell-fill"><input type="number" step="0.01" class="fill-inp" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}" value="${r1(fill) ?? ''}" oninput="updateFillOverride(this)" placeholder="—" /></td>
+      <td class="num cell-fill"><input type="number" step="0.01" class="fill-inp" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}" value="${r1(fill) ?? ''}" onchange="updateFillOverride(this)" placeholder="—" /></td>
       <td class="num cell-sfill cell-sfill-display" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}">${fmtCell(sf)}</td>
       <td class="num cell-diff ${diffSign(diff)}" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}">${fmtCell(diff)}</td>
       <td class="num">${fmtCell(getRecField(r,'End Fuel Level'))}</td>
