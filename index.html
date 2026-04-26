@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   :root{
@@ -45,7 +45,7 @@
     font-size:14px;
   }
   h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;letter-spacing:-0.01em}
- 
+
   /* ========== HEADER ========== */
   .topbar{
     background:var(--bg);
@@ -69,7 +69,7 @@
   }
   .stats-pill span b{color:#fff;font-weight:600;margin-right:3px}
   @media (max-width:600px){ .stats-pill{display:none} }
- 
+
   /* ========== TABS ========== */
   .tabs{
     background:#fff;border-bottom:1px solid var(--line);
@@ -95,13 +95,13 @@
     display:grid;place-items:center;font-size:11px;font-weight:700;
   }
   .tab.active .num{background:var(--primary);color:#fff}
- 
+
   /* ========== LAYOUT ========== */
   .container{max-width:1400px;margin:0 auto;padding:18px}
   .page{display:none}
   .page.active{display:block;animation:fadeIn .25s ease}
   @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
- 
+
   .card{
     background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
     box-shadow:var(--shadow);
@@ -119,11 +119,11 @@
     display:grid;place-items:center;color:var(--primary);
   }
   .card-sub{font-size:12px;color:var(--muted);margin-top:2px}
- 
+
   /* ========== GRID ========== */
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   @media(max-width:900px){.grid-2{grid-template-columns:1fr}}
- 
+
   /* ========== BUTTONS ========== */
   .btn{
     display:inline-flex;align-items:center;justify-content:center;gap:6px;
@@ -142,7 +142,7 @@
   .btn.sm{padding:6px 10px;font-size:12px}
   .btn.icon-only{padding:8px;width:34px;height:34px}
   .btn:disabled{opacity:.5;cursor:not-allowed}
- 
+
   /* ========== FORM ========== */
   label{font-size:12px;font-weight:600;color:var(--ink-2);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
   input[type=text],input[type=date],input[type=number],select{
@@ -152,7 +152,7 @@
   }
   input:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(10,110,110,.12)}
   .field{margin-bottom:14px}
- 
+
   /* ========== UPLOAD ZONE ========== */
   .drop{
     border:2px dashed var(--line-2);border-radius:var(--radius);
@@ -168,7 +168,7 @@
   .drop h3{margin:0 0 4px;font-size:15px;color:var(--ink)}
   .drop p{margin:0;font-size:12px;color:var(--muted)}
   .drop input[type=file]{display:none}
- 
+
   /* ========== CALENDAR ========== */
   .cal-wrap{padding:14px}
   .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px}
@@ -197,15 +197,62 @@
   .cal-day.today{border-color:var(--accent);color:var(--accent);font-weight:700}
   .cal-day.has-data{background:var(--good-2);border-color:var(--good);color:#065f46}
   .cal-day.has-data .check{
-    position:absolute;top:2px;right:2px;width:13px;height:13px;border-radius:50%;
-    background:var(--good);color:#fff;display:grid;place-items:center;font-size:9px;
+    position:absolute;top:2px;right:2px;height:13px;
+    min-width:13px;padding:0 3px;border-radius:7px;
+    background:var(--good);color:#fff;display:grid;place-items:center;
+    font-size:9px;font-weight:700;line-height:1;
+    font-variant-numeric:tabular-nums;
   }
   .cal-day.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
   .cal-day.selected.has-data{background:var(--primary);color:#fff}
   .cal-day.selected.has-data .check{background:#fff;color:var(--good)}
   .cal-legend{display:flex;gap:14px;justify-content:center;font-size:11px;color:var(--muted);margin-top:12px;flex-wrap:wrap}
   .cal-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:middle;margin-right:4px}
- 
+
+  /* ========== Paired mini calendars (Upload + Site Fill) ========== */
+  .cal-pair{
+    display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:10px 12px 12px;
+  }
+  .cal-mini{min-width:0}
+  .cal-mini-title{
+    text-align:center;font-size:10.5px;font-weight:700;color:var(--ink-2);
+    text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;
+    padding:5px 0;border-bottom:1px solid var(--line);
+    font-family:'Space Grotesk',sans-serif;
+  }
+  .cal-mini .cal-head{margin-bottom:6px}
+  .cal-mini .cal-title{font-size:12px}
+  .cal-mini .cal-nav button,
+  .cal-mini .btn.icon-only.sm{width:24px;height:24px;font-size:14px}
+  .cal-grid-mini{gap:2px}
+  .cal-grid-mini .cal-dow{font-size:9px;padding:3px 0;letter-spacing:.04em}
+  .cal-grid-mini .cal-day{font-size:10.5px;border-radius:5px;font-weight:600}
+  .cal-grid-mini .cal-day.has-data .check,
+  .cal-grid-mini .cal-day.partial .check{
+    height:11px;min-width:11px;padding:0 2px;border-radius:6px;
+    font-size:8px;top:1px;right:1px;line-height:1;
+  }
+  .cal-legend-mini{font-size:10px;gap:8px;margin-top:8px}
+  .cal-legend-mini i{width:9px;height:9px}
+
+  /* Partial state — some but not all vehicles have site fill */
+  .cal-day.partial{
+    background:#fef3c7;border-color:#f59e0b;color:#92400e;
+  }
+  .cal-day.partial .check{
+    position:absolute;top:2px;right:2px;height:13px;
+    min-width:13px;padding:0 3px;border-radius:7px;
+    background:#f59e0b;color:#fff;display:grid;place-items:center;
+    font-size:9px;font-weight:700;line-height:1;
+    font-variant-numeric:tabular-nums;
+  }
+  .cal-day.partial:hover{border-color:#d97706;color:#92400e;transform:translateY(-1px);box-shadow:var(--shadow)}
+
+  /* On narrow screens, stack the two calendars */
+  @media (max-width:720px){
+    .cal-pair{grid-template-columns:1fr;gap:14px}
+  }
+
   /* ========== TABLES ========== */
   .table-wrap{
     overflow:auto;
@@ -256,7 +303,7 @@
   .pivot td{font-size:12px;padding:7px 10px}
   .pivot td.metric-cell{background:#fbfcfe}
   .pivot tr:hover td.metric-cell{background:var(--primary-3)}
- 
+
   /* 3-column-per-date pivot (Page 2) */
   .pivot.pivot3 .sticky-branch{
     position:sticky;left:0;z-index:3;background:var(--bg-2);color:#fff;min-width:130px;
@@ -282,7 +329,7 @@
   .pivot.pivot3 td.sticky-diff.diff-neg{color:#991b1b;background:#fef2f2}
   .pivot.pivot3 td.sticky-diff.diff-zero{color:#065f46;background:#f0fdf4}
   .pivot.pivot3 td.sticky-diff.diff-empty{color:#cbd5e1;font-weight:400}
- 
+
   .pivot.pivot3 .sticky-rem{
     position:sticky;left:530px;z-index:3;background:var(--bg-2);color:#fff;min-width:170px;
     border-right:2px solid var(--line);
@@ -307,7 +354,7 @@
   }
   .pivot.pivot3 td.sticky-site input:hover{border-color:var(--line-2);background:#fbfcfe}
   .pivot.pivot3 td.sticky-site input:focus{outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 2px rgba(10,110,110,.12)}
- 
+
   .pivot.pivot3 th.date-grp{
     text-align:center;background:linear-gradient(180deg,#0a6e6e 0%,#0d8585 100%);
     color:#fff;font-size:11px;letter-spacing:.04em;padding:8px 4px;
@@ -321,7 +368,7 @@
   .pivot.pivot3 th.m-fill{background:#065f46;color:#d1fae5}
   .pivot.pivot3 th.m-sfill{background:#92400e;color:#fed7aa}
   .pivot.pivot3 th.m-hmr{background:#1e40af;color:#dbeafe}
- 
+
   .pivot.pivot3 td.metric-cell{padding:2px 1px;min-width:62px}
   .pivot.pivot3 td.cell-fill{background:#ecfdf5}
   .pivot.pivot3 td.cell-sfill{background:#fffbeb}
@@ -331,7 +378,7 @@
   .pivot.pivot3 tr:hover td.cell-fill{background:#d1fae5}
   .pivot.pivot3 tr:hover td.cell-sfill{background:#fef3c7}
   .pivot.pivot3 tr:hover td.cell-shmr{background:#dbeafe}
- 
+
   .pivot.pivot3 input.fill-inp,
   .pivot.pivot3 input.site-fill-inp,
   .pivot.pivot3 input.wh-inp,
@@ -355,7 +402,7 @@
   .pivot.pivot3 input[type=number]::-webkit-outer-spin-button,
   .pivot.pivot3 input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   .pivot.pivot3 input[type=number]{-moz-appearance:textfield}
- 
+
   /* Mileage page header legend chips */
   .card-sub .legend-chip{
     display:inline-flex;align-items:center;gap:4px;
@@ -367,7 +414,7 @@
   .card-sub .legend-online{color:#047857;background:#ecfdf5;border-color:#a7f3d0}
   .card-sub .legend-site{color:#b45309;background:#fffbeb;border-color:#fcd34d}
   .card-sub .legend-road{color:#0369a1;background:#f0f9ff;border-color:#7dd3fc}
- 
+
   /* Mileage pivot (Page 4) — same sticky cols as pivot3, but read-only cells */
   .pivot.pivot-mileage{ font-size:13px }
   .pivot.pivot-mileage .sticky-branch{
@@ -399,7 +446,7 @@
   .pivot.pivot-mileage tbody tr:nth-child(even) td.metric-cell{filter:brightness(.985)}
   .pivot.pivot-mileage tbody tr.branch-start td{border-top:2px solid var(--primary)}
   .pivot.pivot-mileage tbody tr.branch-start:first-child td{border-top:none}
- 
+
   .pivot.pivot-mileage th.date-grp{
     text-align:center;background:linear-gradient(180deg,#0a6e6e 0%,#0d8585 100%);
     color:#fff;font-size:11px;letter-spacing:.06em;padding:8px 4px;font-weight:600;
@@ -412,7 +459,7 @@
   }
   .pivot.pivot-mileage th.m-omil{background:#065f46;color:#a7f3d0}
   .pivot.pivot-mileage th.m-smil{background:#92400e;color:#fed7aa}
- 
+
   .pivot.pivot-mileage td.metric-cell{
     padding:8px 10px;min-width:88px;text-align:right;
     font-variant-numeric:tabular-nums;font-size:13px;
@@ -431,7 +478,7 @@
   .pivot.pivot-mileage tr:hover td.cell-omil{background:#dcfce7}
   .pivot.pivot-mileage tr:hover td.cell-smil{background:#fef3c7}
   .pivot.pivot-mileage tr:hover td.cell-roadmil{background:#bae6fd}
- 
+
   /* Value styling — prominent numbers, faded dashes */
   .pivot.pivot-mileage .mile-val{
     font-weight:700;font-size:13.5px;font-variant-numeric:tabular-nums;
@@ -442,7 +489,7 @@
   .pivot.pivot-mileage .mile-empty{
     color:#cbd5e1;font-weight:400;font-size:14px;letter-spacing:0;
   }
- 
+
   /* ===================================================
      STICKY TABLE HEADERS (Page 2, 3, 4)
      Headers stick to top of .table-wrap (the scrolling container).
@@ -468,14 +515,14 @@
   .report-tbl thead th.rcol-date{
     z-index:6;
   }
- 
+
   .veh-pill{
     display:inline-block;background:#fff;color:#1e40af;padding:3px 9px;
     border:1px solid #bfdbfe;border-radius:5px;font-size:11px;font-weight:700;
     font-variant-numeric:tabular-nums;letter-spacing:.02em;
   }
   .site-input{font-weight:500}
- 
+
   /* ========== BADGES & MISC ========== */
   .badge{
     display:inline-flex;align-items:center;gap:5px;
@@ -494,7 +541,7 @@
   }
   .empty-state h3{margin:0 0 6px;color:var(--ink-2);font-size:15px}
   .empty-state p{margin:0;font-size:13px;max-width:340px;margin:0 auto;line-height:1.5}
- 
+
   /* ========== CURATED REPORT TABLE ========== */
   .report-tbl{ font-size:12px; min-width:max-content }
   .report-tbl th{
@@ -508,7 +555,7 @@
   .report-tbl td.num{ text-align:right }
   .report-tbl tr:nth-child(even) td{ background:#fbfcfe }
   .report-tbl tr:hover td{ background:var(--primary-3) }
- 
+
   /* Sticky leading columns */
   .report-tbl td.rcol-1, .report-tbl th.rcol-1{
     position:sticky;left:0;z-index:2;min-width:140px;
@@ -524,26 +571,26 @@
   .report-tbl tr:nth-child(even) td.rcol-date{ background:#fbfcfe }
   .report-tbl tr:hover td.rcol-1,
   .report-tbl tr:hover td.rcol-date{ background:var(--primary-3) }
- 
+
   /* Fill column — green tint (sensor-detected fuel fill) */
   .report-tbl th.cell-fill{ background:#0c5132;color:#a7f3d0 }
   .report-tbl td.cell-fill{ background:#ecfdf5;color:#065f46;font-weight:600 }
   .report-tbl tr:nth-child(even) td.cell-fill{ background:#d1fae5 }
   .report-tbl tr:hover td.cell-fill{ background:#a7f3d0 }
- 
+
   /* SITE FILL column — amber tint (manual receipt entry, display-only on reports) */
   .report-tbl th.cell-sfill{ background:#7c2d12;color:#fed7aa }
   .report-tbl td.cell-sfill{ background:#fffbeb }
   .report-tbl tr:nth-child(even) td.cell-sfill{ background:#fef3c7 }
   .report-tbl tr:hover td.cell-sfill{ background:#fde68a }
   .report-tbl td.cell-sfill-display{ color:#92400e;font-weight:600;font-variant-numeric:tabular-nums;padding-right:14px }
- 
+
   /* DIFF column — colored by sign */
   .report-tbl td.cell-diff{ font-weight:600 }
   .report-tbl td.cell-diff.diff-ok{ color:#059669 }
   .report-tbl td.cell-diff.diff-bad{ color:#dc2626 }
   .report-tbl td.cell-diff.diff-warn{ color:#d97706 }
- 
+
   /* NA flag for Work Hour anomalies (23:59 sentinel or fuel-without-work) */
   .cell-na{
     display:inline-block;background:#fee2e2;color:#b91c1c;
@@ -552,7 +599,7 @@
     transition:all .12s;
   }
   .cell-na:hover{background:#fecaca;border-color:#dc2626;transform:scale(1.05)}
- 
+
   /* Editable inputs in cells */
   .report-tbl input.site-name-inp,
   .report-tbl input.model-inp{
@@ -582,7 +629,7 @@
   .report-tbl input.site-fill-inp:focus{ outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 2px rgba(245,158,11,.18) }
   .report-tbl input[type=number]::-webkit-outer-spin-button,
   .report-tbl input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none;margin:0 }
- 
+
   /* Master List card on Page 2 */
   details.master-list{ background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden }
   details.master-list summary{
@@ -623,7 +670,7 @@
     padding:8px 12px;background:var(--primary-3);border-radius:8px;flex-wrap:wrap;
   }
   .master-list-stats b{color:var(--primary);font-weight:700;margin-right:3px}
- 
+
   /* Smart paste textarea & preview */
   textarea#ml-smart-paste{
     width:100%;font-family:'SF Mono',Consolas,Monaco,monospace;font-size:11px;
@@ -641,12 +688,12 @@
   table.ml-preview td{padding:5px 9px;border-bottom:1px solid var(--line);white-space:nowrap}
   table.ml-preview tr:nth-child(even) td{background:#fbfcfe}
   table.ml-preview tr:last-child td{border-bottom:none}
- 
+
   /* ========== ADMIN PAGE: PIN GATE ========== */
   .tab.tab-admin{ color:#92400e }
   .tab.tab-admin.active{ background:linear-gradient(180deg,#fbbf24 0%,#f59e0b 100%);color:#451a03 }
   .tab.tab-admin .num{ background:transparent;font-size:14px }
- 
+
   .admin-lock{
     min-height:60vh;display:grid;place-items:center;padding:24px 16px;
   }
@@ -703,13 +750,13 @@
   .pin-key:active{ transform:translateY(0);background:var(--primary);color:#fff }
   .pin-key.pin-aux{ background:var(--panel-2);font-size:18px;color:var(--muted) }
   .pin-key.pin-aux:hover{ background:#fef3c7;color:#92400e;border-color:#f59e0b }
- 
+
   .admin-bar{
     display:flex;align-items:center;justify-content:space-between;
     background:linear-gradient(180deg,#ecfdf5 0%,#d1fae5 100%);
     border:1px solid #a7f3d0;border-radius:12px;padding:10px 16px;margin-bottom:14px;
   }
- 
+
   /* ========== TOAST ========== */
   .toast{
     position:fixed;bottom:18px;right:18px;left:18px;
@@ -724,7 +771,7 @@
   .toast.good{background:var(--good)}
   .toast.bad{background:var(--bad)}
   .toast.warn{background:var(--warn)}
- 
+
   /* ========== UPLOAD LOG ========== */
   .upload-list{margin-top:14px;display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto;padding-right:4px}
   .upload-item{
@@ -747,7 +794,7 @@
   }
   .upload-item .x-btn:hover{background:#fee2e2;border-color:#fca5a5;color:#dc2626;transform:scale(1.05)}
   .upload-item .x-btn:active{transform:scale(.95)}
- 
+
   /* ========== TOOLBAR ========== */
   .toolbar{
     display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
@@ -755,7 +802,7 @@
   }
   .toolbar .field{margin:0;flex:1;min-width:140px}
   .toolbar .actions{display:flex;gap:8px;flex-wrap:wrap}
- 
+
   /* ========== REPORT ========== */
   .report-tabs{
     display:flex;gap:4px;padding:14px 18px 0;
@@ -766,14 +813,14 @@
     cursor:pointer;font-weight:600;font-size:13px;font-family:inherit;
   }
   .rtab.active{background:#fff;color:var(--primary);border-color:var(--line)}
- 
+
   .report-meta{
     background:var(--panel-2);padding:14px 18px;border-bottom:1px solid var(--line);
     display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;
   }
   .report-meta .lbl{color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-size:10px;margin-bottom:2px}
   .report-meta .val{color:var(--ink);font-weight:600}
- 
+
   .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;padding:14px 18px;background:#fff;border-bottom:1px solid var(--line)}
   .summary-card{
     border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:linear-gradient(180deg,#fbfcfe,#fff);
@@ -781,7 +828,7 @@
   .summary-card .lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
   .summary-card .val{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:var(--ink);margin-top:3px;font-variant-numeric:tabular-nums}
   .summary-card .delta{font-size:11px;color:var(--muted);margin-top:2px}
- 
+
   /* ========== PRINT ========== */
   @media print{
     body{background:#fff}
@@ -805,7 +852,7 @@
     .print-header .meta{font-size:11px;color:#444}
   }
   .print-header{display:none}
- 
+
   /* ========== HELP ========== */
   details.help{
     margin-top:12px;font-size:12px;color:var(--muted);
@@ -815,11 +862,138 @@
   details.help[open] summary{margin-bottom:6px}
   details.help ul{margin:4px 0 0 0;padding-left:18px}
   details.help li{margin-bottom:3px}
- 
+
+  /* ========== PAGE 5: ABNORMALITIES ========== */
+  .ab-stats{
+    display:flex;gap:10px;margin:14px 0 16px;flex-wrap:wrap;
+  }
+  .ab-chip{
+    display:flex;align-items:center;gap:10px;padding:10px 16px;
+    background:#fff;border:1.5px solid var(--line);border-radius:12px;
+    cursor:pointer;font-family:inherit;transition:all .15s;
+    min-width:130px;
+  }
+  .ab-chip:hover{border-color:var(--ink-2);transform:translateY(-1px)}
+  .ab-chip.active{border-color:var(--primary);background:var(--primary-3);box-shadow:0 0 0 3px rgba(10,110,110,.08)}
+  .ab-chip-num{
+    font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;
+    color:var(--ink);min-width:24px;
+  }
+  .ab-chip-lbl{
+    font-size:12px;font-weight:600;color:var(--ink-2);letter-spacing:.02em;
+  }
+  .ab-chip.ab-chip-power.active{border-color:#dc2626;background:#fef2f2;box-shadow:0 0 0 3px rgba(220,38,38,.08)}
+  .ab-chip.ab-chip-power.active .ab-chip-num{color:#991b1b}
+  .ab-chip.ab-chip-fill.active{border-color:#d97706;background:#fffbeb;box-shadow:0 0 0 3px rgba(217,119,6,.08)}
+  .ab-chip.ab-chip-fill.active .ab-chip-num{color:#92400e}
+  .ab-chip.ab-chip-sensor.active{border-color:#2563eb;background:#eff6ff;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+  .ab-chip.ab-chip-sensor.active .ab-chip-num{color:#1e40af}
+
+  .ab-tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .ab-tbl thead th{
+    background:var(--bg-2);color:#fff;padding:9px 12px;font-size:10.5px;
+    letter-spacing:.04em;text-transform:uppercase;font-weight:700;text-align:left;
+    border-right:1px solid rgba(255,255,255,.08);
+    position:sticky;top:0;z-index:4;
+    white-space:nowrap;
+  }
+  .ab-tbl tbody td{
+    padding:10px 12px;border-bottom:1px solid var(--line);
+    background:#fff;color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+  .ab-tbl tbody tr:hover td{background:var(--primary-3)}
+  .ab-tbl tbody tr:last-child td{border-bottom:none}
+
+  .ab-badge{
+    display:inline-flex;align-items:center;gap:4px;
+    padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;
+    letter-spacing:.04em;border:1px solid;white-space:nowrap;
+  }
+  .ab-badge.ab-power{background:#fef2f2;color:#991b1b;border-color:#fca5a5}
+  .ab-badge.ab-fill{background:#fffbeb;color:#92400e;border-color:#fcd34d}
+  .ab-badge.ab-sensor{background:#eff6ff;color:#1e40af;border-color:#93c5fd}
+
+  /* Progress dropdown (Page 5) — color-coded by status */
+  .prog-sel{
+    width:100%;min-width:170px;
+    padding:5px 8px;font-size:11.5px;font-weight:600;
+    border:1px solid var(--line);border-radius:6px;
+    background:#fff;color:var(--ink-2);
+    cursor:pointer;transition:all .15s;
+    font-family:inherit;
+    font-variant-numeric:tabular-nums;
+  }
+  .prog-sel:hover{border-color:var(--primary)}
+  .prog-sel:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-3)}
+  .prog-sel.prog-empty{color:var(--muted);font-style:italic;font-weight:500}
+  .prog-sel.prog-vendor   {background:#fff7ed;color:#9a3412;border-color:#fdba74}
+  .prog-sel.prog-planned  {background:#eff6ff;color:#1e40af;border-color:#93c5fd}
+  .prog-sel.prog-solved   {background:#ecfdf5;color:#065f46;border-color:#6ee7b7;font-weight:700}
+  .prog-sel.prog-dashrath {background:#faf5ff;color:#6b21a8;border-color:#d8b4fe}
+  .prog-sel.prog-glitch   {background:#fef2f2;color:#991b1b;border-color:#fca5a5}
+
+  .ab-detail{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .ab-detail b{color:var(--ink);font-weight:700}
+
+  .ab-empty{
+    text-align:center;padding:48px 20px;color:var(--muted);
+    background:#fff;border-radius:8px;
+  }
+  .ab-empty .ic{font-size:48px;margin-bottom:8px;opacity:.5}
+  .ab-empty h3{margin:6px 0 4px;color:var(--good);font-size:18px}
+  .ab-empty p{margin:0;font-size:13px}
+
+  /* ========== PAGE 6: MERGED REPORT ========== */
+  .merged-info{
+    background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
+    color:#fff;border-radius:12px;padding:18px 20px;margin:14px 0 16px;
+  }
+  .merged-info-grid{
+    display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+    gap:14px 24px;margin-bottom:14px;
+  }
+  .mi-lbl{
+    font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;
+    color:#94a3b8;margin-bottom:4px;font-weight:600;
+  }
+  .mi-val{font-size:14px;color:#fff;font-weight:600;line-height:1.3}
+  .mi-remark{grid-column:1/-1}
+  .mi-remark .mi-val{font-style:italic;font-weight:500;color:#fbbf24}
+
+  .merged-stats{
+    display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
+    gap:10px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);
+  }
+  .ms-item{
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);
+    border-radius:10px;padding:10px 12px;text-align:center;
+  }
+  .ms-num{
+    font-size:18px;font-weight:800;color:#fff;
+    font-variant-numeric:tabular-nums;line-height:1.15;
+  }
+  .ms-lbl{
+    font-size:10px;text-transform:uppercase;letter-spacing:.04em;
+    color:#cbd5e1;margin-top:3px;font-weight:600;
+  }
+  .ms-online .ms-num{color:#86efac}
+  .ms-site .ms-num{color:#fdba74}
+  .ms-diff .ms-num{color:#fbbf24}
+  .ms-mil .ms-num{color:#7dd3fc}
+
+  /* Totals row in merged table */
+  .merged-tot td{
+    background:linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%) !important;
+    font-weight:700;color:var(--ink);
+    border-top:2px solid var(--primary);
+    font-variant-numeric:tabular-nums;
+  }
+
 </style>
 </head>
 <body>
- 
+
 <header class="topbar">
   <div class="topbar-row">
     <div class="brand">
@@ -837,46 +1011,66 @@
     </div>
   </div>
 </header>
- 
+
 <nav class="tabs">
   <div class="tabs-inner">
     <button class="tab active" data-tab="upload"><span class="num">1</span>Upload</button>
     <button class="tab" data-tab="vehicles"><span class="num">2</span>Vehicles &amp; Sites</button>
     <button class="tab" data-tab="reports"><span class="num">3</span>Reports</button>
     <button class="tab" data-tab="mileage"><span class="num">4</span>Mileage</button>
+    <button class="tab" data-tab="abnormal"><span class="num">5</span>Abnormalities</button>
+    <button class="tab" data-tab="merged"><span class="num">6</span>Merged Report</button>
     <button class="tab tab-admin" data-tab="admin"><span class="num">🔒</span>Admin</button>
   </div>
 </nav>
- 
+
 <main class="container">
- 
+
   <!-- ============ PAGE 1: UPLOAD ============ -->
   <section class="page active" id="page-upload">
     <div class="grid-2">
- 
-      <!-- Calendar -->
+
+      <!-- Calendars: Upload status + Site Fill completion -->
       <div class="card">
         <div class="card-head">
           <div>
-            <div class="card-title"><span class="icon">📅</span>Upload Calendar</div>
-            <div class="card-sub">Green ticks show dates with uploaded fuel economy data</div>
+            <div class="card-title"><span class="icon">📅</span>Calendars</div>
+            <div class="card-sub">Upload status (left) · Site Fill completion (right)</div>
           </div>
         </div>
-        <div class="cal-wrap">
-          <div class="cal-head">
-            <button class="btn icon-only sm" onclick="calNav(-1)">‹</button>
-            <div class="cal-title" id="cal-title">—</div>
-            <button class="btn icon-only sm" onclick="calNav(1)">›</button>
+        <div class="cal-pair">
+          <!-- Calendar 1: Upload status -->
+          <div class="cal-mini">
+            <div class="cal-mini-title">Upload</div>
+            <div class="cal-head">
+              <button class="btn icon-only sm" onclick="calNav(-1)">‹</button>
+              <div class="cal-title" id="cal-title">—</div>
+              <button class="btn icon-only sm" onclick="calNav(1)">›</button>
+            </div>
+            <div class="cal-grid cal-grid-mini" id="cal-grid"></div>
+            <div class="cal-legend cal-legend-mini">
+              <span><i style="background:var(--good-2);border:1px solid var(--good)"></i>Uploaded</span>
+              <span><i style="background:var(--accent)"></i>Today</span>
+            </div>
           </div>
-          <div class="cal-grid" id="cal-grid"></div>
-          <div class="cal-legend">
-            <span><i style="background:#fff;border:1px solid var(--line)"></i>No data</span>
-            <span><i style="background:var(--good-2);border:1px solid var(--good)"></i>Uploaded</span>
-            <span><i style="background:var(--accent)"></i>Today</span>
+
+          <!-- Calendar 2: Site Fill completion -->
+          <div class="cal-mini">
+            <div class="cal-mini-title">Site Fill Status</div>
+            <div class="cal-head">
+              <button class="btn icon-only sm" onclick="cal2Nav(-1)">‹</button>
+              <div class="cal-title" id="cal2-title">—</div>
+              <button class="btn icon-only sm" onclick="cal2Nav(1)">›</button>
+            </div>
+            <div class="cal-grid cal-grid-mini" id="cal2-grid"></div>
+            <div class="cal-legend cal-legend-mini">
+              <span><i style="background:var(--good-2);border:1px solid var(--good)"></i>Complete</span>
+              <span><i style="background:#fef3c7;border:1px solid #f59e0b"></i>Partial</span>
+            </div>
           </div>
         </div>
       </div>
- 
+
       <!-- Upload zone -->
       <div class="card">
         <div class="card-head">
@@ -923,7 +1117,7 @@
       </div>
     </div>
   </section>
- 
+
   <!-- ============ PAGE 2: VEHICLES & SITES ============ -->
   <section class="page" id="page-vehicles">
     <div class="card">
@@ -961,7 +1155,7 @@
       <div id="vehicles-body"></div>
     </div>
   </section>
- 
+
   <!-- ============ PAGE 3: REPORTS ============ -->
   <section class="page" id="page-reports">
     <div class="card">
@@ -975,12 +1169,12 @@
           <button class="btn primary sm" onclick="exportReportXLSX()">Export Excel</button>
         </div>
       </div>
- 
+
       <div class="report-tabs no-print">
         <button class="rtab active" data-rtab="date" onclick="setRTab('date')">By Date</button>
         <button class="rtab" data-rtab="vehicle" onclick="setRTab('vehicle')">By Vehicle</button>
       </div>
- 
+
       <!-- Date-wise toolbar -->
       <div class="toolbar no-print" id="rtb-date">
         <div class="field">
@@ -988,7 +1182,7 @@
           <select id="rep-date"></select>
         </div>
       </div>
- 
+
       <!-- Vehicle-wise toolbar -->
       <div class="toolbar no-print" id="rtb-vehicle" style="display:none">
         <div class="field">
@@ -1008,16 +1202,16 @@
           <button class="btn primary sm" onclick="renderReport()">Apply</button>
         </div>
       </div>
- 
+
       <div class="print-header">
         <h1 id="print-title">Fuel Economy Report</h1>
         <div class="meta" id="print-meta"></div>
       </div>
- 
+
       <div id="report-body"></div>
     </div>
   </section>
- 
+
   <!-- ============ PAGE 4: MILEAGE ============ -->
   <section class="page" id="page-mileage">
     <div class="card">
@@ -1060,7 +1254,109 @@
       <div id="mileage-body"></div>
     </div>
   </section>
- 
+
+  <!-- ============ PAGE 5: ABNORMALITIES ============ -->
+  <section class="page" id="page-abnormal">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title"><span class="icon">🚨</span>Abnormalities</div>
+          <div class="card-sub">
+            Auto-detected issues across all uploaded data — review and act on them.
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn sm" onclick="exportAbnormalitiesXLSX()">Export Excel</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="field">
+          <label>From date</label>
+          <input type="date" id="ab-from" onchange="renderAbnormalities()" />
+        </div>
+        <div class="field">
+          <label>To date</label>
+          <input type="date" id="ab-to" onchange="renderAbnormalities()" />
+        </div>
+        <div class="field" style="flex:0 0 auto;min-width:auto">
+          <label style="visibility:hidden">.</label>
+          <div class="actions">
+            <button class="btn sm" onclick="setAbRange(7)">Last 7d</button>
+            <button class="btn sm" onclick="setAbRange(30)">Last 30d</button>
+            <button class="btn sm" onclick="setAbRangeAll()">All</button>
+          </div>
+        </div>
+        <div class="field" style="flex:1 1 200px">
+          <label>Search vehicle / site / branch</label>
+          <input type="text" id="ab-search" placeholder="Search…" oninput="renderAbnormalities()" />
+        </div>
+      </div>
+
+      <div class="ab-stats" id="ab-stats">
+        <button class="ab-chip ab-chip-all active" data-type="all" onclick="setAbnFilter('all')">
+          <span class="ab-chip-num" id="ab-count-all">0</span>
+          <span class="ab-chip-lbl">All</span>
+        </button>
+        <button class="ab-chip ab-chip-power" data-type="power" onclick="setAbnFilter('power')">
+          <span class="ab-chip-num" id="ab-count-power">0</span>
+          <span class="ab-chip-lbl">🔌 Power Source</span>
+        </button>
+        <button class="ab-chip ab-chip-fill" data-type="fill" onclick="setAbnFilter('fill')">
+          <span class="ab-chip-num" id="ab-count-fill">0</span>
+          <span class="ab-chip-lbl">⛽ Fill Mismatch</span>
+        </button>
+        <button class="ab-chip ab-chip-sensor" data-type="sensor" onclick="setAbnFilter('sensor')">
+          <span class="ab-chip-num" id="ab-count-sensor">0</span>
+          <span class="ab-chip-lbl">📡 Sensor</span>
+        </button>
+      </div>
+
+      <div id="abnormal-body"></div>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 6: MERGED REPORT (per-vehicle history) ============ -->
+  <section class="page" id="page-merged">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title"><span class="icon">📋</span>Merged Report</div>
+          <div class="card-sub">All data merged for a single vehicle across a date range — Online + Site + computed fields, with totals.</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn sm" onclick="exportMergedXLSX()">Export Excel</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="field" style="flex:0 0 280px;min-width:220px">
+          <label>Vehicle</label>
+          <select id="mer-vehicle" onchange="renderMerged()"></select>
+        </div>
+        <div class="field">
+          <label>From date</label>
+          <input type="date" id="mer-from" onchange="renderMerged()" />
+        </div>
+        <div class="field">
+          <label>To date</label>
+          <input type="date" id="mer-to" onchange="renderMerged()" />
+        </div>
+        <div class="field" style="flex:0 0 auto;min-width:auto">
+          <label style="visibility:hidden">.</label>
+          <div class="actions">
+            <button class="btn sm" onclick="setMerRange(7)">Last 7d</button>
+            <button class="btn sm" onclick="setMerRange(30)">Last 30d</button>
+            <button class="btn sm" onclick="setMerRangeAll()">All</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="merged-summary"></div>
+      <div id="merged-body"></div>
+    </div>
+  </section>
+
   <!-- ============ PAGE 5: ADMIN (PIN-gated Master List) ============ -->
   <section class="page" id="page-admin">
     <!-- Locked state: PIN entry -->
@@ -1092,7 +1388,7 @@
         </div>
       </div>
     </div>
- 
+
     <!-- Unlocked state: Master List -->
     <div class="admin-content" id="admin-content" style="display:none">
       <div class="admin-bar">
@@ -1102,7 +1398,7 @@
         </div>
         <button class="btn sm" onclick="lockAdmin()">🔒 Lock</button>
       </div>
- 
+
       <details class="master-list" id="master-list" open>
         <summary>
           <span class="icon">📋</span>
@@ -1117,9 +1413,9 @@
           <div style="margin-top:10px">
             <button class="btn primary sm" onclick="importMasterListFromSmartPaste()">Import from Smart Paste</button>
           </div>
- 
+
           <hr style="margin:20px 0 14px;border:none;border-top:1px solid var(--line)">
- 
+
           <h4 style="margin:0 0 4px;font-size:13px;font-weight:700;color:var(--ink)">📋 3-Column Paste <span style="font-weight:500;font-size:11px;color:var(--muted);margin-left:4px">— if Smart Paste can't detect your format</span></h4>
           <p>Copy each column from Excel separately and paste into the matching box. <b>One value per line.</b> Empty rows skipped. Row N in each box becomes one record.</p>
           <div class="ml-three-col">
@@ -1149,21 +1445,21 @@
       </details>
     </div>
   </section>
- 
+
 </main>
- 
+
 <div class="toast" id="toast"></div>
- 
+
 <script>
 /* ============================================================
    STATE & STORAGE
 ============================================================ */
 const STORAGE_KEY = 'fet_tasr_v1';
- 
+
 // Vehicles that use km/L (Distance ÷ Consumption) instead of the default L/hr (Consumption ÷ Work Hour).
 // These are road vehicles (Bolero / Pickup / Water Tanker) where distance is the meaningful metric.
 const MILEAGE_DISTANCE_BASED = new Set(['MH34BZ0942','MH32BZ0277','MH34BZ4289']);
- 
+
 let state = {
   records: [],          // {date, vehicle, km, hmr, fuel, kmpl, branch, data:{colName:value}}
   sites: {},            // {vehicle: siteName}      — editable
@@ -1173,10 +1469,11 @@ let state = {
   siteHMRs: {},         // {`${v}|${d}`: number}    — manual Site HMR entered with Site Fill
   fillOverrides: {},    // {`${v}|${d}`: number}    — overrides upload's Fill (Online Fill correction)
   workHourOverrides: {},// {`${v}|${d}`: number}    — overrides upload's Work Hour (Online HMR correction)
+  progress: {},         // {`${v}|${d}|${type}`: progress label} — Page 5 abnormality tracking
   uploads: [],
   columnOrder: []
 };
- 
+
 function loadState(){
   try{
     const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
@@ -1188,11 +1485,12 @@ function loadState(){
     if(s.siteHMRs) state.siteHMRs = s.siteHMRs;
     if(s.fillOverrides) state.fillOverrides = s.fillOverrides;
     if(s.workHourOverrides) state.workHourOverrides = s.workHourOverrides;
+    if(s.progress) state.progress = s.progress;
     if(s.uploads) state.uploads = s.uploads;
     if(s.columnOrder) state.columnOrder = s.columnOrder;
   }catch(e){console.warn('load failed',e)}
 }
- 
+
 /* ============================================================
    CLOUD SYNC (Supabase) — drop-in cloud layer
    ────────────────────────────────────────────────────────────
@@ -1203,14 +1501,14 @@ function loadState(){
 ============================================================ */
 const SUPABASE_URL = 'https://nmupuithswsfqidrpxbc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tdXB1aXRoc3dzZnFpZHJweGJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMDY0MzAsImV4cCI6MjA5Mjc4MjQzMH0.lfTE0kqfa4Fg0EwPpZBrv9XLVlPGJgobfS-NltcFCBM';
- 
+
 const cloud = {
   enabled: false,
   client: null,
   pushTimer: null,
   pushing: false,
   lastError: null,
- 
+
   async init(){
     if(!SUPABASE_URL.includes('supabase.co') || SUPABASE_ANON_KEY.length < 30 || SUPABASE_ANON_KEY.startsWith('YOUR-')){
       this.setStatus('local'); return;
@@ -1229,7 +1527,7 @@ const cloud = {
       this.setStatus('error');
     }
   },
- 
+
   setStatus(s){
     const el = document.getElementById('sync-status');
     if(!el) return;
@@ -1244,27 +1542,32 @@ const cloud = {
     el.innerHTML = `<span style="color:${color};font-weight:600">${text}</span>`;
     el.title = tip;
   },
- 
+
   async fetchAll(){
     if(!this.enabled) return;
-    const [rec, veh, cells, ups] = await Promise.all([
+    const [rec, veh, cells, ups, prog] = await Promise.all([
       this.client.from('records').select('*'),
       this.client.from('vehicles').select('*'),
       this.client.from('cells').select('*'),
-      this.client.from('uploads').select('*').order('uploaded_at', {ascending: false}).limit(100)
+      this.client.from('uploads').select('*').order('uploaded_at', {ascending: false}).limit(100),
+      this.client.from('abnormality_progress').select('*')
     ]);
     if(rec.error) throw rec.error;
     if(veh.error) throw veh.error;
     if(cells.error) throw cells.error;
     if(ups.error) throw ups.error;
- 
+    // Progress table is optional — don't fail fetchAll if user hasn't run the migration yet
+    if(prog.error){
+      console.warn('abnormality_progress not available (run add_progress_table.sql):', prog.error.message);
+    }
+
     // Records — overwrite from cloud (cloud is source of truth)
     state.records = (rec.data || []).map(r => ({
       vehicle: r.vehicle, date: r.date,
       km: r.km, hmr: r.hmr, fuel: r.fuel,
       branch: r.branch, data: r.data || {}
     })).sort((a,b)=> a.date.localeCompare(b.date) || a.vehicle.localeCompare(b.vehicle));
- 
+
     // Vehicles
     state.sites = {}; state.models = {}; state.remarks = {};
     (veh.data || []).forEach(v => {
@@ -1272,7 +1575,7 @@ const cloud = {
       if(v.model) state.models[v.vehicle] = v.model;
       if(v.remark) state.remarks[v.vehicle] = v.remark;
     });
- 
+
     // Cell overrides
     state.fillOverrides = {}; state.workHourOverrides = {};
     state.siteFills = {}; state.siteHMRs = {};
@@ -1283,7 +1586,15 @@ const cloud = {
       if(c.site_fill !== null && c.site_fill !== undefined) state.siteFills[k] = +c.site_fill;
       if(c.site_hmr !== null && c.site_hmr !== undefined) state.siteHMRs[k] = +c.site_hmr;
     });
- 
+
+    // Abnormality progress (Page 5)
+    state.progress = {};
+    if(prog && !prog.error && prog.data){
+      prog.data.forEach(p => {
+        if(p.progress) state.progress[`${p.vehicle}|${p.entry_date}|${p.issue_type}`] = p.progress;
+      });
+    }
+
     // Uploads
     state.uploads = (ups.data || []).map(u => ({
       file: u.file,
@@ -1291,18 +1602,18 @@ const cloud = {
       count: u.count,
       dates: u.dates || []
     }));
- 
+
     saveLocal();
     refreshAll();
   },
- 
+
   schedulePush(){
     if(!this.enabled) return;
     if(this.pushTimer) clearTimeout(this.pushTimer);
     this.setStatus('syncing');
     this.pushTimer = setTimeout(()=> this.pushVehiclesAndCells(), 1500);
   },
- 
+
   async pushVehiclesAndCells(){
     if(!this.enabled || this.pushing) return;
     this.pushing = true;
@@ -1352,7 +1663,7 @@ const cloud = {
       this.pushing = false;
     }
   },
- 
+
   async pushRecords(newRecs){
     if(!this.enabled || !newRecs.length) return;
     this.setStatus('syncing');
@@ -1373,7 +1684,7 @@ const cloud = {
       this.setStatus('error');
     }
   },
- 
+
   async pushUploadEntry(u){
     if(!this.enabled) return;
     try{
@@ -1382,14 +1693,36 @@ const cloud = {
       });
     }catch(e){ console.error('Push upload entry failed:', e); }
   },
- 
+
+  async pushProgress(vehicle, date, type, progress){
+    // Immediate single-row upsert (no debounce — progress changes are infrequent and must be visible to teammates ASAP)
+    if(!this.enabled) return;
+    try{
+      if(progress === '' || progress === null || progress === undefined){
+        await this.client.from('abnormality_progress')
+          .delete()
+          .match({vehicle, entry_date: date, issue_type: type});
+      } else {
+        await this.client.from('abnormality_progress').upsert(
+          {vehicle, entry_date: date, issue_type: type, progress, updated_at: new Date().toISOString()},
+          {onConflict: 'vehicle,entry_date,issue_type'}
+        );
+      }
+      this.setStatus('synced');
+    }catch(e){
+      console.error('Push progress failed:', e);
+      this.lastError = e.message;
+      this.setStatus('error');
+    }
+  },
+
   async deleteRecordsByDates(dates){
     if(!this.enabled || !dates.length) return;
     try{
       await this.client.from('records').delete().in('date', dates);
     }catch(e){ console.error('Delete records failed:', e); }
   },
- 
+
   async clearAll(){
     if(!this.enabled) return;
     try{
@@ -1401,7 +1734,7 @@ const cloud = {
       ]);
     }catch(e){ console.error('Clear cloud failed:', e); }
   },
- 
+
   /* ─── REALTIME SUBSCRIPTIONS ─────────────────────────────
      Listens for INSERT/UPDATE/DELETE on cells, records, vehicles.
      When a worker saves on mobile (or another PC user edits),
@@ -1411,7 +1744,7 @@ const cloud = {
   channel: null,
   pendingChanges: null,
   refreshTimer: null,
- 
+
   setupRealtime(){
     if(!this.enabled || this.channel) return;
     this.pendingChanges = new Set();
@@ -1421,10 +1754,11 @@ const cloud = {
         .on('postgres_changes', {event:'*', schema:'public', table:'cells'},    p => this._applyCellChange(p))
         .on('postgres_changes', {event:'*', schema:'public', table:'records'},  p => this._applyRecordChange(p))
         .on('postgres_changes', {event:'*', schema:'public', table:'vehicles'}, p => this._applyVehicleChange(p))
+        .on('postgres_changes', {event:'*', schema:'public', table:'abnormality_progress'}, p => this._applyProgressChange(p))
         .subscribe();
     }catch(e){ console.error('Realtime setup failed:', e); }
   },
- 
+
   _applyCellChange(payload){
     const ev = payload.eventType;
     const row = payload.new || payload.old;
@@ -1445,7 +1779,7 @@ const cloud = {
     saveLocal();
     this._scheduleRefresh(`${row.vehicle} · ${row.date}`);
   },
- 
+
   _applyRecordChange(payload){
     const ev = payload.eventType;
     if(ev === 'DELETE'){
@@ -1467,7 +1801,7 @@ const cloud = {
     saveLocal();
     this._scheduleRefresh(`record ${payload.new?.vehicle || payload.old?.vehicle || ''}`);
   },
- 
+
   _applyVehicleChange(payload){
     const ev = payload.eventType;
     const o = payload.old, n = payload.new;
@@ -1485,13 +1819,29 @@ const cloud = {
     saveLocal();
     this._scheduleRefresh('vehicle metadata');
   },
- 
+
+  _applyProgressChange(payload){
+    const ev = payload.eventType;
+    const row = payload.new || payload.old;
+    if(!row) return;
+    const k = `${row.vehicle}|${row.entry_date}|${row.issue_type}`;
+    if(ev === 'DELETE'){
+      delete state.progress[k];
+    } else {
+      const n = payload.new;
+      if(n.progress) state.progress[k] = n.progress;
+      else delete state.progress[k];
+    }
+    saveLocal();
+    this._scheduleRefresh(`progress · ${row.vehicle}`);
+  },
+
   _scheduleRefresh(label){
     this.pendingChanges.add(label);
     if(this.refreshTimer) clearTimeout(this.refreshTimer);
     this.refreshTimer = setTimeout(() => this._doRefresh(), 1500);
   },
- 
+
   _doRefresh(){
     // Don't yank focus / re-render while user is typing — defer
     const ae = document.activeElement;
@@ -1510,7 +1860,7 @@ const cloud = {
     }
   }
 };
- 
+
 function saveLocal(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
   catch(e){ console.warn('localStorage full — relying on cloud only', e); }
@@ -1520,7 +1870,7 @@ function saveState(){
   updateStats();
   cloud.schedulePush();
 }
- 
+
 /* ============================================================
    UTILITIES
 ============================================================ */
@@ -1583,7 +1933,7 @@ function fmtShortDate(s){
   const [y,m,d] = s.split('-');
   return `${d}/${m}`;
 }
- 
+
 // Normalise a raw cell value from SheetJS:
 //   '--' / '' / null  → null
 //   "03:55" (HH:MM)   → 3.917 (decimal hours)
@@ -1614,7 +1964,7 @@ function toast(msg, kind=''){
   clearTimeout(toast._t);
   toast._t = setTimeout(()=>t.classList.remove('show'), 2800);
 }
- 
+
 /* ============================================================
    COLUMN DETECTION
    Uses exact (case-insensitive) match against known header names.
@@ -1630,7 +1980,7 @@ const COL_EXACT = {
   branch:  ['branch','site','location','depot','site name','branch name'],
   company: ['company','organization','client']
 };
- 
+
 // Find the vehicle anchor column (Object/Vehicle/Asset).
 function findVehicleCol(headerRow){
   for(let i=0;i<headerRow.length;i++){
@@ -1639,7 +1989,7 @@ function findVehicleCol(headerRow){
   }
   return -1;
 }
- 
+
 // Etrack reports stack unit metadata in cols 0-2 (e.g. "Distance Unit | km").
 // The real header block is contiguous around the vehicle column — walk left
 // from the anchor while previous cells are non-empty to find the block start.
@@ -1648,7 +1998,7 @@ function findHeaderBlockStart(headerRow, anchorIdx){
   while(start > 0 && String(headerRow[start-1]||'').trim() !== '') start--;
   return start;
 }
- 
+
 function detectColumns(headerRow, startCol){
   // Build header-name → column-index lookup (first occurrence wins for duplicates)
   const headerByName = {};
@@ -1671,7 +2021,7 @@ function detectColumns(headerRow, startCol){
   }
   return map;
 }
- 
+
 // "84:48" or "359:59" or "08:30:15" → decimal hours (84.8, 359.98, 8.504...)
 function parseHMR(v){
   if(v===null||v===undefined||v==='') return null;
@@ -1687,7 +2037,7 @@ function parseHMR(v){
   }
   return num(v);
 }
- 
+
 // Look for "Duration: from DD-MM-YYYY ... to DD-MM-YYYY" in early rows.
 // Uses lazy match between dates so "12:00 AM to" / "11:59 PM" don't break it.
 function findDurationDates(rows){
@@ -1702,14 +2052,14 @@ function findDurationDates(rows){
   }
   return null;
 }
- 
+
 // Filename like "Fuel_Economy_17-04-2026_10-58-57_PM.xlsx" → "2026-04-17"
 function findFilenameDate(name){
   const m = name.match(/(\d{1,2})[-_](\d{1,2})[-_](\d{4})/);
   if(m) return parseDateAny(`${m[1]}-${m[2]}-${m[3]}`);
   return null;
 }
- 
+
 /* ============================================================
    FILE UPLOAD
 ============================================================ */
@@ -1732,7 +2082,7 @@ function setupUpload(){
     const files = [...e.dataTransfer.files];
     if(files.length) handleFiles(files);
   });
- 
+
   document.getElementById('restore-input').addEventListener('change', e=>{
     const f = e.target.files[0]; if(!f) return;
     const r = new FileReader();
@@ -1741,7 +2091,7 @@ function setupUpload(){
         const obj = JSON.parse(ev.target.result);
         if(!obj.records) throw new Error('Invalid backup');
         if(!confirm(`Restore ${obj.records.length} records? This replaces current data.`)) return;
-        state = Object.assign({records:[],sites:{},models:{},siteFills:{},siteHMRs:{},fillOverrides:{},workHourOverrides:{},uploads:[],columnOrder:[]}, obj);
+        state = Object.assign({records:[],sites:{},models:{},remarks:{},siteFills:{},siteHMRs:{},fillOverrides:{},workHourOverrides:{},progress:{},uploads:[],columnOrder:[]}, obj);
         saveState(); refreshAll();
         toast('Restored ✓','good');
       }catch(err){ toast('Invalid backup file','bad'); }
@@ -1750,7 +2100,7 @@ function setupUpload(){
     e.target.value = '';
   });
 }
- 
+
 async function handleFiles(files){
   let okCount = 0, totalRows = 0;
   const allDates = new Set();
@@ -1780,7 +2130,7 @@ async function handleFiles(files){
     setTimeout(()=>toast('⚠ '+warnings[0],'warn'), 3000);
   }
 }
- 
+
 function processOneFile(file){
   return new Promise((resolve, reject)=>{
     const r = new FileReader();
@@ -1798,16 +2148,16 @@ function processOneFile(file){
     r.readAsArrayBuffer(file);
   });
 }
- 
+
 function processRows(rows, filename){
   if(!rows.length){ throw new Error('Empty file'); }
- 
+
   // --- Date detection (priority: explicit override > duration row > filename) ---
   const overrideDate = document.getElementById('upload-date').value || null;
   const duration = findDurationDates(rows);
   const filenameDate = findFilenameDate(filename);
   let warning = null;
- 
+
   // --- Header detection: scan first 12 rows for one containing Object/Vehicle/Asset ---
   let hdrIdx = -1;
   for(let i=0;i<Math.min(12,rows.length);i++){
@@ -1817,14 +2167,14 @@ function processRows(rows, filename){
     }
   }
   if(hdrIdx === -1) throw new Error('Could not find header row (need Object/Vehicle column)');
- 
+
   const headers = rows[hdrIdx];
   const vehicleCol = findVehicleCol(headers);
   if(vehicleCol === -1) throw new Error('Vehicle/Object column not detected');
   const startCol = findHeaderBlockStart(headers, vehicleCol);
   const cols = detectColumns(headers, startCol);
   cols.vehicle = vehicleCol;
- 
+
   // Capture ALL column headers in order (excluding the vehicle column itself —
   // the vehicle is shown separately in reports)
   const allColIdx = []; // [{idx, name}]
@@ -1838,7 +2188,7 @@ function processRows(rows, filename){
   allColIdx.forEach(({name})=>{
     if(!state.columnOrder.includes(name)) state.columnOrder.push(name);
   });
- 
+
   // Determine the date for rows that don't have a date column
   let defaultDate = overrideDate;
   if(!defaultDate && duration){
@@ -1848,30 +2198,30 @@ function processRows(rows, filename){
     }
   }
   if(!defaultDate && filenameDate) defaultDate = filenameDate;
- 
+
   const newRecs = [];
   const datesSeen = new Set();
   const branchByVehicle = {};
- 
+
   for(let i = hdrIdx+1; i < rows.length; i++){
     const row = rows[i];
     if(!row || row.every(c=>c===''||c===null||c===undefined)) continue;
- 
+
     const veh = String(row[cols.vehicle]||'').trim();
     if(!veh || /^total|^grand|^summary|^average/i.test(veh)) continue;
- 
+
     let date = cols.date !== undefined ? parseDateAny(row[cols.date]) : null;
     if(!date) date = defaultDate;
     if(!date) continue;
- 
+
     const km   = cols.km   !== undefined ? num(row[cols.km])   : null;
     const hmr  = cols.hmr  !== undefined ? parseHMR(row[cols.hmr])  : null;
     const fuel = cols.fuel !== undefined ? num(row[cols.fuel]) : null;
     let kmpl   = cols.kmpl !== undefined ? num(row[cols.kmpl]) : null;
     if(kmpl===null && km && fuel && fuel>0) kmpl = km / fuel;
- 
+
     if(km===null && hmr===null && fuel===null) continue;
- 
+
     // Capture branch for auto-mapping
     let branchValue = null;
     if(cols.branch !== undefined){
@@ -1881,7 +2231,7 @@ function processRows(rows, filename){
         branchValue = br;
       }
     }
- 
+
     // Capture ALL columns into data (with HH:MM auto-converted to decimal hours,
     // '--' and empty → null, numeric strings → numbers, everything else as-is)
     const data = {};
@@ -1889,22 +2239,22 @@ function processRows(rows, filename){
       const raw = row[idx];
       data[name] = normaliseCellValue(raw);
     }
- 
+
     newRecs.push({date, vehicle:veh, km, hmr, fuel, kmpl, branch:branchValue, data});
     datesSeen.add(date);
   }
- 
+
   if(!newRecs.length) throw new Error('No valid rows');
- 
+
   // Note: site names are NOT auto-filled from upload data — they come ONLY from
   // the Master List import (Admin page) or manual entry on Page 2 / Page 3.
- 
+
   // Merge: replace records for (date, vehicle) combos in this upload
   const keysInUpload = new Set(newRecs.map(r=>`${r.date}|${r.vehicle}`));
   state.records = state.records.filter(r=>!keysInUpload.has(`${r.date}|${r.vehicle}`));
   state.records.push(...newRecs);
   state.records.sort((a,b)=> a.date.localeCompare(b.date) || a.vehicle.localeCompare(b.vehicle));
- 
+
   state.uploads.unshift({
     file: filename,
     when: new Date().toISOString(),
@@ -1912,14 +2262,14 @@ function processRows(rows, filename){
     dates: [...datesSeen].sort()
   });
   state.uploads = state.uploads.slice(0,30);
- 
+
   // Push the new records and upload entry to the cloud (fire-and-forget)
   cloud.pushRecords(newRecs);
   cloud.pushUploadEntry(state.uploads[0]);
- 
+
   return { rows: newRecs.length, dates: [...datesSeen], warning };
 }
- 
+
 function renderUploadList(){
   const wrap = document.getElementById('upload-list');
   if(!state.uploads.length){
@@ -1953,7 +2303,7 @@ function renderUploadList(){
     </div>`;
   }).join('');
 }
- 
+
 function removeUpload(idx){
   const u = state.uploads[idx];
   if(!u) return;
@@ -1981,34 +2331,39 @@ function removeUpload(idx){
   toast(`Removed upload · ${droppedRecs} record${droppedRecs===1?'':'s'} deleted`,'warn');
 }
 function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
- 
+
 /* ============================================================
    CALENDAR
 ============================================================ */
 let calCursor = new Date();
 calCursor.setDate(1);
- 
+
 function renderCalendar(){
   const yr = calCursor.getFullYear(), mo = calCursor.getMonth();
   const monthName = calCursor.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
   document.getElementById('cal-title').textContent = monthName;
- 
+
   const firstDay = new Date(yr, mo, 1).getDay(); // 0=Sun
   const daysInMonth = new Date(yr, mo+1, 0).getDate();
   const today = fmtDate(new Date());
-  const datesWithData = new Set(state.records.map(r=>r.date));
+
+  // Count vehicles per date that have Online Fill (>0) — same denominator as Site Fill calendar
+  const status = getSiteFillStatusByDate();
   const selDate = document.getElementById('upload-date').value;
- 
+
   const dows = ['S','M','T','W','T','F','S'];
   let html = dows.map(d=>`<div class="cal-dow">${d}</div>`).join('');
   for(let i=0;i<firstDay;i++) html += `<div class="cal-day empty"></div>`;
   for(let d=1;d<=daysInMonth;d++){
     const ds = `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const cls = ['cal-day'];
-    if(datesWithData.has(ds)) cls.push('has-data');
+    const cnt = (status[ds] && status[ds].needed) || 0;
+    if(cnt > 0) cls.push('has-data');
     if(ds === today) cls.push('today');
     if(ds === selDate) cls.push('selected');
-    html += `<div class="${cls.join(' ')}" onclick="pickDate('${ds}')">${d}${datesWithData.has(ds)?'<div class="check">✓</div>':''}</div>`;
+    const tooltip = cnt > 0 ? `${cnt} vehicle${cnt===1?'':'s'} with Online Fill` : 'No fills';
+    const mark = cnt > 0 ? `<div class="check">${cnt}</div>` : '';
+    html += `<div class="${cls.join(' ')}" title="${tooltip}" onclick="pickDate('${ds}')">${d}${mark}</div>`;
   }
   document.getElementById('cal-grid').innerHTML = html;
 }
@@ -2021,7 +2376,102 @@ function pickDate(ds){
   renderCalendar();
   toast('Date set: '+fmtNiceDate(ds));
 }
- 
+
+/* ============================================================
+   SITE FILL STATUS CALENDAR (Page 1, second calendar)
+   For each date:
+     - Find vehicles that have an Online Fill > 0 on that date
+     - Check how many of those vehicles have Site Fill entered
+       (any value including 0 counts; '' or missing = not entered)
+     - All entered → 'has-data' (green ✓)
+     - Some entered → 'partial' (amber, shows count)
+     - None entered → blank (just the day number)
+============================================================ */
+let calCursor2 = new Date();
+calCursor2.setDate(1);
+
+function getSiteFillStatusByDate(){
+  // Build a date → {needed, filled, vehicles[]} map
+  const status = {};
+  state.records.forEach(r=>{
+    const k = `${r.vehicle}|${r.date}`;
+    let onlineFill;
+    if(k in state.fillOverrides) onlineFill = state.fillOverrides[k];
+    else if(r.data && 'Fill' in r.data) onlineFill = r.data['Fill'];
+    else onlineFill = null;
+    // Only vehicles where a real online fill happened (>0) need a site fill
+    if(onlineFill === null || onlineFill === undefined || onlineFill === '') return;
+    const num = +onlineFill;
+    if(!isFinite(num) || num <= 0) return;
+
+    if(!status[r.date]) status[r.date] = {needed:0, filled:0};
+    status[r.date].needed++;
+    // Site fill entered = key present with any number (including 0)
+    const sf = state.siteFills[k];
+    if(sf !== undefined && sf !== null && sf !== '' && !isNaN(+sf)){
+      status[r.date].filled++;
+    }
+  });
+  return status;
+}
+
+function renderSiteCalendar(){
+  const titleEl = document.getElementById('cal2-title');
+  const gridEl  = document.getElementById('cal2-grid');
+  if(!titleEl || !gridEl) return;
+
+  const yr = calCursor2.getFullYear(), mo = calCursor2.getMonth();
+  titleEl.textContent = calCursor2.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+
+  const firstDay = new Date(yr, mo, 1).getDay();
+  const daysInMonth = new Date(yr, mo+1, 0).getDate();
+  const today = fmtDate(new Date());
+  const status = getSiteFillStatusByDate();
+
+  const dows = ['S','M','T','W','T','F','S'];
+  let html = dows.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<firstDay;i++) html += `<div class="cal-day empty"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const ds = `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cls = ['cal-day'];
+    const s = status[ds];
+    let mark = '';
+    let tooltip = 'No online fills on this date';
+    if(s){
+      tooltip = `${s.filled} of ${s.needed} site fills entered`;
+      if(s.filled >= s.needed){
+        cls.push('has-data');
+        mark = '<div class="check">✓</div>';
+      } else if(s.filled > 0){
+        cls.push('partial');
+        mark = `<div class="check">${s.filled}</div>`;
+      }
+      // else: needs entries but none done → leave plain
+    }
+    if(ds === today) cls.push('today');
+    html += `<div class="${cls.join(' ')}" title="${tooltip}" onclick="goToVehiclesForDate('${ds}')">${d}${mark}</div>`;
+  }
+  gridEl.innerHTML = html;
+}
+
+function cal2Nav(delta){
+  calCursor2.setMonth(calCursor2.getMonth()+delta);
+  renderSiteCalendar();
+}
+
+function goToVehiclesForDate(ds){
+  // Switch to Page 2 and filter to this single date
+  const tab = document.querySelector('.tab[data-tab="vehicles"]');
+  if(tab) tab.click();
+  setTimeout(()=>{
+    const fromEl = document.getElementById('veh-from');
+    const toEl   = document.getElementById('veh-to');
+    if(fromEl) fromEl.value = ds;
+    if(toEl)   toEl.value   = ds;
+    if(typeof renderVehiclesPivot === 'function') renderVehiclesPivot();
+  }, 30);
+}
+
 /* ============================================================
    PAGE 2: VEHICLES & SITES
 ============================================================ */
@@ -2041,7 +2491,7 @@ function setVehRangeAll(){
   document.getElementById('veh-to').value = all[all.length-1];
   renderVehicles();
 }
- 
+
 function renderVehicles(){
   const body = document.getElementById('vehicles-body');
   if(!state.records.length){
@@ -2051,7 +2501,7 @@ function renderVehicles(){
   const fromD = document.getElementById('veh-from').value;
   const toD   = document.getElementById('veh-to').value;
   const search = (document.getElementById('veh-search').value||'').toLowerCase().trim();
- 
+
   const recs = state.records.filter(r=>
     (!fromD || r.date >= fromD) && (!toD || r.date <= toD)
   );
@@ -2088,7 +2538,7 @@ function renderVehicles(){
     body.innerHTML = emptyState('No matches','Try a different search.');
     return;
   }
- 
+
   // Build 3-col-per-date pivot (Online Fill / Site Fill / Site HMR)
   let html = '<div class="table-wrap"><table class="pivot pivot3">';
   html += '<thead><tr>';
@@ -2107,13 +2557,13 @@ function renderVehicles(){
     html += `<th class="metric num m-hmr">Site&nbsp;HMR</th>`;
   });
   html += '</tr></thead><tbody>';
- 
+
   let prevBranch = null;
   vehicles.forEach(v=>{
     const branch = vehBranch[v] || '';
     const isNewBranchGroup = (branch !== prevBranch);
     prevBranch = branch;
- 
+
     // Compute Diff = Σ Online Fill − Σ Site Fill across visible dates
     let onlineSum = 0, siteSum = 0, anyData = false;
     dates.forEach(d=>{
@@ -2132,7 +2582,7 @@ function renderVehicles(){
       else { diffCls = 'diff-neg'; diffStr = fmtNum(diff, 1); }
     }
     const diffTitle = anyData ? `Online Σ ${fmtNum(onlineSum,1)} − Site Σ ${fmtNum(siteSum,1)} = ${fmtNum(diff,1)} L` : 'No data in range';
- 
+
     html += `<tr${isNewBranchGroup ? ' class="branch-start"' : ''}>`;
     html += `<td class="sticky-branch">${branch ? escapeHtml(branch) : '<span style="color:var(--muted)">—</span>'}</td>`;
     html += `<td class="sticky-veh"><span class="veh-pill">${escapeHtml(v)}</span></td>`;
@@ -2155,7 +2605,7 @@ function renderVehicles(){
   html += '</tbody></table></div>';
   body.innerHTML = html;
 }
- 
+
 function updateRemark(input){
   const v = input.dataset.vehicle;
   const t = (input.value || '').trim();
@@ -2163,7 +2613,7 @@ function updateRemark(input){
   else delete state.remarks[v];
   saveState();
 }
- 
+
 function updateSite(vehicle, site){
   if(site && site.trim()){
     state.sites[vehicle] = site.trim();
@@ -2174,11 +2624,11 @@ function updateSite(vehicle, site){
   toast('Site saved','good');
 }
 function escapeAttr(s){return String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}
- 
+
 function emptyState(title, msg){
   return `<div class="empty-state"><div class="ic">📭</div><h3>${title}</h3><p>${msg}</p></div>`;
 }
- 
+
 /* ============================================================
    PAGE 3: REPORTS
 ============================================================ */
@@ -2195,7 +2645,7 @@ function populateReportFilters(){
   const sel = document.getElementById('rep-date');
   sel.innerHTML = dates.map(d=>`<option value="${d}">${fmtNiceDate(d)}</option>`).join('') || '<option value="">— no data —</option>';
   sel.onchange = renderReport;
- 
+
   const vehicles = [...new Set(state.records.map(r=>r.vehicle))].sort();
   const vsel = document.getElementById('rep-vehicle');
   vsel.innerHTML = vehicles.map(v=>{
@@ -2203,25 +2653,25 @@ function populateReportFilters(){
     return `<option value="${escapeAttr(v)}">${escapeHtml(v)}${s}</option>`;
   }).join('') || '<option value="">— no data —</option>';
   vsel.onchange = renderReport;
- 
+
   if(dates.length){
     const to = dates[0], from = dates[Math.min(dates.length-1, 29)];
     if(!document.getElementById('rep-from').value) document.getElementById('rep-from').value = from;
     if(!document.getElementById('rep-to').value) document.getElementById('rep-to').value = to;
   }
 }
- 
+
 function renderReport(){
   const body = document.getElementById('report-body');
   const ph = document.getElementById('print-header');
   const ptitle = document.getElementById('print-title');
   const pmeta = document.getElementById('print-meta');
- 
+
   if(!state.records.length){
     body.innerHTML = emptyState('No data','Upload data first to view reports.');
     return;
   }
- 
+
   if(curRTab === 'date'){
     const date = document.getElementById('rep-date').value;
     if(!date){ body.innerHTML = emptyState('Pick a date',''); return; }
@@ -2243,7 +2693,7 @@ function renderReport(){
     body.innerHTML = renderVehicleReport(recs, v, fromD, toD);
   }
 }
- 
+
 // ---- Helpers for curated reports ----
 function getRecField(r, name){
   // Lookup helper that prefers user overrides, then semantic shortcuts, then data{}
@@ -2323,12 +2773,12 @@ function editNAWorkHour(span, v, d){
   const inp = td.querySelector('input');
   if(inp){ inp.focus(); inp.select(); }
 }
- 
+
 function getRawSiteHMR(vehicle, date){
   const k = `${vehicle}|${date}`;
   return (k in state.siteHMRs) ? state.siteHMRs[k] : null;
 }
- 
+
 // Page 3 Work Hour display logic (NA rules):
 //   1) HMR == 23:59 (≈23.9833 hours) — telematics sentinel for "no work" → NA
 //   2) HMR == 00:00 AND (Start Fuel + Online Fill − End Fuel) > 5L — fuel consumed
@@ -2358,7 +2808,7 @@ function getDiff(r){
   if(fill == null || sf == null) return null;
   return fill - sf;
 }
- 
+
 // Inline edit handlers
 function updateSiteNameInline(input){
   const v = input.dataset.vehicle;
@@ -2394,6 +2844,7 @@ function updateFillOverride(input){
     if(inp !== input && inp.dataset.vehicle === v && inp.dataset.date === d) inp.value = synced;
   });
   refreshDiffCells(v, d);
+  if(typeof renderSiteCalendar === 'function') renderSiteCalendar();
 }
 function updateWorkHourOverride(input){
   // Online HMR override — overrides upload's Work Hour. Used by Page 3 Work Hour column.
@@ -2465,8 +2916,9 @@ function updateSiteFill(input){
     if(inp !== input && inp.dataset.vehicle === v && inp.dataset.date === d) inp.value = synced;
   });
   refreshSiteFillAndDiff(v, d);
+  if(typeof renderSiteCalendar === 'function') renderSiteCalendar();
 }
- 
+
 // ---- Renderers ----
 function renderDateReport(recs, date){
   if(!recs.length) return emptyState('No data for this date','');
@@ -2476,7 +2928,7 @@ function renderDateReport(recs, date){
     return ba.localeCompare(bb) || a.vehicle.localeCompare(b.vehicle);
   });
   const totals = computeTotals(recs);
- 
+
   // Split totals into road-vehicle subset (km/L) and hour-meter subset (L/hr) so the
   // "average mileage" line is meaningful — formulas differ per vehicle.
   let kmRoad = 0, fuelRoad = 0;
@@ -2495,7 +2947,7 @@ function renderDateReport(recs, date){
   });
   const avgKmpl = fuelRoad > 0 ? kmRoad / fuelRoad : null;
   const avgLph  = hrHr   > 0 ? fuelHr  / hrHr     : null;
- 
+
   let html = renderSummaryGrid({
     items: [
       ['Vehicles', recs.length, ''],
@@ -2509,7 +2961,7 @@ function renderDateReport(recs, date){
       ['Avg km/L (road veh)', avgKmpl!=null?fmtNum(avgKmpl,1):'—', avgKmpl!=null?'km/L':'']
     ]
   });
- 
+
   html += `<div class="table-wrap"><table class="report-tbl">
     <thead><tr>
       <th class="rcol-1">Branch</th>
@@ -2551,13 +3003,13 @@ function renderDateReport(recs, date){
   html += `</tbody></table></div>`;
   return html;
 }
- 
+
 function renderVehicleReport(recs, vehicle, fromD, toD){
   if(!recs.length) return emptyState('No data for this vehicle/range','');
   const totals = computeTotals(recs);
   const branch = (recs[0].branch) || (recs[0].data && recs[0].data['Branch']) || '';
   const objectModel = (recs[0].data && recs[0].data['Object Model']) || '';
- 
+
   // Per-vehicle Avg Mileage: km/L for road vehicles, L/hr for hour-meter vehicles.
   let avgMil, avgUnit;
   if(MILEAGE_DISTANCE_BASED.has(vehicle)){
@@ -2567,7 +3019,7 @@ function renderVehicleReport(recs, vehicle, fromD, toD){
     avgMil = totals.hmr > 0 ? totals.fuel / totals.hmr : null;
     avgUnit = 'L/hr';
   }
- 
+
   let html = renderSummaryGrid({
     items: [
       ['Days', recs.length, ''],
@@ -2582,7 +3034,7 @@ function renderVehicleReport(recs, vehicle, fromD, toD){
       ['Avg Mileage', avgMil!=null?fmtNum(avgMil,1):'—', avgMil!=null?avgUnit:'']
     ]
   });
- 
+
   html += `<div class="table-wrap"><table class="report-tbl">
     <thead><tr>
       <th class="rcol-date">DATE</th>
@@ -2626,7 +3078,7 @@ function renderVehicleReport(recs, vehicle, fromD, toD){
   html += `</tbody></table></div>`;
   return html;
 }
- 
+
 function computeTotals(recs){
   const t = {km:0, hmr:0, fuel:0, fill:0, siteFill:0, diff:0, sfCount:0};
   recs.forEach(r=>{
@@ -2649,7 +3101,7 @@ function computeTotals(recs){
   t.avgMileage = t.fuel > 0 ? t.km / t.fuel : null;
   return t;
 }
- 
+
 function renderSummaryGrid({items}){
   let h = `<div class="summary-grid">`;
   items.forEach(([lbl, val, delta])=>{
@@ -2661,9 +3113,303 @@ function renderSummaryGrid({items}){
   h += `</div>`;
   return h;
 }
- 
+
 /* ============================================================
    EXPORTS
+============================================================ */
+/* ============================================================
+   EXCEL STYLING — shared helpers for all page exports
+   Uses xlsx-js-style which honors cell.s for colors/fonts/borders.
+============================================================ */
+const XBORDER = {
+  top:    {style:'thin', color:{rgb:'CBD5E1'}},
+  bottom: {style:'thin', color:{rgb:'CBD5E1'}},
+  left:   {style:'thin', color:{rgb:'CBD5E1'}},
+  right:  {style:'thin', color:{rgb:'CBD5E1'}}
+};
+const XS = {
+  // Main header (dark slate)
+  hdr: {
+    font:{bold:true, color:{rgb:'FFFFFF'}, sz:11, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'0F172A'}},
+    alignment:{horizontal:'center', vertical:'center', wrapText:true},
+    border: XBORDER
+  },
+  // Date group header (teal)
+  dateHdr: {
+    font:{bold:true, color:{rgb:'FFFFFF'}, sz:10, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'0A6E6E'}},
+    alignment:{horizontal:'center', vertical:'center'},
+    border: XBORDER
+  },
+  // Online Fill metric header
+  hdrOnline: {
+    font:{bold:true, color:{rgb:'A7F3D0'}, sz:10, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'065F46'}},
+    alignment:{horizontal:'center', vertical:'center'},
+    border: XBORDER
+  },
+  // Site Fill metric header
+  hdrSite: {
+    font:{bold:true, color:{rgb:'FED7AA'}, sz:10, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'92400E'}},
+    alignment:{horizontal:'center', vertical:'center'},
+    border: XBORDER
+  },
+  // Site HMR metric header
+  hdrHmr: {
+    font:{bold:true, color:{rgb:'CBD5E1'}, sz:10, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'334155'}},
+    alignment:{horizontal:'center', vertical:'center'},
+    border: XBORDER
+  },
+  // Body text
+  body: {
+    font:{color:{rgb:'0F172A'}, sz:10, name:'Calibri'},
+    alignment:{vertical:'center'},
+    border: XBORDER
+  },
+  // Body number (right aligned, tabular)
+  bodyNum: {
+    font:{color:{rgb:'0F172A'}, sz:10, name:'Calibri'},
+    alignment:{horizontal:'right', vertical:'center'},
+    numFmt:'#,##0.0',
+    border: XBORDER
+  },
+  // Online Fill cell tint
+  cellOnline: {
+    font:{color:{rgb:'047857'}, sz:10, bold:true, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'F0FDF4'}},
+    alignment:{horizontal:'right', vertical:'center'},
+    numFmt:'#,##0.0',
+    border: XBORDER
+  },
+  // Site Fill cell tint
+  cellSite: {
+    font:{color:{rgb:'B45309'}, sz:10, bold:true, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'FFFBEB'}},
+    alignment:{horizontal:'right', vertical:'center'},
+    numFmt:'#,##0.0',
+    border: XBORDER
+  },
+  // Site HMR cell tint
+  cellHmr: {
+    font:{color:{rgb:'475569'}, sz:10, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'F8FAFC'}},
+    alignment:{horizontal:'right', vertical:'center'},
+    numFmt:'#,##0.0',
+    border: XBORDER
+  },
+  // Diff positive (orange tint)
+  diffPos: {
+    font:{color:{rgb:'92400E'}, sz:10, bold:true, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'FFFBEB'}},
+    alignment:{horizontal:'right', vertical:'center'},
+    numFmt:'+#,##0.0;-#,##0.0;0',
+    border: XBORDER
+  },
+  // Diff negative (red tint)
+  diffNeg: {
+    font:{color:{rgb:'991B1B'}, sz:10, bold:true, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'FEF2F2'}},
+    alignment:{horizontal:'right', vertical:'center'},
+    numFmt:'+#,##0.0;-#,##0.0;0',
+    border: XBORDER
+  },
+  // Diff zero (green tint)
+  diffZero: {
+    font:{color:{rgb:'065F46'}, sz:10, bold:true, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'F0FDF4'}},
+    alignment:{horizontal:'right', vertical:'center'},
+    numFmt:'+#,##0.0;-#,##0.0;0',
+    border: XBORDER
+  },
+  // Vehicle pill cell
+  vehPill: {
+    font:{color:{rgb:'1E40AF'}, bold:true, sz:10, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'EFF6FF'}},
+    alignment:{horizontal:'center', vertical:'center'},
+    border: XBORDER
+  },
+  // Branch break row (top border)
+  branchBreak: {
+    border: {
+      top:    {style:'medium', color:{rgb:'0A6E6E'}},
+      bottom: {style:'thin',   color:{rgb:'CBD5E1'}},
+      left:   {style:'thin',   color:{rgb:'CBD5E1'}},
+      right:  {style:'thin',   color:{rgb:'CBD5E1'}}
+    }
+  },
+  // Totals row
+  total: {
+    font:{bold:true, sz:11, color:{rgb:'0F172A'}, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'E2E8F0'}},
+    alignment:{horizontal:'right', vertical:'center'},
+    numFmt:'#,##0.0',
+    border:{
+      top:    {style:'medium', color:{rgb:'0A6E6E'}},
+      bottom: {style:'medium', color:{rgb:'0A6E6E'}},
+      left:   {style:'thin',   color:{rgb:'CBD5E1'}},
+      right:  {style:'thin',   color:{rgb:'CBD5E1'}}
+    }
+  },
+  totalLabel: {
+    font:{bold:true, sz:11, color:{rgb:'FFFFFF'}, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'0F172A'}},
+    alignment:{horizontal:'left', vertical:'center'},
+    border:{
+      top:    {style:'medium', color:{rgb:'0A6E6E'}},
+      bottom: {style:'medium', color:{rgb:'0A6E6E'}},
+      left:   {style:'thin',   color:{rgb:'CBD5E1'}},
+      right:  {style:'thin',   color:{rgb:'CBD5E1'}}
+    }
+  },
+  // Abnormality badges
+  abPower: {
+    font:{bold:true, sz:10, color:{rgb:'991B1B'}, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'FEF2F2'}},
+    alignment:{horizontal:'center', vertical:'center'},
+    border: XBORDER
+  },
+  abFill: {
+    font:{bold:true, sz:10, color:{rgb:'92400E'}, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'FFFBEB'}},
+    alignment:{horizontal:'center', vertical:'center'},
+    border: XBORDER
+  },
+  abSensor: {
+    font:{bold:true, sz:10, color:{rgb:'1E40AF'}, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'EFF6FF'}},
+    alignment:{horizontal:'center', vertical:'center'},
+    border: XBORDER
+  },
+  // Summary card title (Page 6)
+  cardTitle: {
+    font:{bold:true, sz:14, color:{rgb:'FFFFFF'}, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'0F172A'}},
+    alignment:{horizontal:'left', vertical:'center'}
+  },
+  cardLabel: {
+    font:{bold:true, sz:10, color:{rgb:'94A3B8'}, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'1E293B'}},
+    alignment:{horizontal:'left', vertical:'center'}
+  },
+  cardValue: {
+    font:{bold:true, sz:11, color:{rgb:'FFFFFF'}, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'1E293B'}},
+    alignment:{horizontal:'left', vertical:'center'}
+  }
+};
+
+// Apply a style to a cell, creating it if missing
+function xStyle(ws, addr, style){
+  if(!ws[addr]) ws[addr] = {t:'s', v:''};
+  ws[addr].s = style;
+}
+// Set a cell's value AND style
+function xCell(ws, r, c, value, style, opts){
+  const addr = XLSX.utils.encode_cell({r, c});
+  const cell = {};
+  if(opts && opts.f){
+    cell.t = 'n';
+    cell.f = opts.f;
+    if(value != null) cell.v = value;
+  } else if(value === '' || value == null){
+    cell.t = 's'; cell.v = '';
+  } else if(typeof value === 'number'){
+    cell.t = 'n'; cell.v = value;
+  } else {
+    cell.t = 's'; cell.v = String(value);
+  }
+  if(style) cell.s = style;
+  ws[addr] = cell;
+}
+
+/* ============================================================
+   styleSheet — walk a worksheet and apply XS styles to every cell
+   based on a config describing header rows, special columns, totals.
+============================================================ */
+function styleSheet(ws, cfg){
+  if(!ws['!ref']) return;
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  const {
+    headerRows = 1,
+    totalRowCount = 0,           // last N rows are TOTAL rows
+    vehicleCols = [],            // cols rendered as vehPill
+    onlineFillCols = [],
+    siteFillCols = [],
+    hmrCols = [],
+    diffCols = [],               // sign-based color
+    typeCol = -1,                // abnormality type column
+    numericCols = [],            // bodyNum
+    headerRowStyles = null,      // optional: per-row style array for header rows
+    columnHeaderRow = -1,        // row index that holds plain text labels (XS.hdr)
+    dateHeaderRow = -1,          // row that holds merged date labels (XS.dateHdr)
+    metricSubRow = -1,           // row of metric sub-headers (Online/Site/HMR alternating)
+    metricStartCol = 0,          // first col of metric pattern
+    metricPattern = []           // e.g. [XS.hdrOnline, XS.hdrSite, XS.hdrHmr]
+  } = cfg || {};
+
+  const lastDataRow = range.e.r - totalRowCount;
+  for(let r = range.s.r; r <= range.e.r; r++){
+    for(let c = range.s.c; c <= range.e.c; c++){
+      const addr = XLSX.utils.encode_cell({r, c});
+      if(!ws[addr]) ws[addr] = {t:'s', v:''};
+
+      let style;
+      // Total row(s)
+      if(r > lastDataRow){
+        style = (c === 0) ? XS.totalLabel : XS.total;
+      }
+      // Header rows
+      else if(r < headerRows){
+        if(headerRowStyles && headerRowStyles[r]){
+          style = headerRowStyles[r](c);
+        } else if(r === dateHeaderRow){
+          style = (c < metricStartCol) ? XS.hdr : XS.dateHdr;
+        } else if(r === metricSubRow){
+          if(c < metricStartCol){
+            style = XS.hdr;
+          } else {
+            const idx = (c - metricStartCol) % metricPattern.length;
+            style = metricPattern[idx];
+          }
+        } else if(r === columnHeaderRow){
+          style = XS.hdr;
+        } else {
+          style = XS.hdr;
+        }
+      }
+      // Data rows
+      else {
+        if(vehicleCols.includes(c)) style = XS.vehPill;
+        else if(onlineFillCols.includes(c)) style = XS.cellOnline;
+        else if(siteFillCols.includes(c)) style = XS.cellSite;
+        else if(hmrCols.includes(c)) style = XS.cellHmr;
+        else if(diffCols.includes(c)){
+          const v = ws[addr].v;
+          if(v === '' || v == null || isNaN(+v)) style = XS.bodyNum;
+          else if(Math.abs(+v) < 0.05) style = XS.diffZero;
+          else if(+v > 0) style = XS.diffPos;
+          else style = XS.diffNeg;
+        }
+        else if(c === typeCol){
+          const v = String(ws[addr].v || '').toLowerCase();
+          if(v.includes('power')) style = XS.abPower;
+          else if(v.includes('fill')) style = XS.abFill;
+          else if(v.includes('sensor')) style = XS.abSensor;
+          else style = XS.body;
+        }
+        else if(numericCols.includes(c)) style = XS.bodyNum;
+        else style = XS.body;
+      }
+      ws[addr].s = style;
+    }
+  }
+}
+
+/* ============================================================
+   PAGE 2 EXPORT — with Diff formula + Remark column + full styling
 ============================================================ */
 function exportVehiclesXLSX(){
   const fromD = document.getElementById('veh-from').value;
@@ -2671,7 +3417,6 @@ function exportVehiclesXLSX(){
   const recs = state.records.filter(r=>(!fromD||r.date>=fromD)&&(!toD||r.date<=toD));
   if(!recs.length){ toast('Nothing to export','warn'); return; }
   const dates = [...new Set(recs.map(r=>r.date))].sort();
-  // Sort by Branch then vehicle — matches on-screen pivot
   const vehBranchE = {};
   recs.forEach(r=>{
     if(!(r.vehicle in vehBranchE)){
@@ -2684,39 +3429,126 @@ function exportVehiclesXLSX(){
   });
   const lookup = {};
   recs.forEach(r=>{ lookup[`${r.vehicle}|${r.date}`] = r; });
- 
-  const head1 = ['Branch','Vehicle','Site Name'];
-  const head2 = ['','',''];
-  dates.forEach(d=>{
-    head1.push(fmtShortDate(d), '', '');
-    head2.push('Online Fill','Site Fill','Site HMR');
-  });
-  const data = [head1, head2];
-  vehicles.forEach(v=>{
-    const row = [vehBranchE[v]||'', v, state.sites[v]||''];
-    dates.forEach(d=>{
-      const r = lookup[`${v}|${d}`];
-      const k = `${v}|${d}`;
-      const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k] : ((r && r.data && 'Fill' in r.data) ? r.data['Fill'] : '');
-      const siteFill   = (k in state.siteFills)     ? state.siteFills[k]     : '';
-      const siteHMR    = (k in state.siteHMRs) ? state.siteHMRs[k] : '';
-      row.push(onlineFill ?? '', siteFill ?? '', siteHMR ?? '');
-    });
-    data.push(row);
-  });
- 
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  // Merge date headers across 3 cols each (offset by Branch col)
-  ws['!merges'] = ws['!merges'] || [];
-  for(let i=0;i<dates.length;i++){
-    ws['!merges'].push({s:{r:0,c:3+i*3},e:{r:0,c:5+i*3}});
+
+  // Column layout:
+  // 0: Branch | 1: Vehicle | 2: Site Name | 3: Diff (FORMULA) | 4: Remark
+  // 5..: Date1 Online | Date1 Site | Date1 HMR | Date2 Online | Date2 Site | Date2 HMR | ...
+  const N = dates.length;
+  const FIXED_COLS = 5;
+  const totalCols = FIXED_COLS + N * 3;
+
+  const ws = {};
+  ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:1+vehicles.length, c:totalCols-1}});
+
+  // === Header row 0 — main labels ===
+  xCell(ws, 0, 0, 'Branch', XS.hdr);
+  xCell(ws, 0, 1, 'Vehicle', XS.hdr);
+  xCell(ws, 0, 2, 'Site Name', XS.hdr);
+  xCell(ws, 0, 3, 'Diff (L)', XS.hdr);
+  xCell(ws, 0, 4, 'Remark', XS.hdr);
+  for(let i=0; i<N; i++){
+    xCell(ws, 0, FIXED_COLS + i*3, fmtShortDate(dates[i]), XS.dateHdr);
+    xCell(ws, 0, FIXED_COLS + i*3 + 1, '', XS.dateHdr);
+    xCell(ws, 0, FIXED_COLS + i*3 + 2, '', XS.dateHdr);
   }
+
+  // === Header row 1 — sub-labels (Online/Site/HMR per date) ===
+  for(let c=0; c<FIXED_COLS; c++){
+    xCell(ws, 1, c, '', XS.hdr);  // empty (merged with row 0)
+  }
+  for(let i=0; i<N; i++){
+    xCell(ws, 1, FIXED_COLS + i*3,     'Online Fill', XS.hdrOnline);
+    xCell(ws, 1, FIXED_COLS + i*3 + 1, 'Site Fill',   XS.hdrSite);
+    xCell(ws, 1, FIXED_COLS + i*3 + 2, 'Site HMR',    XS.hdrHmr);
+  }
+
+  // === Data rows ===
+  let prevBranch = null;
+  vehicles.forEach((v, idx)=>{
+    const r0 = 2 + idx;  // 0-indexed row in sheet
+    const branch = vehBranchE[v] || '';
+    const isBranchBreak = (branch !== prevBranch && idx > 0);
+    prevBranch = branch;
+
+    // Compute diff for styling decision
+    let onlineSum = 0, siteSum = 0, anyData = false;
+    dates.forEach(d=>{
+      const rec = lookup[`${v}|${d}`];
+      const k = `${v}|${d}`;
+      const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k] : ((rec && rec.data && 'Fill' in rec.data) ? rec.data['Fill'] : null);
+      const siteFill   = (k in state.siteFills)     ? state.siteFills[k]     : null;
+      if(onlineFill != null && !isNaN(+onlineFill)){ onlineSum += +onlineFill; anyData = true; }
+      if(siteFill != null && !isNaN(+siteFill)){ siteSum += +siteFill; anyData = true; }
+    });
+    const diffVal = onlineSum - siteSum;
+    let diffStyle = XS.bodyNum;
+    if(anyData){
+      if(Math.abs(diffVal) < 0.05) diffStyle = XS.diffZero;
+      else if(diffVal > 0) diffStyle = XS.diffPos;
+      else diffStyle = XS.diffNeg;
+    }
+    // Apply branch-break top border by overriding border on this row's cells
+    const applyBreak = (style) => isBranchBreak ? {...style, border: XS.branchBreak.border} : style;
+
+    xCell(ws, r0, 0, branch || '', applyBreak(XS.body));
+    xCell(ws, r0, 1, v, applyBreak(XS.vehPill));
+    xCell(ws, r0, 2, state.sites[v] || '', applyBreak(XS.body));
+
+    // Diff column — FORMULA referencing the Online/Site cells in this row
+    const onlineRefs = [], siteRefs = [];
+    for(let i=0; i<N; i++){
+      onlineRefs.push(XLSX.utils.encode_cell({r:r0, c:FIXED_COLS + i*3}));
+      siteRefs.push(XLSX.utils.encode_cell({r:r0, c:FIXED_COLS + i*3 + 1}));
+    }
+    const formula = `SUM(${onlineRefs.join(',')})-SUM(${siteRefs.join(',')})`;
+    xCell(ws, r0, 3, anyData ? diffVal : '', applyBreak(diffStyle), {f: formula});
+
+    xCell(ws, r0, 4, state.remarks[v] || '', applyBreak(XS.body));
+
+    // Date cells
+    dates.forEach((d, i)=>{
+      const rec = lookup[`${v}|${d}`];
+      const k = `${v}|${d}`;
+      const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k] : ((rec && rec.data && 'Fill' in rec.data) ? rec.data['Fill'] : null);
+      const siteFill   = (k in state.siteFills)     ? state.siteFills[k]     : null;
+      const siteHMR    = (k in state.siteHMRs)      ? state.siteHMRs[k]      : null;
+      const oVal = (onlineFill != null && !isNaN(+onlineFill)) ? +onlineFill : '';
+      const sVal = (siteFill != null && !isNaN(+siteFill)) ? +siteFill : '';
+      const hVal = (siteHMR != null && !isNaN(+siteHMR)) ? +siteHMR : '';
+      xCell(ws, r0, FIXED_COLS + i*3,     oVal, applyBreak(XS.cellOnline));
+      xCell(ws, r0, FIXED_COLS + i*3 + 1, sVal, applyBreak(XS.cellSite));
+      xCell(ws, r0, FIXED_COLS + i*3 + 2, hVal, applyBreak(XS.cellHmr));
+    });
+  });
+
+  // Merges: row 0 date headers span 3 cells each; sticky cols span both header rows
+  ws['!merges'] = [];
+  for(let c=0; c<FIXED_COLS; c++){
+    ws['!merges'].push({s:{r:0,c}, e:{r:1,c}});
+  }
+  for(let i=0; i<N; i++){
+    ws['!merges'].push({
+      s:{r:0, c:FIXED_COLS + i*3},
+      e:{r:0, c:FIXED_COLS + i*3 + 2}
+    });
+  }
+  // Column widths
+  const cols = [
+    {wch:14}, {wch:16}, {wch:22}, {wch:11}, {wch:22}
+  ];
+  for(let i=0; i<N; i++){ cols.push({wch:11}, {wch:11}, {wch:11}); }
+  ws['!cols'] = cols;
+  // Row heights — header rows a bit taller
+  ws['!rows'] = [{hpt:24}, {hpt:20}];
+  // Freeze first 5 columns and 2 header rows
+  ws['!views'] = [{xSplit:5, ySplit:2, state:'frozen'}];
+
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Vehicles × Dates');
-  XLSX.writeFile(wb, `FuelEconomy_DataEntry_${fromD||'all'}_to_${toD||'all'}.xlsx`);
-  toast('Exported ✓','good');
+  XLSX.utils.book_append_sheet(wb, ws, 'Vehicles & Sites');
+  XLSX.writeFile(wb, `FuelEconomy_Vehicles_${fromD||'all'}_to_${toD||'all'}.xlsx`);
+  toast('Exported with formulas + colors ✓','good');
 }
- 
+
 /* ============================================================
    PAGE 4: MILEAGE PIVOT
 ============================================================ */
@@ -2736,7 +3568,7 @@ function setMilRangeAll(){
   document.getElementById('mil-to').value = all[all.length-1];
   renderMileagePivot();
 }
- 
+
 // Compute Site Mileage map — keyed by `${vehicle}|${date}`. NA on first event for a
 // vehicle, NA where HMR delta is non-positive. Uses ALL Site Fill events for a vehicle
 // (regardless of visible date range), so the previous-fill anchor can be outside range.
@@ -2781,13 +3613,13 @@ function computeSiteMileageMap(vehicles){
   });
   return result;
 }
- 
+
 function fmtMileage(v){
   if(v === undefined || v === null || v === '' || v === 'NA') return '<span class="mile-empty">—</span>';
   if(typeof v !== 'number' || !isFinite(v) || isNaN(v)) return '<span class="mile-empty">—</span>';
   return `<span class="mile-val">${fmtNum(v, 1)}</span>`;
 }
- 
+
 function renderMileagePivot(){
   const body = document.getElementById('mileage-body');
   if(!state.records.length){
@@ -2797,20 +3629,20 @@ function renderMileagePivot(){
   const fromD = document.getElementById('mil-from').value;
   const toD   = document.getElementById('mil-to').value;
   const search = (document.getElementById('mil-search').value||'').toLowerCase().trim();
- 
+
   const recs = state.records.filter(r=>(!fromD||r.date>=fromD)&&(!toD||r.date<=toD));
   if(!recs.length){
     body.innerHTML = emptyState('No data in this range','Adjust the date filter or pick a different range.');
     return;
   }
- 
+
   const dates = [...new Set(recs.map(r=>r.date))].sort();
   const vehMap = {};
   recs.forEach(r=>{
     if(!vehMap[r.vehicle]) vehMap[r.vehicle] = {};
     vehMap[r.vehicle][r.date] = r;
   });
- 
+
   const vehBranch = {};
   recs.forEach(r=>{
     if(!(r.vehicle in vehBranch)){
@@ -2832,9 +3664,9 @@ function renderMileagePivot(){
     body.innerHTML = emptyState('No matches','Try a different search.');
     return;
   }
- 
+
   const siteMileageByVD = computeSiteMileageMap(vehicles);
- 
+
   let html = '<div class="table-wrap"><table class="pivot pivot-mileage">';
   html += '<thead><tr>';
   html += `<th rowspan="2" class="sticky-branch">Branch</th>`;
@@ -2849,7 +3681,7 @@ function renderMileagePivot(){
     html += `<th class="metric num m-smil">Site&nbsp;Mileage</th>`;
   });
   html += '</tr></thead><tbody>';
- 
+
   let prevBranch = null;
   vehicles.forEach(v=>{
     const branch = vehBranch[v] || '';
@@ -2879,13 +3711,13 @@ function renderMileagePivot(){
   html += '</tbody></table></div>';
   body.innerHTML = html;
 }
- 
+
 function exportMileageXLSX(){
   const fromD = document.getElementById('mil-from').value;
   const toD   = document.getElementById('mil-to').value;
   const recs = state.records.filter(r=>(!fromD||r.date>=fromD)&&(!toD||r.date<=toD));
   if(!recs.length){ toast('Nothing to export','warn'); return; }
- 
+
   const dates = [...new Set(recs.map(r=>r.date))].sort();
   const lookup = {};
   recs.forEach(r=>{ lookup[`${r.vehicle}|${r.date}`] = r; });
@@ -2900,7 +3732,7 @@ function exportMileageXLSX(){
     return ba.localeCompare(bb) || a.localeCompare(b);
   });
   const siteMileageByVD = computeSiteMileageMap(vehicles);
- 
+
   const head1 = ['Branch','Vehicle','Site Name'];
   const head2 = ['','',''];
   dates.forEach(d=>{
@@ -2931,27 +3763,51 @@ function exportMileageXLSX(){
     });
     data.push(row);
   });
- 
+
   const ws = XLSX.utils.aoa_to_sheet(data);
   ws['!merges'] = ws['!merges'] || [];
   // Date-header merges (row 0)
   for(let i=0;i<dates.length;i++){
     ws['!merges'].push({s:{r:0,c:3+i*2},e:{r:0,c:4+i*2}});
   }
+  // Sticky header cols span both header rows
+  for(let c=0; c<3; c++){
+    ws['!merges'].push({s:{r:0,c}, e:{r:1,c}});
+  }
   // Road-vehicle per-cell merges
   roadMergeRows.forEach(m=>{
     ws['!merges'].push({s:{r:m.r,c:m.c},e:{r:m.r,c:m.c+1}});
   });
+
+  // === Apply styles ===
+  styleSheet(ws, {
+    headerRows: 2,
+    dateHeaderRow: 0,
+    metricSubRow: 1,
+    metricStartCol: 3,
+    metricPattern: [XS.hdrOnline, XS.hdrSite],
+    vehicleCols: [1],
+    // Cells use cellOnline / cellSite alternating starting at col 3
+    onlineFillCols: dates.map((_,i)=>3+i*2),
+    siteFillCols:   dates.map((_,i)=>4+i*2),
+  });
+  // Column widths
+  const widths = [{wch:14}, {wch:16}, {wch:22}];
+  for(let i=0; i<dates.length; i++) widths.push({wch:13}, {wch:13});
+  ws['!cols'] = widths;
+  ws['!rows'] = [{hpt:24}, {hpt:20}];
+  ws['!views'] = [{xSplit:3, ySplit:2, state:'frozen'}];
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Mileage');
   XLSX.writeFile(wb, `Mileage_${fromD||'all'}_to_${toD||'all'}.xlsx`);
-  toast('Exported ✓','good');
+  toast('Exported with colors ✓','good');
 }
- 
+
 function exportReportXLSX(){
   if(!state.records.length){ toast('No data','warn'); return; }
   let data, filename;
- 
+
   const buildRow = (r) => {
     const fill = getRecField(r, 'Fill');
     const sf = getSiteFill(r.vehicle, r.date);
@@ -2974,7 +3830,7 @@ function exportReportXLSX(){
     ];
   };
   const colHeaders = ['Branch','Object','SITE NAME','Object Model','Distance','Work Hour','Start Fuel Level','Max Speed','Online Fill','SITE FILL','DIFF','End Fuel Level','Consumption','MILEAGE'];
- 
+
   if(curRTab==='date'){
     const date = document.getElementById('rep-date').value;
     const recs = state.records.filter(r=>r.date===date)
@@ -2994,12 +3850,33 @@ function exportReportXLSX(){
     filename = `Report_${v.replace(/[^\w]/g,'_')}_${fromD}_to_${toD}.xlsx`;
   }
   const ws = XLSX.utils.aoa_to_sheet(data);
+
+  // Columns: 0=DATE, 1=Branch, 2=Object(vehicle), 3=Site Name, 4=Object Model,
+  // 5=Distance, 6=Work Hour, 7=Start Fuel, 8=Max Speed,
+  // 9=Online Fill, 10=SITE FILL, 11=DIFF, 12=End Fuel, 13=Consumption, 14=MILEAGE
+  styleSheet(ws, {
+    headerRows: 1,
+    columnHeaderRow: 0,
+    vehicleCols: [2],
+    onlineFillCols: [9],
+    siteFillCols: [10],
+    diffCols: [11],
+    numericCols: [5, 6, 7, 8, 12, 13, 14]
+  });
+  ws['!cols'] = [
+    {wch:11},{wch:14},{wch:16},{wch:22},{wch:18},
+    {wch:11},{wch:11},{wch:12},{wch:11},
+    {wch:13},{wch:13},{wch:11},{wch:12},{wch:14},{wch:11}
+  ];
+  ws['!rows'] = [{hpt:24}];
+  ws['!views'] = [{xSplit:3, ySplit:1, state:'frozen'}];
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Report');
   XLSX.writeFile(wb, filename);
-  toast('Exported ✓','good');
+  toast('Exported with colors ✓','good');
 }
- 
+
 function exportBackup(){
   const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -3008,7 +3885,7 @@ function exportBackup(){
   a.click(); URL.revokeObjectURL(url);
   toast('Backup downloaded ✓','good');
 }
- 
+
 function clearAllData(){
   if(!confirm('Clear ALL data? This deletes all uploaded records and site mappings. Cannot be undone.')) return;
   if(!confirm('Really sure? Last chance.')) return;
@@ -3016,12 +3893,12 @@ function clearAllData(){
     if(!confirm('Cloud sync is ON — this will also wipe ALL data on the server. Proceed?')) return;
     cloud.clearAll();
   }
-  state = {records:[], sites:{}, models:{}, siteFills:{}, siteHMRs:{}, fillOverrides:{}, workHourOverrides:{}, uploads:[], columnOrder:[]};
+  state = {records:[], sites:{}, models:{}, remarks:{}, siteFills:{}, siteHMRs:{}, fillOverrides:{}, workHourOverrides:{}, progress:{}, uploads:[], columnOrder:[]};
   saveState();
   refreshAll();
   toast('All data cleared','warn');
 }
- 
+
 /* ============================================================
    MASTER LIST (Vehicle → Model + Site Name)
 ============================================================ */
@@ -3101,12 +3978,12 @@ EXR200-32376\tCLAMPSHELL\tNEW Clamashell No.2
 EXR200-32386\tCLAMPSHELL\tNEW Clamashell No.1
 LG-31523\tLOADER\tNew (LUVGONG) PAY LODER NO. 4
 Liugong loader -01\tLOADER\t(LUVGONG) PAY LODER NO. 1`;
- 
+
 const MASTER_LIST_HEADER_TOKENS = new Set([
   'object','vehicle','vehicle name','vehicle no','vehicle number',
   'fe name','asset','name','reg no','registration'
 ]);
- 
+
 // Smart parser: auto-detects format (tab, multi-space, comma, 3-line cycles, or
 // vehicle-anchor for fully concatenated text). Returns {items, strategy}.
 // Skips header rows, blank rows, and #N/A.
@@ -3114,7 +3991,7 @@ function parseMasterList(text){
   if(!text || !text.trim()) return {items:[], strategy:'none'};
   const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
   if(!lines.length) return {items:[], strategy:'none'};
- 
+
   // Strategy 1: Tab-separated (Excel / Sheets paste)
   if(lines.some(l => l.includes('\t'))){
     const items = parseDelimItems(text, '\t');
@@ -3155,7 +4032,7 @@ function parseMasterList(text){
     strategy: filtered.length ? 'vehicles only' : 'none'
   };
 }
- 
+
 function parseDelimItems(text, delim){
   const items = [];
   for(const line of text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean)){
@@ -3222,7 +4099,7 @@ function getKnownVehicles(){
   });
   return [...set];
 }
- 
+
 function refreshMasterListPreview(){
   const text = document.getElementById('ml-smart-paste')?.value || '';
   const preview = document.getElementById('ml-smart-preview');
@@ -3257,7 +4134,7 @@ function refreshMasterListPreview(){
   html += '</tbody></table></div>';
   preview.innerHTML = html;
 }
- 
+
 function importMasterListFromSmartPaste(){
   const text = document.getElementById('ml-smart-paste').value;
   const result = parseMasterList(text);
@@ -3273,7 +4150,7 @@ function importMasterListFromSmartPaste(){
   renderMasterListStats();
   toast(`Imported ${items.length} via ${result.strategy} · ${mUpd} models, ${sUpd} sites ✓`,'good');
 }
- 
+
 // Minimal CSV line splitter — handles "double quoted, fields"
 function splitCSVLine(line){
   const out = [];
@@ -3292,30 +4169,30 @@ function splitCSVLine(line){
   out.push(cur);
   return out;
 }
- 
+
 function importThreeColumnMaster(){
   const splitLines = id => document.getElementById(id).value.split(/\r?\n/).map(s=>s.trim());
   const objs   = splitLines('ml-col-obj');
   const models = splitLines('ml-col-model');
   const sites  = splitLines('ml-col-site');
- 
+
   // Trim trailing blanks (so user can paste extra newlines harmlessly)
   while(objs.length   && !objs[objs.length-1])   objs.pop();
   while(models.length && !models[models.length-1]) models.pop();
   while(sites.length  && !sites[sites.length-1])  sites.pop();
- 
+
   const maxLen = Math.max(objs.length, models.length, sites.length);
   if(!maxLen){ toast('All boxes are empty — paste data first','warn'); return; }
- 
+
   // Skip a header row if first lines look like column titles
   let startIdx = 0;
   const isHeader = s => /^(object|fe\s*name|vehicle|model|site\s*name)$/i.test((s||'').trim());
   if(isHeader(objs[0]) || isHeader(models[0]) || isHeader(sites[0])) startIdx = 1;
- 
+
   // Warn if column lengths mismatch (likely paste mistake)
   const lens = [objs.length, models.length, sites.length].filter(n=>n>0);
   const mismatched = lens.length > 1 && Math.min(...lens) !== Math.max(...lens);
- 
+
   let mUpd = 0, sUpd = 0, count = 0, skipped = 0;
   for(let i = startIdx; i < maxLen; i++){
     const obj = (objs[i]||'').trim();
@@ -3327,7 +4204,7 @@ function importThreeColumnMaster(){
     if(site){ state.sites[obj] = site; sUpd++; }
     count++;
   }
- 
+
   saveState();
   refreshAll();
   renderMasterListStats();
@@ -3338,7 +4215,7 @@ function importThreeColumnMaster(){
     setTimeout(()=>toast(`⚠ Column lengths differ: Object=${objs.length}, Model=${models.length}, Site=${sites.length}`,'warn'), 2800);
   }
 }
- 
+
 function loadDefaultMasterListIntoUI(){
   const items = parseMasterList(MASTER_LIST_DEFAULT).items;
   // Fill the smart-paste textarea with the original TSV
@@ -3350,7 +4227,7 @@ function loadDefaultMasterListIntoUI(){
   document.getElementById('ml-col-site').value  = items.map(it=>it.site).join('\n');
   toast(`Loaded ${items.length} default rows — click Import to apply`,'warn');
 }
- 
+
 function loadCurrentStateIntoUI(){
   const allVeh = new Set([...Object.keys(state.models), ...Object.keys(state.sites)]);
   state.records.forEach(r=>allVeh.add(r.vehicle));
@@ -3369,7 +4246,7 @@ function loadCurrentStateIntoUI(){
   document.getElementById('ml-col-site').value  = sorted.map(v => state.sites[v]  || '').join('\n');
   toast(`Loaded ${sorted.length} vehicles from current state`,'good');
 }
- 
+
 function clearMasterList(){
   if(!confirm('Clear all Models and Site Names? Records and Site Fills are kept.')) return;
   state.models = {};
@@ -3379,7 +4256,7 @@ function clearMasterList(){
   renderMasterListStats();
   toast('Cleared models & sites','warn');
 }
- 
+
 function cleanupBranchAsSiteLeftovers(){
   // Older versions of the parser auto-filled state.sites[v] with the BRANCH name when
   // sites were empty. This helper removes those leftovers — i.e. site entries whose
@@ -3402,7 +4279,7 @@ function cleanupBranchAsSiteLeftovers(){
   renderMasterListStats();
   toast(`Cleaned ${candidates.length} branch-as-site leftover${candidates.length===1?'':'s'}`,'good');
 }
- 
+
 function exportMasterListXLSX(){
   // Build vehicle list from records ∪ models ∪ sites
   const allVeh = new Set();
@@ -3415,12 +4292,19 @@ function exportMasterListXLSX(){
     rows.push([v, state.models[v]||'', state.sites[v]||'']);
   });
   const ws = XLSX.utils.aoa_to_sheet(rows);
+  styleSheet(ws, {
+    headerRows: 1, columnHeaderRow: 0,
+    vehicleCols: [0]
+  });
+  ws['!cols'] = [{wch:18},{wch:24},{wch:22}];
+  ws['!rows'] = [{hpt:24}];
+  ws['!views'] = [{xSplit:0, ySplit:1, state:'frozen'}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Master List');
   XLSX.writeFile(wb, `MasterList_${fmtDate(new Date())}.xlsx`);
-  toast('Exported ✓','good');
+  toast('Exported with colors ✓','good');
 }
- 
+
 function renderMasterListStats(){
   const el = document.getElementById('master-list-stats');
   if(!el) return;
@@ -3428,7 +4312,7 @@ function renderMasterListStats(){
   const s = Object.keys(state.sites).length;
   el.innerHTML = `<span><b>${m}</b>models</span><span><b>${s}</b>site names</span><span><b>${Object.keys(state.siteFills).length}</b>site fills</span><span><b>${Object.keys(state.siteHMRs).length}</b>site HMRs</span><span><b>${Object.keys(state.fillOverrides).length}</b>online fill overrides</span>`;
 }
- 
+
 /* ============================================================
    STATS & TABS
 ============================================================ */
@@ -3439,7 +4323,7 @@ function updateStats(){
   document.getElementById('stat-veh').textContent = veh;
   document.getElementById('stat-rec').textContent = state.records.length;
 }
- 
+
 function setupTabs(){
   document.querySelectorAll('.tab').forEach(t=>{
     t.addEventListener('click', ()=>{
@@ -3453,24 +4337,32 @@ function setupTabs(){
         if(!document.getElementById('mil-from').value){ setMilRangeAll(); }
         else { renderMileagePivot(); }
       }
+      if(t.dataset.tab==='abnormal'){
+        if(!document.getElementById('ab-from').value){ setAbRange(30); }
+        else { renderAbnormalities(); }
+      }
+      if(t.dataset.tab==='merged'){
+        populateMergedFilters();
+        renderMerged();
+      }
       if(t.dataset.tab==='admin'){ syncAdminLockState(); }
     });
   });
 }
- 
+
 /* ============================================================
    ADMIN PAGE — PIN gate (PIN = 3456, persisted for the session)
 ============================================================ */
 const ADMIN_PIN = '3456';
 let pinBuffer = '';
- 
+
 function syncAdminLockState(){
   const unlocked = sessionStorage.getItem('fet_admin_unlocked') === '1';
   document.getElementById('admin-lock').style.display    = unlocked ? 'none' : '';
   document.getElementById('admin-content').style.display = unlocked ? '' : 'none';
   if(!unlocked){ pinClear(); }
 }
- 
+
 function renderPinDots(){
   document.querySelectorAll('.pin-dot').forEach((dot,i)=>{
     dot.classList.toggle('filled', i < pinBuffer.length);
@@ -3478,7 +4370,7 @@ function renderPinDots(){
   });
   document.getElementById('pin-error').textContent = '';
 }
- 
+
 function pinPress(digit){
   if(pinBuffer.length >= 4) return;
   pinBuffer += digit;
@@ -3514,7 +4406,7 @@ function lockAdmin(){
   syncAdminLockState();
   toast('Admin locked','warn');
 }
- 
+
 // Keyboard support — digits/backspace work when the Admin lock screen is active
 document.addEventListener('keydown', (e)=>{
   const adminPage = document.getElementById('page-admin');
@@ -3525,17 +4417,893 @@ document.addEventListener('keydown', (e)=>{
   else if(e.key === 'Backspace'){ pinBack(); e.preventDefault(); }
   else if(e.key === 'Escape'){ pinClear(); }
 });
- 
+
+/* ============================================================
+   PAGE 5: ABNORMALITIES
+   Auto-detects three issue types from the records + cell data:
+     1. POWER SOURCE — site fill recorded but Run/Stop/Idle Time
+        AND Start Fuel AND End Fuel are all 0 (sensor offline?)
+     2. FILL MISMATCH — both Online Fill + Site Fill present and
+        |Online − Site| > 10 L
+     3. SENSOR — Work Hour > 0.3 hr but Consumption ≤ 0
+============================================================ */
+let curAbnFilter = 'all';
+
+// Flexible field lookup — telematics column names vary across providers
+function getDataAny(r, names){
+  if(!r || !r.data) return null;
+  for(const n of names){
+    if(n in r.data) return r.data[n];
+  }
+  // Case-insensitive fallback
+  const lcMap = {};
+  Object.keys(r.data).forEach(k => { lcMap[k.toLowerCase()] = r.data[k]; });
+  for(const n of names){
+    if(n.toLowerCase() in lcMap) return lcMap[n.toLowerCase()];
+  }
+  return null;
+}
+function isZeroish(v){
+  if(v === null || v === undefined || v === '') return false; // unknown ≠ zero
+  const n = +v;
+  return !isNaN(n) && Math.abs(n) < 0.01;
+}
+
+function findAbnormalities(fromD, toD, search){
+  const out = [];
+  const q = (search || '').trim().toLowerCase();
+  for(const r of state.records){
+    if(fromD && r.date < fromD) continue;
+    if(toD && r.date > toD) continue;
+    if(q){
+      const branch = (r.branch || '').toLowerCase();
+      const veh = (r.vehicle || '').toLowerCase();
+      const site = (state.sites[r.vehicle] || '').toLowerCase();
+      if(!(veh.includes(q) || branch.includes(q) || site.includes(q))) continue;
+    }
+    const k = `${r.vehicle}|${r.date}`;
+    const siteFill = (k in state.siteFills) ? state.siteFills[k] : null;
+    const siteHMR  = (k in state.siteHMRs)  ? state.siteHMRs[k]  : null;
+    const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k]
+                      : ((r.data && 'Fill' in r.data) ? r.data['Fill'] : null);
+    const consumption = getRecField(r, 'Consumption');
+    const wh = getEffectiveWorkHour(r);
+    const numWH = (wh === 'NA') ? null : +wh;
+    const startFuel = r.data && r.data['Start Fuel Level'];
+    const endFuel   = r.data && r.data['End Fuel Level'];
+    const runTime   = getDataAny(r, ['Running Time','Run Time','Working Time','Run Hours']);
+    const stopTime  = getDataAny(r, ['Stop Time','Stoppage Time','Stoppage','Stop']);
+    const idleTime  = getDataAny(r, ['Idle Time','Idling Time','Idle']);
+
+    // 1) POWER SOURCE
+    const hasSiteData = (siteFill != null) || (siteHMR != null);
+    const allZero = isZeroish(runTime) && isZeroish(stopTime) && isZeroish(idleTime)
+                    && isZeroish(startFuel) && isZeroish(endFuel);
+    if(hasSiteData && allZero){
+      out.push({
+        date: r.date, vehicle: r.vehicle,
+        branch: r.branch || '', site: state.sites[r.vehicle] || '',
+        type: 'power',
+        details: `Run ${fmtNum(runTime,1)}h · Stop ${fmtNum(stopTime,1)}h · Idle ${fmtNum(idleTime,1)}h · StartFuel ${fmtNum(startFuel,0)} · EndFuel ${fmtNum(endFuel,0)} — but Site Fill ${fmtNum(siteFill,1)}L recorded`
+      });
+    }
+
+    // 2) FILL MISMATCH
+    if(siteFill != null && onlineFill != null
+       && !isNaN(+siteFill) && !isNaN(+onlineFill)){
+      const diff = (+onlineFill) - (+siteFill);
+      if(Math.abs(diff) > 10){
+        out.push({
+          date: r.date, vehicle: r.vehicle,
+          branch: r.branch || '', site: state.sites[r.vehicle] || '',
+          type: 'fill',
+          details: `Online <b>${fmtNum(onlineFill,1)}L</b> · Site <b>${fmtNum(siteFill,1)}L</b> · Diff <b>${diff > 0 ? '+' : ''}${fmtNum(diff,1)}L</b>`
+        });
+      }
+    }
+
+    // 3) SENSOR
+    if(numWH != null && numWH > 0.3 && consumption != null && consumption <= 0){
+      out.push({
+        date: r.date, vehicle: r.vehicle,
+        branch: r.branch || '', site: state.sites[r.vehicle] || '',
+        type: 'sensor',
+        details: `Work Hour <b>${fmtNum(numWH,2)}h</b> · Consumption <b>${fmtNum(consumption,1)}L</b> (zero/negative)`
+      });
+    }
+  }
+  // Sort: most recent first, then by vehicle
+  out.sort((a,b)=> b.date.localeCompare(a.date) || a.vehicle.localeCompare(b.vehicle));
+  return out;
+}
+
+function setAbRange(days){
+  const all = [...new Set(state.records.map(r=>r.date))].sort();
+  if(!all.length) return;
+  const to = all[all.length-1];
+  const toD = new Date(to + 'T00:00:00');
+  const fromD = new Date(toD); fromD.setDate(fromD.getDate() - days + 1);
+  document.getElementById('ab-from').value = fmtDate(fromD);
+  document.getElementById('ab-to').value = to;
+  renderAbnormalities();
+}
+function setAbRangeAll(){
+  const all = [...new Set(state.records.map(r=>r.date))].sort();
+  if(!all.length) return;
+  document.getElementById('ab-from').value = all[0];
+  document.getElementById('ab-to').value = all[all.length-1];
+  renderAbnormalities();
+}
+
+function setAbnFilter(t){
+  curAbnFilter = t;
+  document.querySelectorAll('.ab-chip').forEach(c=>{
+    c.classList.toggle('active', c.dataset.type === t);
+  });
+  renderAbnormalities();
+}
+
+/* ============================================================
+   PAGE 5: ABNORMALITIES
+   Three rule types:
+     1. Power Source — site fill present + telematics all-zero
+     2. Fill Mismatch — both online & site filled, |diff| > 10 L
+     3. Sensor      — work hour > 0.3 h & raw consumption ≤ 0
+============================================================ */
+let abnFilter = 'all';
+
+function setAbnFilter(type){
+  abnFilter = type;
+  document.querySelectorAll('.ab-chip').forEach(c=>{
+    c.classList.toggle('active', c.dataset.type === type);
+  });
+  renderAbnormalities();
+}
+
+function setAbRange(days){
+  const dates = [...new Set(state.records.map(r=>r.date))].sort();
+  if(!dates.length) return;
+  const to = dates[dates.length-1];
+  const toD = new Date(to);
+  const fromD = new Date(toD); fromD.setDate(fromD.getDate() - days + 1);
+  document.getElementById('ab-from').value = fromD.toISOString().slice(0,10);
+  document.getElementById('ab-to').value = to;
+  renderAbnormalities();
+}
+function setAbRangeAll(){
+  const dates = [...new Set(state.records.map(r=>r.date))].sort();
+  if(!dates.length) return;
+  document.getElementById('ab-from').value = dates[0];
+  document.getElementById('ab-to').value = dates[dates.length-1];
+  renderAbnormalities();
+}
+
+// Helper — flexible field lookup with multiple possible key names
+function abnFieldVal(r, ...keys){
+  if(!r.data) return null;
+  for(const key of keys){
+    if(key in r.data){
+      const v = r.data[key];
+      if(typeof v === 'number') return v;
+      if(v === '' || v == null) continue;
+      const n = +v;
+      if(!isNaN(n)) return n;
+    }
+  }
+  return null;
+}
+
+// Helper — RAW consumption (no negative-clamp) — used to detect zero/minus consumption
+function getRawConsumption(r){
+  const startF = r.data && r.data['Start Fuel Level'];
+  const fill = getRecField(r, 'Fill');
+  const endF = r.data && r.data['End Fuel Level'];
+  if(typeof startF === 'number' && typeof fill === 'number' && typeof endF === 'number'){
+    return startF + fill - endF;
+  }
+  return null;
+}
+
+function detectAbnormalities(from, to){
+  const issues = [];
+  // Build vehicle → branch lookup (using most recent branch)
+  const vehBranch = {};
+  state.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).forEach(r=>{
+    if(r.branch && !vehBranch[r.vehicle]) vehBranch[r.vehicle] = r.branch;
+  });
+  // Build records lookup keyed by v|d (filtered by date range)
+  const recMap = {};
+  state.records.forEach(r=>{
+    if(from && r.date < from) return;
+    if(to && r.date > to) return;
+    recMap[`${r.vehicle}|${r.date}`] = r;
+  });
+
+  // === Type 1: POWER SOURCE — site fill present + telematics all zero ===
+  Object.keys(state.siteFills).forEach(k=>{
+    const sep = k.indexOf('|'); if(sep < 0) return;
+    const v = k.substring(0, sep);
+    const d = k.substring(sep+1);
+    if(from && d < from) return;
+    if(to && d > to) return;
+    const sf = state.siteFills[k];
+    if(sf == null || +sf <= 0) return;
+    const r = recMap[k];
+    if(!r) return;  // need a telematics record to check zero-state
+
+    const running = abnFieldVal(r, 'Running Time', 'Running');
+    const stopt   = abnFieldVal(r, 'Stop Time', 'Stop');
+    const idle    = abnFieldVal(r, 'Idle Time', 'Idle');
+    const startF  = abnFieldVal(r, 'Start Fuel Level', 'Start Fuel');
+    const endF    = abnFieldVal(r, 'End Fuel Level', 'End Fuel');
+
+    const isZ = x => x === null || x === 0;
+    const allZero = isZ(running) && isZ(stopt) && isZ(idle) && isZ(startF) && isZ(endF);
+    if(allZero){
+      issues.push({
+        type: 'power',
+        vehicle: v, date: d,
+        branch: vehBranch[v] || r.branch || '',
+        site: state.sites[v] || '',
+        details: `Site Fill: ${(+sf).toFixed(1)}L · Run/Stop/Idle/Start Fuel/End Fuel all 0`,
+        sortKey: 1
+      });
+    }
+  });
+
+  // === Types 2 & 3: scan every record in range ===
+  Object.values(recMap).forEach(r=>{
+    const v = r.vehicle, d = r.date;
+    const k = `${v}|${d}`;
+
+    // --- Type 2: FILL MISMATCH — both filled, |diff| > 10L ---
+    const onlineRaw = (k in state.fillOverrides) ? state.fillOverrides[k]
+                    : ((r.data && 'Fill' in r.data) ? r.data['Fill'] : null);
+    const siteRaw   = (k in state.siteFills) ? state.siteFills[k] : null;
+    if(onlineRaw != null && siteRaw != null){
+      const oF = +onlineRaw, sF = +siteRaw;
+      if(!isNaN(oF) && !isNaN(sF) && Math.abs(oF - sF) > 10){
+        const diff = oF - sF;
+        issues.push({
+          type: 'fill',
+          vehicle: v, date: d,
+          branch: vehBranch[v] || r.branch || '',
+          site: state.sites[v] || '',
+          details: `Online: ${oF.toFixed(1)}L · Site: ${sF.toFixed(1)}L · Diff: ${diff>0?'+':''}${diff.toFixed(1)}L`,
+          sortKey: 2
+        });
+      }
+    }
+
+    // --- Type 3: SENSOR — work hour > 0.3 h AND raw consumption ≤ 0 ---
+    const wh = getEffectiveWorkHour(r);
+    const numWH = (wh === 'NA' || wh == null) ? null : +wh;
+    const rawCons = getRawConsumption(r);
+    if(numWH !== null && numWH > 0.3 && rawCons !== null && rawCons <= 0){
+      const sF = (r.data && r.data['Start Fuel Level']) || 0;
+      const eF = (r.data && r.data['End Fuel Level']) || 0;
+      const fl = getRecField(r, 'Fill') || 0;
+      issues.push({
+        type: 'sensor',
+        vehicle: v, date: d,
+        branch: vehBranch[v] || r.branch || '',
+        site: state.sites[v] || '',
+        details: `WH: ${numWH.toFixed(1)}h · Consumption: ${rawCons.toFixed(1)}L (Start ${(+sF).toFixed(1)} + Fill ${(+fl).toFixed(1)} − End ${(+eF).toFixed(1)})`,
+        sortKey: 3
+      });
+    }
+  });
+
+  // Sort: newest date first, then by type, then vehicle
+  issues.sort((a,b)=> b.date.localeCompare(a.date) || a.sortKey - b.sortKey || a.vehicle.localeCompare(b.vehicle));
+  return issues;
+}
+
+function renderAbnormalities(){
+  const fromEl = document.getElementById('ab-from');
+  const toEl = document.getElementById('ab-to');
+  const body = document.getElementById('abnormal-body');
+  if(!body) return;
+
+  if(!state.records.length){
+    body.innerHTML = '<div class="ab-empty"><div class="ic">📭</div><h3 style="color:var(--muted)">No data yet</h3><p>Upload Excel data first to detect abnormalities.</p></div>';
+    ['all','power','fill','sensor'].forEach(t => {
+      const e = document.getElementById('ab-count-'+t); if(e) e.textContent = '0';
+    });
+    return;
+  }
+
+  const from = fromEl.value || '';
+  const to = toEl.value || '';
+  const search = (document.getElementById('ab-search').value || '').trim().toLowerCase();
+
+  let issues = detectAbnormalities(from, to);
+
+  // Search filter
+  if(search){
+    issues = issues.filter(i =>
+      (i.vehicle||'').toLowerCase().includes(search) ||
+      (i.site||'').toLowerCase().includes(search) ||
+      (i.branch||'').toLowerCase().includes(search)
+    );
+  }
+
+  // Update chip counts (for full set, before type filter)
+  const counts = { all: issues.length, power: 0, fill: 0, sensor: 0 };
+  issues.forEach(i => counts[i.type]++);
+  document.getElementById('ab-count-all').textContent = counts.all;
+  document.getElementById('ab-count-power').textContent = counts.power;
+  document.getElementById('ab-count-fill').textContent = counts.fill;
+  document.getElementById('ab-count-sensor').textContent = counts.sensor;
+
+  // Apply type filter
+  const filtered = (abnFilter === 'all') ? issues : issues.filter(i => i.type === abnFilter);
+
+  if(!filtered.length){
+    if(counts.all === 0){
+      body.innerHTML = '<div class="ab-empty"><div class="ic">✓</div><h3>No issues found</h3><p>All vehicles look healthy in the selected range.</p></div>';
+    } else {
+      body.innerHTML = `<div class="ab-empty"><div class="ic">🔍</div><h3 style="color:var(--ink-2)">Nothing in this filter</h3><p>Switch the chip above to see ${counts.all} issues across all categories.</p></div>`;
+    }
+    return;
+  }
+
+  const typeBadge = {
+    power:  '<span class="ab-badge ab-power">🔌 Power</span>',
+    fill:   '<span class="ab-badge ab-fill">⛽ Fill</span>',
+    sensor: '<span class="ab-badge ab-sensor">📡 Sensor</span>'
+  };
+
+  let html = '<div class="table-wrap"><table class="ab-tbl"><thead><tr>';
+  html += '<th>Date</th><th>Branch</th><th>Vehicle</th><th>Site</th><th>Type</th><th>Details</th><th style="min-width:185px">Progress</th>';
+  html += '</tr></thead><tbody>';
+  filtered.forEach(i => {
+    const pk = `${i.vehicle}|${i.date}|${i.type}`;
+    const cur = state.progress[pk] || '';
+    const cls = PROGRESS_CSS[cur] || 'prog-empty';
+    let dropdown = `<select class="prog-sel ${cls}" data-vehicle="${escapeAttr(i.vehicle)}" data-date="${i.date}" data-type="${i.type}" onchange="updateAbnProgress(this)">`;
+    dropdown += `<option value="">— Select status —</option>`;
+    PROGRESS_OPTIONS.forEach(opt => {
+      dropdown += `<option value="${escapeAttr(opt)}"${cur===opt?' selected':''}>${escapeHtml(opt)}</option>`;
+    });
+    dropdown += '</select>';
+
+    html += `<tr>`;
+    html += `<td>${fmtNiceDate(i.date)}</td>`;
+    html += `<td>${escapeHtml(i.branch||'')}</td>`;
+    html += `<td><span class="veh-pill">${escapeHtml(i.vehicle)}</span></td>`;
+    html += `<td>${escapeHtml(i.site||'')}</td>`;
+    html += `<td>${typeBadge[i.type]||''}</td>`;
+    html += `<td class="ab-detail">${escapeHtml(i.details)}</td>`;
+    html += `<td>${dropdown}</td>`;
+    html += `</tr>`;
+  });
+  html += '</tbody></table></div>';
+  body.innerHTML = html;
+}
+
+/* ============================================================
+   ABNORMALITY PROGRESS — Page 5 dropdown
+============================================================ */
+const PROGRESS_OPTIONS = [
+  'Escalated to Vendor',
+  'Repair Planned',
+  'Solved',
+  'Escalated to Dashrath Sir',
+  'Technical Glitch'
+];
+const PROGRESS_CSS = {
+  'Escalated to Vendor':       'prog-vendor',
+  'Repair Planned':            'prog-planned',
+  'Solved':                    'prog-solved',
+  'Escalated to Dashrath Sir': 'prog-dashrath',
+  'Technical Glitch':          'prog-glitch'
+};
+
+function updateAbnProgress(sel){
+  const v = sel.dataset.vehicle;
+  const d = sel.dataset.date;
+  const t = sel.dataset.type;
+  const val = sel.value;
+  const k = `${v}|${d}|${t}`;
+  if(val) state.progress[k] = val;
+  else delete state.progress[k];
+  saveLocal();
+  // Update dropdown's color class immediately for visual feedback
+  sel.className = 'prog-sel ' + (PROGRESS_CSS[val] || 'prog-empty');
+  // Push to cloud immediately (don't wait for debounced cell push)
+  cloud.pushProgress(v, d, t, val);
+}
+
+function exportAbnormalitiesXLSX(){
+  if(typeof XLSX === 'undefined'){ toast('Excel library not loaded','warn'); return; }
+  const from = document.getElementById('ab-from').value;
+  const to = document.getElementById('ab-to').value;
+  const search = (document.getElementById('ab-search').value || '').trim().toLowerCase();
+
+  let issues = detectAbnormalities(from, to);
+  if(search){
+    issues = issues.filter(i =>
+      (i.vehicle||'').toLowerCase().includes(search) ||
+      (i.site||'').toLowerCase().includes(search) ||
+      (i.branch||'').toLowerCase().includes(search)
+    );
+  }
+  if(abnFilter !== 'all') issues = issues.filter(i => i.type === abnFilter);
+
+  if(!issues.length){ toast('Nothing to export','warn'); return; }
+
+  const wb = XLSX.utils.book_new();
+  const typeLabel = { power: 'Power Source', fill: 'Fill Mismatch', sensor: 'Sensor' };
+  const stripHTML = s => String(s||'').replace(/<[^>]+>/g, '').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+  const progLookup = i => state.progress[`${i.vehicle}|${i.date}|${i.type}`] || '';
+  const headers = ['Date','Branch','Vehicle','Site','Type','Details','Progress'];
+  const all = [headers, ...issues.map(i => [
+    i.date, i.branch||'', i.vehicle, i.site||'', typeLabel[i.type]||i.type, stripHTML(i.details), progLookup(i)
+  ])];
+  const wsAll = XLSX.utils.aoa_to_sheet(all);
+  wsAll['!cols'] = [{wch:11},{wch:14},{wch:18},{wch:22},{wch:14},{wch:50},{wch:24}];
+  wsAll['!rows'] = [{hpt:24}];
+  wsAll['!views'] = [{xSplit:0, ySplit:1, state:'frozen'}];
+  styleSheet(wsAll, {
+    headerRows: 1, columnHeaderRow: 0,
+    vehicleCols: [2],
+    typeCol: 4
+  });
+  // Color the Progress column based on each cell's value
+  applyProgressColumnStyle(wsAll, 6);
+  XLSX.utils.book_append_sheet(wb, wsAll, 'All Abnormalities');
+
+  // One sheet per type (only those with rows)
+  ['power','fill','sensor'].forEach(t => {
+    const sub = issues.filter(i => i.type === t);
+    if(!sub.length) return;
+    const subHdrs = ['Date','Branch','Vehicle','Site','Details','Progress'];
+    const rows = [subHdrs, ...sub.map(i => [
+      i.date, i.branch||'', i.vehicle, i.site||'', stripHTML(i.details), progLookup(i)
+    ])];
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:11},{wch:14},{wch:18},{wch:22},{wch:50},{wch:24}];
+    ws['!rows'] = [{hpt:24}];
+    ws['!views'] = [{xSplit:0, ySplit:1, state:'frozen'}];
+    // Apply per-type tint as the body style for the data area
+    const bodyStyle = (t === 'power') ? XS.abPower : (t === 'fill') ? XS.abFill : XS.abSensor;
+    styleSheet(ws, {
+      headerRows: 1, columnHeaderRow: 0,
+      vehicleCols: [2]
+    });
+    // Now override col 4 (Details) per-type tint for visual cue
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for(let r=1; r<=range.e.r; r++){
+      const addr = XLSX.utils.encode_cell({r, c:4});
+      if(ws[addr]) ws[addr].s = { ...bodyStyle, alignment:{horizontal:'left', vertical:'center', wrapText:true} };
+    }
+    // Color the Progress column
+    applyProgressColumnStyle(ws, 5);
+    XLSX.utils.book_append_sheet(wb, ws, typeLabel[t].replace(/\s+/g,'_'));
+  });
+
+  const fname = `TASR_Abnormalities_${from}_to_${to}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  toast(`Exported ${issues.length} issues with colors ✓`,'good');
+}
+
+// Style the Progress column based on cell value (color-coded badge feel)
+function applyProgressColumnStyle(ws, colIdx){
+  if(!ws['!ref']) return;
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  // Map progress value → XS-like style
+  const styleFor = (val) => {
+    const v = String(val||'').toLowerCase();
+    if(v === '') return null;
+    const base = {
+      font:{bold:true, sz:10, name:'Calibri'},
+      alignment:{horizontal:'center', vertical:'center'},
+      border:XBORDER
+    };
+    if(v.includes('solved')){
+      return {...base, font:{...base.font, color:{rgb:'065F46'}}, fill:{patternType:'solid', fgColor:{rgb:'ECFDF5'}}};
+    }
+    if(v.includes('vendor')){
+      return {...base, font:{...base.font, color:{rgb:'9A3412'}}, fill:{patternType:'solid', fgColor:{rgb:'FFF7ED'}}};
+    }
+    if(v.includes('repair') || v.includes('planned')){
+      return {...base, font:{...base.font, color:{rgb:'1E40AF'}}, fill:{patternType:'solid', fgColor:{rgb:'EFF6FF'}}};
+    }
+    if(v.includes('dashrath')){
+      return {...base, font:{...base.font, color:{rgb:'6B21A8'}}, fill:{patternType:'solid', fgColor:{rgb:'FAF5FF'}}};
+    }
+    if(v.includes('glitch') || v.includes('technical')){
+      return {...base, font:{...base.font, color:{rgb:'991B1B'}}, fill:{patternType:'solid', fgColor:{rgb:'FEF2F2'}}};
+    }
+    return null;
+  };
+  for(let r=1; r<=range.e.r; r++){
+    const addr = XLSX.utils.encode_cell({r, c:colIdx});
+    if(!ws[addr] || !ws[addr].v) continue;
+    const s = styleFor(ws[addr].v);
+    if(s) ws[addr].s = s;
+  }
+}
+
+/* ============================================================
+   PAGE 6: MERGED REPORT (per vehicle, across date range)
+   Combines:
+     - Uploaded data (Distance, Work Hour, Start/End Fuel, Online Fill)
+     - Manual entries (Site Fill, Site HMR)
+     - Computed (Diff, Consumption, Mileage)
+     - Vehicle metadata (site, model, branch, remark)
+============================================================ */
+function populateMergedFilters(){
+  const sel = document.getElementById('mer-vehicle');
+  if(!sel) return;
+  const vehicles = [...new Set(state.records.map(r=>r.vehicle))].sort();
+  if(!vehicles.length){
+    sel.innerHTML = '<option value="">— no data —</option>';
+    return;
+  }
+  const cur = sel.value;
+  sel.innerHTML = vehicles.map(v=>{
+    const site = state.sites[v] ? ` — ${escapeHtml(state.sites[v])}` : '';
+    return `<option value="${escapeAttr(v)}">${escapeHtml(v)}${site}</option>`;
+  }).join('');
+  if(cur && vehicles.includes(cur)) sel.value = cur;
+
+  // Default dates: last 30 days of available data, only if not set
+  const dates = [...new Set(state.records.map(r=>r.date))].sort();
+  if(dates.length){
+    const fromEl = document.getElementById('mer-from');
+    const toEl = document.getElementById('mer-to');
+    if(!toEl.value){
+      const to = dates[dates.length-1];
+      const toD = new Date(to);
+      const fromD = new Date(toD); fromD.setDate(fromD.getDate()-29);
+      fromEl.value = fromD.toISOString().slice(0,10);
+      toEl.value = to;
+    }
+  }
+}
+
+function setMerRange(days){
+  const dates = [...new Set(state.records.map(r=>r.date))].sort();
+  if(!dates.length) return;
+  const to = dates[dates.length-1];
+  const toD = new Date(to);
+  const fromD = new Date(toD); fromD.setDate(fromD.getDate()-days+1);
+  document.getElementById('mer-from').value = fromD.toISOString().slice(0,10);
+  document.getElementById('mer-to').value = to;
+  renderMerged();
+}
+function setMerRangeAll(){
+  const dates = [...new Set(state.records.map(r=>r.date))].sort();
+  if(!dates.length) return;
+  document.getElementById('mer-from').value = dates[0];
+  document.getElementById('mer-to').value = dates[dates.length-1];
+  renderMerged();
+}
+
+function renderMerged(){
+  const summaryEl = document.getElementById('merged-summary');
+  const bodyEl = document.getElementById('merged-body');
+  if(!summaryEl || !bodyEl) return;
+
+  if(!state.records.length){
+    summaryEl.innerHTML = '';
+    bodyEl.innerHTML = emptyState('No data', 'Upload data first.');
+    return;
+  }
+
+  const v = document.getElementById('mer-vehicle').value;
+  const from = document.getElementById('mer-from').value;
+  const to = document.getElementById('mer-to').value;
+  if(!v){ summaryEl.innerHTML=''; bodyEl.innerHTML = emptyState('Pick a vehicle',''); return; }
+
+  // Records for this vehicle in range
+  let recs = state.records.filter(r => r.vehicle === v);
+  if(from) recs = recs.filter(r => r.date >= from);
+  if(to)   recs = recs.filter(r => r.date <= to);
+  recs.sort((a,b)=> a.date.localeCompare(b.date));
+
+  // Vehicle metadata
+  const branch = (recs.length && recs[0].branch) || (state.records.find(r=>r.vehicle===v && r.branch)?.branch) || '';
+  const site = state.sites[v] || '';
+  const model = state.models[v] || (recs[0] && recs[0].data && recs[0].data['Object Model']) || '';
+  const remark = state.remarks[v] || '';
+  const isRoad = MILEAGE_DISTANCE_BASED.has(v);
+  const mileageUnit = isRoad ? 'km/L' : 'L/hr';
+
+  // Aggregate totals
+  let totDist=0, totWH=0, totOnline=0, totSite=0, totCons=0;
+  let mileageSum=0, mileageCount=0;
+  let onlineHas=0, siteHas=0;
+  recs.forEach(r=>{
+    const k = `${v}|${r.date}`;
+    if(typeof r.km === 'number') totDist += r.km;
+    const wh = getEffectiveWorkHour(r);
+    if(wh !== 'NA' && wh != null && !isNaN(+wh)) totWH += +wh;
+    const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k] : ((r.data && 'Fill' in r.data) ? r.data['Fill'] : null);
+    const siteFill = (k in state.siteFills) ? state.siteFills[k] : null;
+    if(onlineFill != null && !isNaN(+onlineFill)){ totOnline += +onlineFill; onlineHas++; }
+    if(siteFill != null && !isNaN(+siteFill)){ totSite += +siteFill; siteHas++; }
+    const cons = getRecField(r, 'Consumption');
+    if(cons != null && !isNaN(+cons)) totCons += +cons;
+    const mil = getRecField(r, 'MILEAGE');
+    if(mil != null && !isNaN(+mil)){ mileageSum += +mil; mileageCount++; }
+  });
+  const fillDiff = totOnline - totSite;
+  const avgMil = mileageCount > 0 ? mileageSum / mileageCount : null;
+
+  // === Summary card ===
+  summaryEl.innerHTML = `
+    <div class="merged-info">
+      <div class="merged-info-grid">
+        <div><div class="mi-lbl">Vehicle</div><div class="mi-val"><span class="veh-pill">${escapeHtml(v)}</span></div></div>
+        <div><div class="mi-lbl">Site</div><div class="mi-val">${escapeHtml(site||'—')}</div></div>
+        <div><div class="mi-lbl">Model</div><div class="mi-val">${escapeHtml(model||'—')}</div></div>
+        <div><div class="mi-lbl">Branch</div><div class="mi-val">${escapeHtml(branch||'—')}</div></div>
+        ${remark ? `<div class="mi-remark"><div class="mi-lbl">Remark</div><div class="mi-val">${escapeHtml(remark)}</div></div>` : ''}
+      </div>
+      <div class="merged-stats">
+        <div class="ms-item"><div class="ms-num">${recs.length}</div><div class="ms-lbl">Days</div></div>
+        ${isRoad ? `<div class="ms-item"><div class="ms-num">${fmtNum(totDist,1)}</div><div class="ms-lbl">Distance (km)</div></div>` : ''}
+        <div class="ms-item"><div class="ms-num">${fmtNum(totWH,1)}</div><div class="ms-lbl">Work Hours</div></div>
+        <div class="ms-item ms-online"><div class="ms-num">${fmtNum(totOnline,1)}</div><div class="ms-lbl">Online Fill (L)</div></div>
+        <div class="ms-item ms-site"><div class="ms-num">${fmtNum(totSite,1)}</div><div class="ms-lbl">Site Fill (L)</div></div>
+        <div class="ms-item ms-diff"><div class="ms-num">${fillDiff>=0?'+':''}${fmtNum(fillDiff,1)}</div><div class="ms-lbl">Fill Diff (L)</div></div>
+        <div class="ms-item"><div class="ms-num">${fmtNum(totCons,1)}</div><div class="ms-lbl">Consumption (L)</div></div>
+        <div class="ms-item ms-mil"><div class="ms-num">${avgMil != null ? fmtNum(avgMil,1) : '—'}</div><div class="ms-lbl">Avg ${mileageUnit}</div></div>
+      </div>
+    </div>
+  `;
+
+  if(!recs.length){
+    bodyEl.innerHTML = emptyState('No records in range', 'Try a wider date range.');
+    return;
+  }
+
+  // === Detailed daily table ===
+  let html = '<div class="table-wrap"><table class="report-tbl"><thead><tr>';
+  html += '<th>Date</th>';
+  html += '<th class="num">Distance</th>';
+  html += '<th class="num">Work&nbsp;Hour</th>';
+  html += '<th class="num">Start&nbsp;Fuel</th>';
+  html += '<th class="num">Online&nbsp;Fill</th>';
+  html += '<th class="num">Site&nbsp;Fill</th>';
+  html += '<th class="num">Diff</th>';
+  html += '<th class="num">Site&nbsp;HMR</th>';
+  html += '<th class="num">End&nbsp;Fuel</th>';
+  html += '<th class="num">Consumption</th>';
+  html += `<th class="num">Mileage&nbsp;(${mileageUnit})</th>`;
+  html += '</tr></thead><tbody>';
+
+  recs.forEach(r=>{
+    const k = `${v}|${r.date}`;
+    const wh = getEffectiveWorkHour(r);
+    const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k] : ((r.data && 'Fill' in r.data) ? r.data['Fill'] : null);
+    const siteFill = (k in state.siteFills) ? state.siteFills[k] : null;
+    const siteHMR = (k in state.siteHMRs) ? state.siteHMRs[k] : null;
+    const startFuel = r.data && r.data['Start Fuel Level'];
+    const endFuel = r.data && r.data['End Fuel Level'];
+    const cons = getRecField(r, 'Consumption');
+    const mil = getRecField(r, 'MILEAGE');
+
+    // Diff styling
+    let diffStr = '<span style="color:var(--muted)">—</span>';
+    if(onlineFill != null && siteFill != null && !isNaN(+onlineFill) && !isNaN(+siteFill)){
+      const d = +onlineFill - +siteFill;
+      let style = 'color:#065f46';  // close
+      if(Math.abs(d) > 10) style = 'color:#991b1b;font-weight:700';
+      else if(Math.abs(d) > 0.5) style = 'color:#92400e;font-weight:600';
+      diffStr = `<span style="${style}">${d>=0?'+':''}${fmtNum(d,1)}</span>`;
+    }
+
+    html += `<tr>`;
+    html += `<td><b>${fmtNiceDate(r.date)}</b></td>`;
+    html += `<td class="num">${fmtCell(r.km)}</td>`;
+    html += `<td class="num">${wh === 'NA' ? '<span class="ab-badge ab-power" style="font-size:10px;padding:1px 6px">NA</span>' : fmtCell(wh)}</td>`;
+    html += `<td class="num">${fmtCell(startFuel)}</td>`;
+    html += `<td class="num">${fmtCell(onlineFill)}</td>`;
+    html += `<td class="num">${fmtCell(siteFill)}</td>`;
+    html += `<td class="num">${diffStr}</td>`;
+    html += `<td class="num">${fmtCell(siteHMR)}</td>`;
+    html += `<td class="num">${fmtCell(endFuel)}</td>`;
+    html += `<td class="num">${fmtCell(cons)}</td>`;
+    html += `<td class="num">${fmtCell(mil)}</td>`;
+    html += '</tr>';
+  });
+
+  // Totals row
+  html += '<tr class="merged-tot">';
+  html += '<td>TOTAL</td>';
+  html += `<td class="num">${fmtNum(totDist,1)}</td>`;
+  html += `<td class="num">${fmtNum(totWH,1)}</td>`;
+  html += '<td class="num"></td>';
+  html += `<td class="num">${fmtNum(totOnline,1)}</td>`;
+  html += `<td class="num">${fmtNum(totSite,1)}</td>`;
+  html += `<td class="num"><b>${fillDiff>=0?'+':''}${fmtNum(fillDiff,1)}</b></td>`;
+  html += '<td class="num"></td>';
+  html += '<td class="num"></td>';
+  html += `<td class="num">${fmtNum(totCons,1)}</td>`;
+  html += `<td class="num">${avgMil != null ? fmtNum(avgMil,1)+' avg' : '—'}</td>`;
+  html += '</tr>';
+
+  html += '</tbody></table></div>';
+  bodyEl.innerHTML = html;
+}
+
+function exportMergedXLSX(){
+  if(typeof XLSX === 'undefined'){ toast('Excel library not loaded','warn'); return; }
+  const v = document.getElementById('mer-vehicle').value;
+  const from = document.getElementById('mer-from').value;
+  const to = document.getElementById('mer-to').value;
+  if(!v){ toast('Pick a vehicle','warn'); return; }
+
+  let recs = state.records.filter(r => r.vehicle === v);
+  if(from) recs = recs.filter(r => r.date >= from);
+  if(to)   recs = recs.filter(r => r.date <= to);
+  recs.sort((a,b)=> a.date.localeCompare(b.date));
+  if(!recs.length){ toast('No data in range','warn'); return; }
+
+  const isRoad = MILEAGE_DISTANCE_BASED.has(v);
+  const mileageUnit = isRoad ? 'km/L' : 'L/hr';
+
+  // Header info rows
+  const branch = (recs[0] && recs[0].branch) || '';
+  const site = state.sites[v] || '';
+  const model = state.models[v] || (recs[0] && recs[0].data && recs[0].data['Object Model']) || '';
+  const remark = state.remarks[v] || '';
+  const headerRows = [
+    ['TASR Fuel Economy — Merged Report'],
+    [],
+    ['Vehicle', v],
+    ['Site', site],
+    ['Model', model],
+    ['Branch', branch],
+    ['Date Range', `${from} to ${to}`],
+  ];
+  if(remark) headerRows.push(['Remark', remark]);
+  headerRows.push([]);
+
+  // Data
+  const cols = ['Date','Distance (km)','Work Hour','Start Fuel','Online Fill (L)','Site Fill (L)','Diff (L)','Site HMR','End Fuel','Consumption (L)',`Mileage (${mileageUnit})`];
+  const rows = [...headerRows, cols];
+
+  let totDist=0, totWH=0, totOnline=0, totSite=0, totCons=0, milSum=0, milCnt=0;
+  recs.forEach(r=>{
+    const k = `${v}|${r.date}`;
+    const wh = getEffectiveWorkHour(r);
+    const numWH = (wh === 'NA' || wh == null) ? null : +wh;
+    const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k] : ((r.data && 'Fill' in r.data) ? r.data['Fill'] : null);
+    const siteFill = (k in state.siteFills) ? state.siteFills[k] : null;
+    const siteHMR = (k in state.siteHMRs) ? state.siteHMRs[k] : null;
+    const startFuel = r.data && r.data['Start Fuel Level'];
+    const endFuel = r.data && r.data['End Fuel Level'];
+    const cons = getRecField(r, 'Consumption');
+    const mil = getRecField(r, 'MILEAGE');
+    const diff = (onlineFill != null && siteFill != null && !isNaN(+onlineFill) && !isNaN(+siteFill)) ? (+onlineFill - +siteFill) : null;
+
+    if(typeof r.km === 'number') totDist += r.km;
+    if(numWH !== null) totWH += numWH;
+    if(onlineFill != null && !isNaN(+onlineFill)) totOnline += +onlineFill;
+    if(siteFill != null && !isNaN(+siteFill)) totSite += +siteFill;
+    if(cons != null && !isNaN(+cons)) totCons += +cons;
+    if(mil != null && !isNaN(+mil)){ milSum += +mil; milCnt++; }
+
+    rows.push([
+      r.date,
+      typeof r.km === 'number' ? +(r.km.toFixed(2)) : '',
+      numWH !== null ? +numWH.toFixed(2) : (wh === 'NA' ? 'NA' : ''),
+      typeof startFuel === 'number' ? startFuel : '',
+      onlineFill != null && !isNaN(+onlineFill) ? +(+onlineFill).toFixed(2) : '',
+      siteFill != null && !isNaN(+siteFill) ? +(+siteFill).toFixed(2) : '',
+      diff != null ? +diff.toFixed(2) : '',
+      siteHMR != null && !isNaN(+siteHMR) ? +(+siteHMR).toFixed(2) : '',
+      typeof endFuel === 'number' ? endFuel : '',
+      cons != null && !isNaN(+cons) ? +(+cons).toFixed(2) : '',
+      mil != null && !isNaN(+mil) ? +(+mil).toFixed(2) : ''
+    ]);
+  });
+
+  rows.push([
+    'TOTAL',
+    +totDist.toFixed(1), +totWH.toFixed(1), '',
+    +totOnline.toFixed(1), +totSite.toFixed(1),
+    +(totOnline-totSite).toFixed(1),
+    '', '',
+    +totCons.toFixed(1),
+    milCnt > 0 ? +(milSum/milCnt).toFixed(2) : ''
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:11},{wch:13},{wch:11},{wch:11},{wch:14},{wch:13},{wch:11},{wch:11},{wch:11},{wch:14},{wch:14}];
+  // Merge title across the first row
+  ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:cols.length-1}}];
+  // Merge each label-row's value across remaining cols (rows 2..N-2 of headerRows; skip blanks)
+  const lastHdrIdx = headerRows.length - 2;  // index of last info row (before trailing blank)
+  for(let r=2; r<=lastHdrIdx; r++){
+    if(headerRows[r] && headerRows[r].length === 2){
+      ws['!merges'].push({s:{r, c:1}, e:{r, c:cols.length-1}});
+    }
+  }
+
+  // === Apply styles ===
+  const numHdr = headerRows.length;          // rows in summary block
+  const colHdrIdx = numHdr;                  // where the column-headers row sits
+  const dataStart = numHdr + 1;
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  const lastRow = range.e.r;
+
+  for(let r=range.s.r; r<=lastRow; r++){
+    for(let c=range.s.c; c<=range.e.c; c++){
+      const addr = XLSX.utils.encode_cell({r, c});
+      if(!ws[addr]) ws[addr] = {t:'s', v:''};
+
+      let style;
+      if(r === 0){
+        style = XS.cardTitle;
+      } else if(r === 1 || (r > 1 && r < numHdr && (!headerRows[r] || headerRows[r].length === 0))){
+        // Blank divider rows
+        style = { fill:{patternType:'solid', fgColor:{rgb:'1E293B'}} };
+      } else if(r >= 2 && r < numHdr){
+        // Info rows: col 0 = label, col 1+ = value
+        style = (c === 0) ? XS.cardLabel : XS.cardValue;
+      } else if(r === colHdrIdx){
+        style = XS.hdr;
+      } else if(r === lastRow){
+        // TOTAL row
+        style = (c === 0) ? XS.totalLabel : XS.total;
+        // Diff cell in total row: keep diff-color
+        if(c === 6){
+          const v = ws[addr].v;
+          if(typeof v === 'number'){
+            if(Math.abs(v) < 0.05) style = {...XS.diffZero, font:{...XS.diffZero.font, sz:11}};
+            else if(v > 0) style = {...XS.diffPos, font:{...XS.diffPos.font, sz:11}};
+            else style = {...XS.diffNeg, font:{...XS.diffNeg.font, sz:11}};
+          }
+        }
+      } else {
+        // Data rows
+        if(c === 0){ style = XS.body; }
+        else if(c === 4){ style = XS.cellOnline; }
+        else if(c === 5){ style = XS.cellSite; }
+        else if(c === 6){
+          // Diff
+          const v = ws[addr].v;
+          if(v === '' || v == null || isNaN(+v)) style = XS.bodyNum;
+          else if(Math.abs(+v) < 0.05) style = XS.diffZero;
+          else if(+v > 0) style = XS.diffPos;
+          else style = XS.diffNeg;
+        }
+        else if(c === 7){ style = XS.cellHmr; }
+        else { style = XS.bodyNum; }
+      }
+      ws[addr].s = style;
+    }
+  }
+  ws['!rows'] = [{hpt:30}, {hpt:6}];  // title row taller, divider row thin
+  ws['!views'] = [{xSplit:0, ySplit:colHdrIdx + 1, state:'frozen'}];
+
+  const wb = XLSX.utils.book_new();
+  const safeName = String(v).replace(/[\\\/\?\*\[\]:]/g,'').substring(0,31) || 'Sheet';
+  XLSX.utils.book_append_sheet(wb, ws, safeName);
+  const fname = `TASR_Merged_${v}_${from}_to_${to}.xlsx`.replace(/[^\w.-]/g,'_');
+  XLSX.writeFile(wb, fname);
+  toast('Exported with colors ✓','good');
+}
+
 function refreshAll(){
   renderCalendar();
+  renderSiteCalendar();
   renderUploadList();
   renderVehicles();
   populateReportFilters();
   renderReport();
   if(document.getElementById('mil-from')) renderMileagePivot();
+  if(document.getElementById('ab-from')) renderAbnormalities();
+  if(document.getElementById('mer-vehicle')){ populateMergedFilters(); renderMerged(); }
   renderMasterListStats();
 }
- 
+
 /* ============================================================
    INIT
 ============================================================ */
@@ -3561,7 +5329,6 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
- 
 
 
 
