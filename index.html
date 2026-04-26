@@ -1,0 +1,3336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Fuel Economy Tracker — TASR BharatNext</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root{
+    --bg:#0b1220;
+    --bg-2:#0f1a2e;
+    --panel:#ffffff;
+    --panel-2:#f6f8fb;
+    --ink:#0d1b2a;
+    --ink-2:#3b4a5a;
+    --muted:#7a8a9a;
+    --line:#e5eaf0;
+    --line-2:#dde3ec;
+    --primary:#0a6e6e;
+    --primary-2:#0d8585;
+    --primary-3:#e6f3f2;
+    --accent:#f59e0b;
+    --accent-2:#d97706;
+    --good:#10b981;
+    --good-2:#d1fae5;
+    --bad:#ef4444;
+    --warn:#f59e0b;
+    --shadow: 0 1px 2px rgba(13,27,42,.06), 0 4px 16px rgba(13,27,42,.06);
+    --shadow-lg: 0 10px 40px rgba(13,27,42,.12);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:linear-gradient(180deg,#f0f4f8 0%,#e8eef5 100%);
+    color:var(--ink);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    font-size:14px;
+  }
+  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;letter-spacing:-0.01em}
+
+  /* ========== HEADER ========== */
+  .topbar{
+    background:var(--bg);
+    color:#fff;
+    padding:14px 18px;
+    box-shadow:var(--shadow);
+    position:sticky;top:0;z-index:50;
+  }
+  .topbar-row{display:flex;align-items:center;justify-content:space-between;max-width:1400px;margin:0 auto;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand-logo{
+    width:38px;height:38px;border-radius:10px;
+    background:linear-gradient(135deg,var(--primary) 0%,var(--accent) 100%);
+    display:grid;place-items:center;font-weight:700;color:#fff;font-size:18px;
+    font-family:'Space Grotesk',sans-serif;
+  }
+  .brand-text .t1{font-weight:700;font-size:15px;letter-spacing:0.02em;line-height:1.1}
+  .brand-text .t2{font-size:11px;color:#9aafc7;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;margin-top:2px}
+  .stats-pill{
+    display:flex;gap:14px;font-size:12px;color:#cbd6e3;
+  }
+  .stats-pill span b{color:#fff;font-weight:600;margin-right:3px}
+  @media (max-width:600px){ .stats-pill{display:none} }
+
+  /* ========== TABS ========== */
+  .tabs{
+    background:#fff;border-bottom:1px solid var(--line);
+    position:sticky;top:66px;z-index:40;
+    box-shadow:0 1px 0 rgba(13,27,42,.04);
+  }
+  .tabs-inner{max-width:1400px;margin:0 auto;display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tab{
+    flex:1;min-width:120px;
+    padding:14px 18px;background:none;border:none;cursor:pointer;
+    color:var(--muted);font-weight:600;font-size:13px;
+    border-bottom:3px solid transparent;
+    transition:all .18s ease;
+    font-family:inherit;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    white-space:nowrap;
+  }
+  .tab:hover{color:var(--ink);background:var(--panel-2)}
+  .tab.active{color:var(--primary);border-bottom-color:var(--primary);background:var(--primary-3)}
+  .tab .num{
+    background:var(--line);color:var(--muted);
+    width:20px;height:20px;border-radius:6px;
+    display:grid;place-items:center;font-size:11px;font-weight:700;
+  }
+  .tab.active .num{background:var(--primary);color:#fff}
+
+  /* ========== LAYOUT ========== */
+  .container{max-width:1400px;margin:0 auto;padding:18px}
+  .page{display:none}
+  .page.active{display:block;animation:fadeIn .25s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .card-pad{padding:18px}
+  .card-head{
+    padding:14px 18px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    background:linear-gradient(180deg,#fbfcfe 0%,#fff 100%);
+  }
+  .card-title{font-size:15px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px}
+  .card-title .icon{
+    width:26px;height:26px;border-radius:7px;background:var(--primary-3);
+    display:grid;place-items:center;color:var(--primary);
+  }
+  .card-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+  /* ========== GRID ========== */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+
+  /* ========== BUTTONS ========== */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    padding:9px 14px;border-radius:var(--radius-sm);
+    font-weight:600;font-size:13px;font-family:inherit;
+    border:1px solid var(--line);background:#fff;color:var(--ink);
+    cursor:pointer;transition:all .15s ease;
+  }
+  .btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-3)}
+  .btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .btn.primary:hover{background:var(--primary-2);border-color:var(--primary-2);color:#fff}
+  .btn.accent{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn.accent:hover{background:var(--accent-2);border-color:var(--accent-2);color:#fff}
+  .btn.danger{background:#fff;color:var(--bad);border-color:#fcd6d6}
+  .btn.danger:hover{background:#fef2f2;color:var(--bad)}
+  .btn.sm{padding:6px 10px;font-size:12px}
+  .btn.icon-only{padding:8px;width:34px;height:34px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* ========== FORM ========== */
+  label{font-size:12px;font-weight:600;color:var(--ink-2);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+  input[type=text],input[type=date],input[type=number],select{
+    width:100%;padding:9px 11px;border:1px solid var(--line-2);border-radius:var(--radius-sm);
+    font-family:inherit;font-size:13px;background:#fff;color:var(--ink);
+    transition:border .15s,box-shadow .15s;
+  }
+  input:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(10,110,110,.12)}
+  .field{margin-bottom:14px}
+
+  /* ========== UPLOAD ZONE ========== */
+  .drop{
+    border:2px dashed var(--line-2);border-radius:var(--radius);
+    padding:28px 18px;text-align:center;cursor:pointer;
+    background:var(--panel-2);transition:all .18s;
+  }
+  .drop:hover,.drop.drag{border-color:var(--primary);background:var(--primary-3)}
+  .drop .ic{
+    width:52px;height:52px;border-radius:14px;
+    background:#fff;border:1px solid var(--line);
+    display:grid;place-items:center;margin:0 auto 10px;color:var(--primary);
+  }
+  .drop h3{margin:0 0 4px;font-size:15px;color:var(--ink)}
+  .drop p{margin:0;font-size:12px;color:var(--muted)}
+  .drop input[type=file]{display:none}
+
+  /* ========== CALENDAR ========== */
+  .cal-wrap{padding:14px}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px}
+  .cal-title{font-weight:700;font-size:14px;color:var(--ink);font-family:'Space Grotesk',sans-serif}
+  .cal-nav{display:flex;gap:4px}
+  .cal-nav button{
+    width:30px;height:30px;border:1px solid var(--line);background:#fff;border-radius:7px;
+    cursor:pointer;display:grid;place-items:center;color:var(--ink-2);
+  }
+  .cal-nav button:hover{border-color:var(--primary);color:var(--primary)}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .cal-dow{
+    text-align:center;font-size:10px;font-weight:700;color:var(--muted);
+    padding:6px 0;letter-spacing:.05em;text-transform:uppercase;
+  }
+  .cal-day{
+    aspect-ratio:1;border:1px solid var(--line);border-radius:7px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-size:13px;font-weight:600;color:var(--ink-2);background:#fff;
+    cursor:pointer;position:relative;transition:all .12s;
+    user-select:none;
+  }
+  .cal-day:hover{border-color:var(--primary);color:var(--primary);transform:translateY(-1px);box-shadow:var(--shadow)}
+  .cal-day.empty{background:transparent;border-color:transparent;cursor:default}
+  .cal-day.empty:hover{transform:none;box-shadow:none}
+  .cal-day.today{border-color:var(--accent);color:var(--accent);font-weight:700}
+  .cal-day.has-data{background:var(--good-2);border-color:var(--good);color:#065f46}
+  .cal-day.has-data .check{
+    position:absolute;top:2px;right:2px;width:13px;height:13px;border-radius:50%;
+    background:var(--good);color:#fff;display:grid;place-items:center;font-size:9px;
+  }
+  .cal-day.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .cal-day.selected.has-data{background:var(--primary);color:#fff}
+  .cal-day.selected.has-data .check{background:#fff;color:var(--good)}
+  .cal-legend{display:flex;gap:14px;justify-content:center;font-size:11px;color:var(--muted);margin-top:12px;flex-wrap:wrap}
+  .cal-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:middle;margin-right:4px}
+
+  /* ========== TABLES ========== */
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{
+    background:var(--panel-2);padding:10px 12px;text-align:left;
+    font-weight:700;color:var(--ink-2);font-size:11px;letter-spacing:.04em;text-transform:uppercase;
+    border-bottom:1px solid var(--line);position:sticky;top:0;
+    white-space:nowrap;
+  }
+  td{padding:9px 12px;border-bottom:1px solid var(--line);color:var(--ink);vertical-align:middle}
+  tr:hover td{background:var(--primary-3)}
+  tr:last-child td{border-bottom:none}
+  th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+  th.center,td.center{text-align:center}
+  td input{padding:6px 9px;font-size:12px}
+  .pivot th.date-grp{
+    background:var(--bg-2);color:#fff;text-align:center;border-right:1px solid rgba(255,255,255,.1);
+    font-size:11px;
+  }
+  .pivot th.metric{background:#1e2d44;color:#cdd9eb;font-size:10px;border-right:1px solid rgba(255,255,255,.08)}
+  .pivot td{font-size:12px;padding:7px 10px}
+  .pivot td.metric-cell{background:#fbfcfe}
+  .pivot tr:hover td.metric-cell{background:var(--primary-3)}
+
+  /* 3-column-per-date pivot (Page 2) */
+  .pivot.pivot3 .sticky-branch{
+    position:sticky;left:0;z-index:3;background:var(--bg-2);color:#fff;min-width:130px;
+  }
+  .pivot.pivot3 td.sticky-branch{background:#fff;color:var(--ink);z-index:1;font-weight:600;font-size:12px}
+  .pivot.pivot3 .sticky-veh{
+    position:sticky;left:130px;z-index:3;background:var(--bg-2);color:#fff;min-width:140px;
+  }
+  .pivot.pivot3 td.sticky-veh{background:#fff;color:var(--ink);z-index:1}
+  .pivot.pivot3 .sticky-site{
+    position:sticky;left:270px;z-index:3;background:var(--bg-2);color:#fff;min-width:170px;
+  }
+  .pivot.pivot3 td.sticky-site{background:#fff;z-index:1;padding:4px 6px}
+  /* Branch group separator: thin top border on first row of each branch group */
+  .pivot.pivot3 tbody tr.branch-start td{border-top:2px solid var(--primary)}
+  .pivot.pivot3 tbody tr.branch-start:first-child td{border-top:none}
+  .pivot.pivot3 td.sticky-site input{
+    width:100%;padding:5px 8px;font-size:12px;border:1px solid transparent;
+    background:transparent;border-radius:4px;font-family:inherit;
+  }
+  .pivot.pivot3 td.sticky-site input:hover{border-color:var(--line-2);background:#fbfcfe}
+  .pivot.pivot3 td.sticky-site input:focus{outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 2px rgba(10,110,110,.12)}
+
+  .pivot.pivot3 th.date-grp{
+    text-align:center;background:linear-gradient(180deg,#0a6e6e 0%,#0d8585 100%);
+    color:#fff;font-size:11px;letter-spacing:.04em;padding:8px 4px;
+    border-left:2px solid rgba(255,255,255,.2);
+  }
+  .pivot.pivot3 th.metric{
+    font-size:10px;font-weight:700;letter-spacing:.02em;padding:6px 3px;
+    text-transform:uppercase;background:#0d4e4e;color:rgba(255,255,255,.92);
+    border-left:1px solid rgba(255,255,255,.08);
+  }
+  .pivot.pivot3 th.m-fill{background:#065f46;color:#d1fae5}
+  .pivot.pivot3 th.m-sfill{background:#92400e;color:#fed7aa}
+  .pivot.pivot3 th.m-hmr{background:#1e40af;color:#dbeafe}
+
+  .pivot.pivot3 td.metric-cell{padding:2px 1px;min-width:62px}
+  .pivot.pivot3 td.cell-fill{background:#ecfdf5}
+  .pivot.pivot3 td.cell-sfill{background:#fffbeb}
+  .pivot.pivot3 td.cell-shmr{background:#eff6ff}
+  .pivot.pivot3 td.no-rec{background:#f8fafc;opacity:.85}
+  .pivot.pivot3 tr:hover td.metric-cell{background:rgba(10,110,110,.06)}
+  .pivot.pivot3 tr:hover td.cell-fill{background:#d1fae5}
+  .pivot.pivot3 tr:hover td.cell-sfill{background:#fef3c7}
+  .pivot.pivot3 tr:hover td.cell-shmr{background:#dbeafe}
+
+  .pivot.pivot3 input.fill-inp,
+  .pivot.pivot3 input.site-fill-inp,
+  .pivot.pivot3 input.wh-inp,
+  .pivot.pivot3 input.site-hmr-inp{
+    width:58px;padding:4px 5px;font-size:11px;text-align:right;
+    border:1px solid transparent;background:transparent;border-radius:3px;
+    font-family:inherit;font-variant-numeric:tabular-nums;font-weight:600;
+  }
+  .pivot.pivot3 input.fill-inp{color:#065f46}
+  .pivot.pivot3 input.fill-inp:hover{border-color:#059669;background:#fff}
+  .pivot.pivot3 input.fill-inp:focus{outline:none;border-color:#059669;background:#fff;box-shadow:0 0 0 2px rgba(5,150,105,.18)}
+  .pivot.pivot3 input.site-fill-inp{color:#92400e}
+  .pivot.pivot3 input.site-fill-inp:hover{border-color:var(--accent);background:#fff}
+  .pivot.pivot3 input.site-fill-inp:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 2px rgba(245,158,11,.18)}
+  .pivot.pivot3 input.wh-inp,
+  .pivot.pivot3 input.site-hmr-inp{color:#1e3a8a}
+  .pivot.pivot3 input.wh-inp:hover,
+  .pivot.pivot3 input.site-hmr-inp:hover{border-color:#3b82f6;background:#fff}
+  .pivot.pivot3 input.wh-inp:focus,
+  .pivot.pivot3 input.site-hmr-inp:focus{outline:none;border-color:#3b82f6;background:#fff;box-shadow:0 0 0 2px rgba(59,130,246,.18)}
+  .pivot.pivot3 input[type=number]::-webkit-outer-spin-button,
+  .pivot.pivot3 input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .pivot.pivot3 input[type=number]{-moz-appearance:textfield}
+
+  /* Mileage page header legend chips */
+  .card-sub .legend-chip{
+    display:inline-flex;align-items:center;gap:4px;
+    font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;
+    background:#f1f5f9;color:var(--ink-2);margin-right:6px;cursor:help;
+    border:1px solid var(--line);
+  }
+  .card-sub .legend-chip:hover{background:#fff;border-color:var(--primary)}
+  .card-sub .legend-online{color:#047857;background:#ecfdf5;border-color:#a7f3d0}
+  .card-sub .legend-site{color:#b45309;background:#fffbeb;border-color:#fcd34d}
+  .card-sub .legend-road{color:#0369a1;background:#f0f9ff;border-color:#7dd3fc}
+
+  /* Mileage pivot (Page 4) — same sticky cols as pivot3, but read-only cells */
+  .pivot.pivot-mileage{ font-size:13px }
+  .pivot.pivot-mileage .sticky-branch{
+    position:sticky;left:0;z-index:3;
+    background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);color:#fff;
+    min-width:130px;letter-spacing:.04em;
+  }
+  .pivot.pivot-mileage td.sticky-branch{
+    background:#fff;color:var(--ink);z-index:1;font-weight:600;font-size:12px;
+    padding:10px 14px;
+  }
+  .pivot.pivot-mileage .sticky-veh{
+    position:sticky;left:130px;z-index:3;
+    background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);color:#fff;
+    min-width:140px;letter-spacing:.04em;
+  }
+  .pivot.pivot-mileage td.sticky-veh{background:#fff;color:var(--ink);z-index:1;padding:8px 10px}
+  .pivot.pivot-mileage .sticky-site{
+    position:sticky;left:270px;z-index:3;
+    background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);color:#fff;
+    min-width:170px;letter-spacing:.04em;
+    border-right:2px solid var(--line);
+  }
+  .pivot.pivot-mileage td.sticky-site{
+    background:#fff;z-index:1;padding:8px 14px;font-size:12px;color:var(--ink-2);
+    border-right:2px solid var(--line);
+  }
+  /* Subtle zebra striping — only on metric cells, not sticky cols */
+  .pivot.pivot-mileage tbody tr:nth-child(even) td.metric-cell{filter:brightness(.985)}
+  .pivot.pivot-mileage tbody tr.branch-start td{border-top:2px solid var(--primary)}
+  .pivot.pivot-mileage tbody tr.branch-start:first-child td{border-top:none}
+
+  .pivot.pivot-mileage th.date-grp{
+    text-align:center;background:linear-gradient(180deg,#0a6e6e 0%,#0d8585 100%);
+    color:#fff;font-size:11px;letter-spacing:.06em;padding:8px 4px;font-weight:600;
+    border-left:2px solid rgba(255,255,255,.28);
+  }
+  .pivot.pivot-mileage th.metric{
+    font-size:9.5px;font-weight:700;letter-spacing:.05em;padding:7px 6px;
+    text-transform:uppercase;color:rgba(255,255,255,.92);
+    border-left:1px solid rgba(255,255,255,.08);
+  }
+  .pivot.pivot-mileage th.m-omil{background:#065f46;color:#a7f3d0}
+  .pivot.pivot-mileage th.m-smil{background:#92400e;color:#fed7aa}
+
+  .pivot.pivot-mileage td.metric-cell{
+    padding:8px 10px;min-width:88px;text-align:right;
+    font-variant-numeric:tabular-nums;font-size:13px;
+    transition:background .12s;
+  }
+  /* Vertical separator at the start of each date group */
+  .pivot.pivot-mileage td.metric-cell.date-start{
+    border-left:1px solid #e2e8f0;
+  }
+  .pivot.pivot-mileage td.cell-omil{background:#f0fdf4}
+  .pivot.pivot-mileage td.cell-smil{background:#fffbeb}
+  .pivot.pivot-mileage td.cell-roadmil{
+    background:linear-gradient(90deg,#f0f9ff 0%,#e0f2fe 100%);
+    text-align:center;border-left:1px dashed #7dd3fc;border-right:1px dashed #7dd3fc;
+  }
+  .pivot.pivot-mileage tr:hover td.cell-omil{background:#dcfce7}
+  .pivot.pivot-mileage tr:hover td.cell-smil{background:#fef3c7}
+  .pivot.pivot-mileage tr:hover td.cell-roadmil{background:#bae6fd}
+
+  /* Value styling — prominent numbers, faded dashes */
+  .pivot.pivot-mileage .mile-val{
+    font-weight:700;font-size:13.5px;font-variant-numeric:tabular-nums;
+  }
+  .pivot.pivot-mileage td.cell-omil .mile-val{color:#047857}
+  .pivot.pivot-mileage td.cell-smil .mile-val{color:#b45309}
+  .pivot.pivot-mileage td.cell-roadmil .mile-val{color:#0369a1;font-size:14px}
+  .pivot.pivot-mileage .mile-empty{
+    color:#cbd5e1;font-weight:400;font-size:14px;letter-spacing:0;
+  }
+  .veh-pill{
+    display:inline-block;background:#fff;color:#1e40af;padding:3px 9px;
+    border:1px solid #bfdbfe;border-radius:5px;font-size:11px;font-weight:700;
+    font-variant-numeric:tabular-nums;letter-spacing:.02em;
+  }
+  .site-input{font-weight:500}
+
+  /* ========== BADGES & MISC ========== */
+  .badge{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;
+    background:var(--primary-3);color:var(--primary);
+  }
+  .badge.good{background:var(--good-2);color:#065f46}
+  .badge.warn{background:#fef3c7;color:#92400e}
+  .badge.bad{background:#fee2e2;color:#991b1b}
+  .empty-state{
+    text-align:center;padding:48px 20px;color:var(--muted);
+  }
+  .empty-state .ic{
+    width:60px;height:60px;border-radius:16px;background:var(--panel-2);border:1px solid var(--line);
+    display:grid;place-items:center;margin:0 auto 12px;color:var(--muted);
+  }
+  .empty-state h3{margin:0 0 6px;color:var(--ink-2);font-size:15px}
+  .empty-state p{margin:0;font-size:13px;max-width:340px;margin:0 auto;line-height:1.5}
+
+  /* ========== CURATED REPORT TABLE ========== */
+  .report-tbl{ font-size:12px; min-width:max-content }
+  .report-tbl th{
+    background:var(--bg-2);color:#fff;padding:9px 10px;
+    border-right:1px solid rgba(255,255,255,.08);border-bottom:none;
+    font-size:10px;letter-spacing:.04em;text-align:left;
+    white-space:nowrap;
+  }
+  .report-tbl th.num{ text-align:right }
+  .report-tbl td{ padding:6px 10px;white-space:nowrap;font-variant-numeric:tabular-nums }
+  .report-tbl td.num{ text-align:right }
+  .report-tbl tr:nth-child(even) td{ background:#fbfcfe }
+  .report-tbl tr:hover td{ background:var(--primary-3) }
+
+  /* Sticky leading columns */
+  .report-tbl td.rcol-1, .report-tbl th.rcol-1{
+    position:sticky;left:0;z-index:2;min-width:140px;
+    background:#fff;font-weight:600;
+  }
+  .report-tbl th.rcol-1{ background:var(--bg-2) }
+  .report-tbl td.rcol-date, .report-tbl th.rcol-date{
+    position:sticky;left:0;z-index:2;min-width:100px;
+    background:#fff;font-weight:600;
+  }
+  .report-tbl th.rcol-date{ background:var(--bg-2) }
+  .report-tbl tr:nth-child(even) td.rcol-1,
+  .report-tbl tr:nth-child(even) td.rcol-date{ background:#fbfcfe }
+  .report-tbl tr:hover td.rcol-1,
+  .report-tbl tr:hover td.rcol-date{ background:var(--primary-3) }
+
+  /* Fill column — green tint (sensor-detected fuel fill) */
+  .report-tbl th.cell-fill{ background:#0c5132;color:#a7f3d0 }
+  .report-tbl td.cell-fill{ background:#ecfdf5;color:#065f46;font-weight:600 }
+  .report-tbl tr:nth-child(even) td.cell-fill{ background:#d1fae5 }
+  .report-tbl tr:hover td.cell-fill{ background:#a7f3d0 }
+
+  /* SITE FILL column — amber tint (manual receipt entry, display-only on reports) */
+  .report-tbl th.cell-sfill{ background:#7c2d12;color:#fed7aa }
+  .report-tbl td.cell-sfill{ background:#fffbeb }
+  .report-tbl tr:nth-child(even) td.cell-sfill{ background:#fef3c7 }
+  .report-tbl tr:hover td.cell-sfill{ background:#fde68a }
+  .report-tbl td.cell-sfill-display{ color:#92400e;font-weight:600;font-variant-numeric:tabular-nums;padding-right:14px }
+
+  /* DIFF column — colored by sign */
+  .report-tbl td.cell-diff{ font-weight:600 }
+  .report-tbl td.cell-diff.diff-ok{ color:#059669 }
+  .report-tbl td.cell-diff.diff-bad{ color:#dc2626 }
+  .report-tbl td.cell-diff.diff-warn{ color:#d97706 }
+
+  /* NA flag for Work Hour anomalies (23:59 sentinel or fuel-without-work) */
+  .cell-na{
+    display:inline-block;background:#fee2e2;color:#b91c1c;
+    padding:2px 9px;border-radius:5px;font-size:11px;font-weight:700;
+    letter-spacing:.04em;cursor:pointer;border:1px solid #fca5a5;
+    transition:all .12s;
+  }
+  .cell-na:hover{background:#fecaca;border-color:#dc2626;transform:scale(1.05)}
+
+  /* Editable inputs in cells */
+  .report-tbl input.site-name-inp,
+  .report-tbl input.model-inp{
+    width:140px;padding:4px 7px;font-size:12px;
+    border:1px solid transparent;background:transparent;border-radius:4px;
+    font-family:inherit;
+  }
+  .report-tbl input.site-name-inp:hover,
+  .report-tbl input.model-inp:hover{ border-color:var(--line-2);background:#fff }
+  .report-tbl input.site-name-inp:focus,
+  .report-tbl input.model-inp:focus{ outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 2px rgba(10,110,110,.12) }
+  .report-tbl input.wh-inp,
+  .report-tbl input.fill-inp,
+  .report-tbl input.site-fill-inp{
+    width:80px;padding:4px 7px;font-size:12px;text-align:right;
+    border:1px solid transparent;background:transparent;border-radius:4px;
+    font-family:inherit;font-variant-numeric:tabular-nums;font-weight:600;
+  }
+  .report-tbl input.wh-inp{ color:var(--ink) }
+  .report-tbl input.wh-inp:hover{ border-color:var(--line-2);background:#fff }
+  .report-tbl input.wh-inp:focus{ outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 2px rgba(10,110,110,.12) }
+  .report-tbl input.fill-inp{ color:#065f46 }
+  .report-tbl input.fill-inp:hover{ border-color:#059669;background:#fff }
+  .report-tbl input.fill-inp:focus{ outline:none;border-color:#059669;background:#fff;box-shadow:0 0 0 2px rgba(5,150,105,.18) }
+  .report-tbl input.site-fill-inp{ color:#92400e }
+  .report-tbl input.site-fill-inp:hover{ border-color:var(--accent);background:#fff }
+  .report-tbl input.site-fill-inp:focus{ outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 2px rgba(245,158,11,.18) }
+  .report-tbl input[type=number]::-webkit-outer-spin-button,
+  .report-tbl input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none;margin:0 }
+
+  /* Master List card on Page 2 */
+  details.master-list{ background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden }
+  details.master-list summary{
+    list-style:none;padding:14px 18px;cursor:pointer;display:flex;align-items:center;gap:10px;
+    font-weight:700;background:linear-gradient(180deg,#fbfcfe 0%,#fff 100%);
+  }
+  details.master-list summary::-webkit-details-marker{display:none}
+  details.master-list summary::after{content:'▾';margin-left:auto;color:var(--muted);font-size:14px;transition:transform .15s}
+  details.master-list[open] summary::after{transform:rotate(180deg)}
+  details.master-list summary .icon{
+    width:26px;height:26px;border-radius:7px;background:var(--primary-3);
+    display:grid;place-items:center;color:var(--primary);
+  }
+  details.master-list summary .sub{font-size:11px;color:var(--muted);font-weight:500;margin-left:6px}
+  .master-list-body{padding:0 18px 16px;border-top:1px solid var(--line)}
+  .master-list-body p{font-size:12px;color:var(--muted);margin:12px 0 10px;line-height:1.5}
+  .master-list-body code{background:var(--panel-2);padding:1px 5px;border-radius:4px;font-size:11px;color:var(--ink)}
+  .ml-three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  @media (max-width:760px){ .ml-three-col{grid-template-columns:1fr} }
+  .ml-col label{
+    display:flex;align-items:center;gap:6px;
+    font-size:11px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:.05em;
+    margin-bottom:5px;
+  }
+  .ml-tag{
+    background:var(--primary-3);color:var(--primary);font-size:9px;font-weight:600;
+    padding:2px 6px;border-radius:99px;text-transform:none;letter-spacing:0;
+  }
+  .ml-col textarea{
+    width:100%;font-family:'SF Mono',Consolas,Monaco,monospace;font-size:11px;
+    padding:8px;border:1px solid var(--line-2);border-radius:8px;line-height:1.6;
+    background:var(--panel-2);color:var(--ink);resize:vertical;
+  }
+  .ml-col textarea:focus{outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(10,110,110,.1)}
+  .master-list-actions{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+  .master-list-stats{
+    display:flex;gap:14px;font-size:12px;color:var(--ink-2);margin-top:10px;
+    padding:8px 12px;background:var(--primary-3);border-radius:8px;flex-wrap:wrap;
+  }
+  .master-list-stats b{color:var(--primary);font-weight:700;margin-right:3px}
+
+  /* Smart paste textarea & preview */
+  textarea#ml-smart-paste{
+    width:100%;font-family:'SF Mono',Consolas,Monaco,monospace;font-size:11px;
+    padding:8px;border:1px solid var(--line-2);border-radius:8px;line-height:1.5;
+    background:var(--panel-2);color:var(--ink);resize:vertical;
+  }
+  textarea#ml-smart-paste:focus{outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(10,110,110,.1)}
+  .ml-preview-wrap{max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
+  table.ml-preview{width:100%;font-size:11px;border-collapse:collapse}
+  table.ml-preview th{
+    background:var(--bg-2);color:#fff;padding:6px 9px;
+    position:sticky;top:0;font-size:10px;letter-spacing:.04em;
+    border-bottom:none;text-align:left;white-space:nowrap;
+  }
+  table.ml-preview td{padding:5px 9px;border-bottom:1px solid var(--line);white-space:nowrap}
+  table.ml-preview tr:nth-child(even) td{background:#fbfcfe}
+  table.ml-preview tr:last-child td{border-bottom:none}
+
+  /* ========== ADMIN PAGE: PIN GATE ========== */
+  .tab.tab-admin{ color:#92400e }
+  .tab.tab-admin.active{ background:linear-gradient(180deg,#fbbf24 0%,#f59e0b 100%);color:#451a03 }
+  .tab.tab-admin .num{ background:transparent;font-size:14px }
+
+  .admin-lock{
+    min-height:60vh;display:grid;place-items:center;padding:24px 16px;
+  }
+  .admin-lock-card{
+    background:#fff;border:1px solid var(--line);border-radius:18px;
+    box-shadow:0 12px 40px rgba(15,23,42,.08);padding:32px 28px 26px;
+    max-width:340px;width:100%;text-align:center;
+  }
+  .admin-lock-icon{
+    width:64px;height:64px;margin:0 auto 14px;border-radius:50%;
+    background:linear-gradient(180deg,#fef3c7 0%,#fde68a 100%);
+    display:grid;place-items:center;font-size:28px;
+    box-shadow:inset 0 -2px 6px rgba(146,64,14,.12);
+  }
+  .admin-lock-card h2{
+    margin:0 0 4px;font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.01em;
+  }
+  .admin-lock-card > p{
+    margin:0 0 22px;font-size:13px;color:var(--muted);
+  }
+  .pin-display{
+    display:flex;justify-content:center;gap:14px;margin:0 0 6px;
+  }
+  .pin-dot{
+    width:14px;height:14px;border-radius:50%;border:2px solid var(--line-2);
+    background:#fff;transition:all .15s;
+  }
+  .pin-dot.filled{
+    background:var(--primary);border-color:var(--primary);
+    box-shadow:0 0 0 4px rgba(10,110,110,.15);
+  }
+  .pin-dot.error{
+    border-color:#dc2626;background:#fee2e2;
+    animation:pin-shake .35s;
+  }
+  @keyframes pin-shake{
+    0%,100%{transform:translateX(0)}
+    25%{transform:translateX(-4px)}
+    75%{transform:translateX(4px)}
+  }
+  .pin-error{
+    min-height:18px;font-size:12px;color:#dc2626;font-weight:600;margin:6px 0 14px;
+  }
+  .pin-pad{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+  }
+  .pin-key{
+    height:54px;border:1px solid var(--line-2);background:#fff;
+    border-radius:12px;font-size:20px;font-weight:600;color:var(--ink);
+    cursor:pointer;transition:all .12s;font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .pin-key:hover{ background:var(--primary-3);border-color:var(--primary);transform:translateY(-1px) }
+  .pin-key:active{ transform:translateY(0);background:var(--primary);color:#fff }
+  .pin-key.pin-aux{ background:var(--panel-2);font-size:18px;color:var(--muted) }
+  .pin-key.pin-aux:hover{ background:#fef3c7;color:#92400e;border-color:#f59e0b }
+
+  .admin-bar{
+    display:flex;align-items:center;justify-content:space-between;
+    background:linear-gradient(180deg,#ecfdf5 0%,#d1fae5 100%);
+    border:1px solid #a7f3d0;border-radius:12px;padding:10px 16px;margin-bottom:14px;
+  }
+
+  /* ========== TOAST ========== */
+  .toast{
+    position:fixed;bottom:18px;right:18px;left:18px;
+    background:var(--ink);color:#fff;padding:12px 16px;border-radius:10px;
+    font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);
+    transform:translateY(80px);opacity:0;transition:all .25s cubic-bezier(.2,.9,.3,1.2);
+    z-index:1000;display:flex;align-items:center;gap:10px;
+    max-width:380px;margin:0 auto;
+  }
+  @media (min-width:600px){ .toast{left:auto;max-width:380px} }
+  .toast.show{transform:translateY(0);opacity:1}
+  .toast.good{background:var(--good)}
+  .toast.bad{background:var(--bad)}
+  .toast.warn{background:var(--warn)}
+
+  /* ========== UPLOAD LOG ========== */
+  .upload-list{margin-top:14px;display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto;padding-right:4px}
+  .upload-item{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:9px 11px 9px 12px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;
+    font-size:12px;
+  }
+  .upload-item:hover{background:#fff;border-color:var(--line-2)}
+  .upload-item .info{display:flex;flex-direction:column;min-width:0;gap:3px;flex:1}
+  .upload-item .fn{font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+  .upload-item .dates{display:flex;flex-direction:column;gap:1px}
+  .upload-item .dline{font-size:11px;color:var(--muted);display:flex;gap:5px;align-items:center;font-variant-numeric:tabular-nums}
+  .upload-item .dline b{font-weight:600;color:var(--ink-2);font-size:10px;text-transform:uppercase;letter-spacing:.04em;min-width:60px}
+  .upload-item .dline .dval{color:var(--ink)}
+  .upload-item .actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+  .upload-item .x-btn{
+    width:24px;height:24px;border-radius:6px;border:1px solid var(--line-2);background:#fff;
+    color:var(--muted);font-size:14px;cursor:pointer;display:grid;place-items:center;
+    line-height:1;padding:0;font-family:inherit;transition:all .15s;
+  }
+  .upload-item .x-btn:hover{background:#fee2e2;border-color:#fca5a5;color:#dc2626;transform:scale(1.05)}
+  .upload-item .x-btn:active{transform:scale(.95)}
+
+  /* ========== TOOLBAR ========== */
+  .toolbar{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
+    padding:14px 18px;background:var(--panel-2);border-bottom:1px solid var(--line);
+  }
+  .toolbar .field{margin:0;flex:1;min-width:140px}
+  .toolbar .actions{display:flex;gap:8px;flex-wrap:wrap}
+
+  /* ========== REPORT ========== */
+  .report-tabs{
+    display:flex;gap:4px;padding:14px 18px 0;
+  }
+  .rtab{
+    padding:8px 16px;border:1px solid var(--line);border-radius:8px 8px 0 0;
+    border-bottom:none;background:var(--panel-2);color:var(--muted);
+    cursor:pointer;font-weight:600;font-size:13px;font-family:inherit;
+  }
+  .rtab.active{background:#fff;color:var(--primary);border-color:var(--line)}
+
+  .report-meta{
+    background:var(--panel-2);padding:14px 18px;border-bottom:1px solid var(--line);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;
+  }
+  .report-meta .lbl{color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-size:10px;margin-bottom:2px}
+  .report-meta .val{color:var(--ink);font-weight:600}
+
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;padding:14px 18px;background:#fff;border-bottom:1px solid var(--line)}
+  .summary-card{
+    border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:linear-gradient(180deg,#fbfcfe,#fff);
+  }
+  .summary-card .lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+  .summary-card .val{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:var(--ink);margin-top:3px;font-variant-numeric:tabular-nums}
+  .summary-card .delta{font-size:11px;color:var(--muted);margin-top:2px}
+
+  /* ========== PRINT ========== */
+  @media print{
+    body{background:#fff}
+    .topbar,.tabs,.toolbar,.card-head,.btn,.no-print{display:none !important}
+    .container{padding:0;max-width:none}
+    .card{box-shadow:none;border:none}
+    .page{display:block !important}
+    .page:not(.active){display:none !important}
+    table{font-size:11px}
+    th{background:#f0f0f0 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .pivot th.date-grp{background:#333 !important;color:#fff !important;-webkit-print-color-adjust:exact}
+    .pivot th.metric{background:#555 !important;color:#fff !important;-webkit-print-color-adjust:exact}
+    .veh-pill{background:#fff !important;color:#1e40af !important;border:1px solid #93c5fd !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .summary-grid{break-inside:avoid}
+    @page{margin:14mm}
+    .print-header{
+      display:block !important;
+      padding:0 0 12px;border-bottom:2px solid #333;margin-bottom:14px;
+    }
+    .print-header h1{margin:0 0 4px;font-size:18px}
+    .print-header .meta{font-size:11px;color:#444}
+  }
+  .print-header{display:none}
+
+  /* ========== HELP ========== */
+  details.help{
+    margin-top:12px;font-size:12px;color:var(--muted);
+    background:var(--panel-2);padding:8px 12px;border-radius:8px;border:1px solid var(--line);
+  }
+  details.help summary{cursor:pointer;font-weight:600;color:var(--ink-2)}
+  details.help[open] summary{margin-bottom:6px}
+  details.help ul{margin:4px 0 0 0;padding-left:18px}
+  details.help li{margin-bottom:3px}
+
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-row">
+    <div class="brand">
+      <div class="brand-logo">FE</div>
+      <div class="brand-text">
+        <div class="t1">Fuel Economy Tracker</div>
+        <div class="t2">TASR BharatNext</div>
+      </div>
+    </div>
+    <div class="stats-pill">
+      <span><b id="stat-days">0</b>days</span>
+      <span><b id="stat-veh">0</b>vehicles</span>
+      <span><b id="stat-rec">0</b>records</span>
+      <span id="sync-status" style="font-size:11px;cursor:help;padding-left:8px;border-left:1px solid rgba(255,255,255,.2);margin-left:4px"><span style="color:#94a3b8;font-weight:600">◌ Local only</span></span>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <div class="tabs-inner">
+    <button class="tab active" data-tab="upload"><span class="num">1</span>Upload</button>
+    <button class="tab" data-tab="vehicles"><span class="num">2</span>Vehicles &amp; Sites</button>
+    <button class="tab" data-tab="reports"><span class="num">3</span>Reports</button>
+    <button class="tab" data-tab="mileage"><span class="num">4</span>Mileage</button>
+    <button class="tab tab-admin" data-tab="admin"><span class="num">🔒</span>Admin</button>
+  </div>
+</nav>
+
+<main class="container">
+
+  <!-- ============ PAGE 1: UPLOAD ============ -->
+  <section class="page active" id="page-upload">
+    <div class="grid-2">
+
+      <!-- Calendar -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title"><span class="icon">📅</span>Upload Calendar</div>
+            <div class="card-sub">Green ticks show dates with uploaded fuel economy data</div>
+          </div>
+        </div>
+        <div class="cal-wrap">
+          <div class="cal-head">
+            <button class="btn icon-only sm" onclick="calNav(-1)">‹</button>
+            <div class="cal-title" id="cal-title">—</div>
+            <button class="btn icon-only sm" onclick="calNav(1)">›</button>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+          <div class="cal-legend">
+            <span><i style="background:#fff;border:1px solid var(--line)"></i>No data</span>
+            <span><i style="background:var(--good-2);border:1px solid var(--good)"></i>Uploaded</span>
+            <span><i style="background:var(--accent)"></i>Today</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload zone -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title"><span class="icon">⬆️</span>Upload Excel File</div>
+            <div class="card-sub">Single day or multi-day file — dates auto-detected</div>
+          </div>
+        </div>
+        <div class="card-pad">
+          <div class="field">
+            <label>Date override (optional)</label>
+            <input type="date" id="upload-date" />
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Usually leave blank — date is read from the file's "Duration:" row or filename. Set this only if both are missing or wrong.</div>
+          </div>
+          <label for="file-input" class="drop" id="dropzone">
+            <div class="ic">⬆</div>
+            <h3>Drop Excel file(s) or tap to browse</h3>
+            <p>.xlsx / .xls / .csv — single or multiple files supported</p>
+            <input type="file" id="file-input" accept=".xlsx,.xls,.csv" multiple />
+          </label>
+          <div id="upload-list" class="upload-list"></div>
+          <details class="help">
+            <summary>What columns are recognised?</summary>
+            <ul>
+              <li><b>Vehicle</b> — Object / Vehicle / Asset</li>
+              <li><b>Branch</b> — Branch / Site / Location <i>(auto-fills site mapping)</i></li>
+              <li><b>KM</b> — Distance / KM / Total Distance</li>
+              <li><b>HMR</b> — Work Hour / HMR / Engine Hours <i>(HH:MM auto-converted to decimal)</i></li>
+              <li><b>Fuel</b> — Consumption / Fuel Used / Fuel Consumed</li>
+              <li><b>KMPL</b> — Mileage Based on Distance / Mileage / KMPL <i>(auto-calculated if missing)</i></li>
+              <li><b>Date</b> — read from "Duration: from… to…" row, or filename date, or override above</li>
+            </ul>
+            <div style="margin-top:6px">Re-uploading the same vehicle+date overwrites the old row. Sites stay editable — auto-fill only fills empty ones.</div>
+          </details>
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn danger sm" onclick="clearAllData()">Clear all data</button>
+            <button class="btn sm" onclick="exportBackup()">Backup JSON</button>
+            <label class="btn sm" style="cursor:pointer">
+              Restore JSON
+              <input type="file" id="restore-input" accept=".json" style="display:none" />
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 2: VEHICLES & SITES ============ -->
+  <section class="page" id="page-vehicles">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title"><span class="icon">🚛</span>Daily Data Entry — Vehicles × Dates</div>
+          <div class="card-sub"><span style="color:#065f46;font-weight:600">Online Fill</span> syncs ↔ Page 3 reports · <span style="color:#92400e;font-weight:600">Site Fill</span> + <span style="color:#1e3a8a;font-weight:600">Site HMR</span> are manual pair (entered together) — Site Fill shows on reports only after Site HMR is also entered</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn sm" onclick="exportVehiclesXLSX()">Export Excel</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="field">
+          <label>From date</label>
+          <input type="date" id="veh-from" onchange="renderVehicles()" />
+        </div>
+        <div class="field">
+          <label>To date</label>
+          <input type="date" id="veh-to" onchange="renderVehicles()" />
+        </div>
+        <div class="field" style="flex:0 0 auto;min-width:auto">
+          <label style="visibility:hidden">.</label>
+          <div class="actions">
+            <button class="btn sm" onclick="setVehRange(7)">Last 7d</button>
+            <button class="btn sm" onclick="setVehRange(30)">Last 30d</button>
+            <button class="btn sm" onclick="setVehRangeAll()">All</button>
+          </div>
+        </div>
+        <div class="field" style="flex:1 1 200px">
+          <label>Search vehicle / site / branch</label>
+          <input type="text" id="veh-search" placeholder="Search…" oninput="renderVehicles()" />
+        </div>
+      </div>
+      <div id="vehicles-body"></div>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 3: REPORTS ============ -->
+  <section class="page" id="page-reports">
+    <div class="card">
+      <div class="card-head no-print">
+        <div>
+          <div class="card-title"><span class="icon">📊</span>Reports</div>
+          <div class="card-sub">Date-wise (all vehicles) or Vehicle-wise (date range)</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn sm" onclick="window.print()">🖨 Print</button>
+          <button class="btn primary sm" onclick="exportReportXLSX()">Export Excel</button>
+        </div>
+      </div>
+
+      <div class="report-tabs no-print">
+        <button class="rtab active" data-rtab="date" onclick="setRTab('date')">By Date</button>
+        <button class="rtab" data-rtab="vehicle" onclick="setRTab('vehicle')">By Vehicle</button>
+      </div>
+
+      <!-- Date-wise toolbar -->
+      <div class="toolbar no-print" id="rtb-date">
+        <div class="field">
+          <label>Pick date</label>
+          <select id="rep-date"></select>
+        </div>
+      </div>
+
+      <!-- Vehicle-wise toolbar -->
+      <div class="toolbar no-print" id="rtb-vehicle" style="display:none">
+        <div class="field">
+          <label>Vehicle</label>
+          <select id="rep-vehicle"></select>
+        </div>
+        <div class="field">
+          <label>From</label>
+          <input type="date" id="rep-from" />
+        </div>
+        <div class="field">
+          <label>To</label>
+          <input type="date" id="rep-to" />
+        </div>
+        <div class="field" style="flex:0 0 auto">
+          <label style="visibility:hidden">.</label>
+          <button class="btn primary sm" onclick="renderReport()">Apply</button>
+        </div>
+      </div>
+
+      <div class="print-header">
+        <h1 id="print-title">Fuel Economy Report</h1>
+        <div class="meta" id="print-meta"></div>
+      </div>
+
+      <div id="report-body"></div>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 4: MILEAGE ============ -->
+  <section class="page" id="page-mileage">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title"><span class="icon">⛽</span>Mileage — Vehicles × Dates</div>
+          <div class="card-sub">
+            <span class="legend-chip legend-online" title="Default: Consumption ÷ Work Hour (L/hr) · Road veh: Distance ÷ Consumption (km/L)">● Online</span>
+            <span class="legend-chip legend-site" title="Current Site Fill ÷ HMR delta (L/hr) · Road veh: HMR delta ÷ Site Fill (km/L) — needs both Site Fill + Site HMR on Page 2">● Site</span>
+            <span class="legend-chip legend-road" title="Bolero / Pickup / Water Tanker — single km/L value">● Road veh (km/L)</span>
+            <span style="color:var(--muted);margin-left:auto">— hover the chips for formulas</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn sm" onclick="exportMileageXLSX()">Export Excel</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="field">
+          <label>From date</label>
+          <input type="date" id="mil-from" onchange="renderMileagePivot()" />
+        </div>
+        <div class="field">
+          <label>To date</label>
+          <input type="date" id="mil-to" onchange="renderMileagePivot()" />
+        </div>
+        <div class="field" style="flex:0 0 auto;min-width:auto">
+          <label style="visibility:hidden">.</label>
+          <div class="actions">
+            <button class="btn sm" onclick="setMilRange(7)">Last 7d</button>
+            <button class="btn sm" onclick="setMilRange(30)">Last 30d</button>
+            <button class="btn sm" onclick="setMilRangeAll()">All</button>
+          </div>
+        </div>
+        <div class="field" style="flex:1 1 200px">
+          <label>Search vehicle / site / branch</label>
+          <input type="text" id="mil-search" placeholder="Search…" oninput="renderMileagePivot()" />
+        </div>
+      </div>
+      <div id="mileage-body"></div>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 5: ADMIN (PIN-gated Master List) ============ -->
+  <section class="page" id="page-admin">
+    <!-- Locked state: PIN entry -->
+    <div class="admin-lock" id="admin-lock">
+      <div class="admin-lock-card">
+        <div class="admin-lock-icon">🔒</div>
+        <h2>Admin access</h2>
+        <p>Enter PIN to manage the Master List</p>
+        <div class="pin-display">
+          <span class="pin-dot" data-i="0"></span>
+          <span class="pin-dot" data-i="1"></span>
+          <span class="pin-dot" data-i="2"></span>
+          <span class="pin-dot" data-i="3"></span>
+        </div>
+        <div class="pin-error" id="pin-error"></div>
+        <div class="pin-pad">
+          <button class="pin-key" onclick="pinPress('1')">1</button>
+          <button class="pin-key" onclick="pinPress('2')">2</button>
+          <button class="pin-key" onclick="pinPress('3')">3</button>
+          <button class="pin-key" onclick="pinPress('4')">4</button>
+          <button class="pin-key" onclick="pinPress('5')">5</button>
+          <button class="pin-key" onclick="pinPress('6')">6</button>
+          <button class="pin-key" onclick="pinPress('7')">7</button>
+          <button class="pin-key" onclick="pinPress('8')">8</button>
+          <button class="pin-key" onclick="pinPress('9')">9</button>
+          <button class="pin-key pin-aux" onclick="pinClear()">⟲</button>
+          <button class="pin-key" onclick="pinPress('0')">0</button>
+          <button class="pin-key pin-aux" onclick="pinBack()">⌫</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unlocked state: Master List -->
+    <div class="admin-content" id="admin-content" style="display:none">
+      <div class="admin-bar">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--good);letter-spacing:.06em;text-transform:uppercase">🔓 Admin unlocked</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:2px">Master list bulk-import &amp; data management</div>
+        </div>
+        <button class="btn sm" onclick="lockAdmin()">🔒 Lock</button>
+      </div>
+
+      <details class="master-list" id="master-list" open>
+        <summary>
+          <span class="icon">📋</span>
+          <span>Master List</span>
+          <span class="sub">Two ways to paste · last import overrides existing</span>
+        </summary>
+        <div class="master-list-body">
+          <h4 style="margin:14px 0 4px;font-size:13px;font-weight:700;color:var(--ink)">📥 Smart Paste <span style="font-weight:500;font-size:11px;color:var(--muted);margin-left:4px">— recommended for most sources</span></h4>
+          <p>Paste any format — tab-separated (Excel), comma-separated, multi-space, one-field-per-line, or even fully concatenated text with no delimiters. Format is auto-detected; preview below shows what'll be imported.</p>
+          <textarea id="ml-smart-paste" rows="6" spellcheck="false" placeholder="Paste your data here&#10;e.g. AP31DM7934&#9;LOADER LIUGONG CLG836&#9;AP31DM7934"></textarea>
+          <div id="ml-smart-preview" style="margin-top:10px"></div>
+          <div style="margin-top:10px">
+            <button class="btn primary sm" onclick="importMasterListFromSmartPaste()">Import from Smart Paste</button>
+          </div>
+
+          <hr style="margin:20px 0 14px;border:none;border-top:1px solid var(--line)">
+
+          <h4 style="margin:0 0 4px;font-size:13px;font-weight:700;color:var(--ink)">📋 3-Column Paste <span style="font-weight:500;font-size:11px;color:var(--muted);margin-left:4px">— if Smart Paste can't detect your format</span></h4>
+          <p>Copy each column from Excel separately and paste into the matching box. <b>One value per line.</b> Empty rows skipped. Row N in each box becomes one record.</p>
+          <div class="ml-three-col">
+            <div class="ml-col">
+              <label>Object <span class="ml-tag">vehicle ID</span></label>
+              <textarea id="ml-col-obj" rows="10" spellcheck="false" placeholder="AP31DM7934&#10;AP39AY5203&#10;01 CG04MG5875"></textarea>
+            </div>
+            <div class="ml-col">
+              <label>Model</label>
+              <textarea id="ml-col-model" rows="10" spellcheck="false" placeholder="LOADER LIUGONG CLG836&#10;LOADER LIUGONG CLG 856 H&#10;JCB 3DX"></textarea>
+            </div>
+            <div class="ml-col">
+              <label>Site Name</label>
+              <textarea id="ml-col-site" rows="10" spellcheck="false" placeholder="AP31DM7934&#10;AP39AY5203&#10;01 CG04MG5875 - BACKHOE LOADER"></textarea>
+            </div>
+          </div>
+          <div class="master-list-actions">
+            <button class="btn primary sm" onclick="importThreeColumnMaster()">Import 3 Columns</button>
+            <button class="btn sm" onclick="loadDefaultMasterListIntoUI()">Load embedded default</button>
+            <button class="btn sm" onclick="loadCurrentStateIntoUI()">Load current state</button>
+            <button class="btn sm" onclick="exportMasterListXLSX()">Export current as XLSX</button>
+            <button class="btn sm" onclick="cleanupBranchAsSiteLeftovers()">🧹 Clear branch-as-site leftovers</button>
+            <button class="btn sm danger" onclick="clearMasterList()" style="margin-left:auto">Clear all Models &amp; Sites</button>
+          </div>
+          <div class="master-list-stats" id="master-list-stats"></div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   STATE & STORAGE
+============================================================ */
+const STORAGE_KEY = 'fet_tasr_v1';
+
+// Vehicles that use km/L (Distance ÷ Consumption) instead of the default L/hr (Consumption ÷ Work Hour).
+// These are road vehicles (Bolero / Pickup / Water Tanker) where distance is the meaningful metric.
+const MILEAGE_DISTANCE_BASED = new Set(['MH34BZ0942','MH32BZ0277','MH34BZ4289']);
+
+let state = {
+  records: [],          // {date, vehicle, km, hmr, fuel, kmpl, branch, data:{colName:value}}
+  sites: {},            // {vehicle: siteName}      — editable
+  models: {},           // {vehicle: model}         — editable, overrides upload's Object Model
+  siteFills: {},        // {`${v}|${d}`: number}    — manual SITE FILL entries
+  siteHMRs: {},         // {`${v}|${d}`: number}    — manual Site HMR entered with Site Fill
+  fillOverrides: {},    // {`${v}|${d}`: number}    — overrides upload's Fill (Online Fill correction)
+  workHourOverrides: {},// {`${v}|${d}`: number}    — overrides upload's Work Hour (Online HMR correction)
+  uploads: [],
+  columnOrder: []
+};
+
+function loadState(){
+  try{
+    const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    if(s.records) state.records = s.records;
+    if(s.sites) state.sites = s.sites;
+    if(s.models) state.models = s.models;
+    if(s.siteFills) state.siteFills = s.siteFills;
+    if(s.siteHMRs) state.siteHMRs = s.siteHMRs;
+    if(s.fillOverrides) state.fillOverrides = s.fillOverrides;
+    if(s.workHourOverrides) state.workHourOverrides = s.workHourOverrides;
+    if(s.uploads) state.uploads = s.uploads;
+    if(s.columnOrder) state.columnOrder = s.columnOrder;
+  }catch(e){console.warn('load failed',e)}
+}
+
+/* ============================================================
+   CLOUD SYNC (Supabase) — drop-in cloud layer
+   ────────────────────────────────────────────────────────────
+   • localStorage stays as offline cache + fast first paint
+   • Supabase is the source of truth for shared multi-user data
+   • Edits propagate via debounced batch push (1.5s after last change)
+   • If Supabase is unreachable, the app keeps working locally
+============================================================ */
+const SUPABASE_URL = 'https://YOUR-PROJECT-REF.supabase.co';   // ← replace
+const SUPABASE_ANON_KEY = 'YOUR-ANON-PUBLIC-KEY';              // ← replace
+
+const cloud = {
+  enabled: false,
+  client: null,
+  pushTimer: null,
+  pushing: false,
+  lastError: null,
+
+  async init(){
+    if(!SUPABASE_URL.includes('supabase.co') || SUPABASE_ANON_KEY.length < 30 || SUPABASE_ANON_KEY.startsWith('YOUR-')){
+      this.setStatus('local'); return;
+    }
+    if(!window.supabase){ this.setStatus('local'); return; }
+    try{
+      this.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      this.enabled = true;
+      this.setStatus('syncing');
+      await this.fetchAll();
+      this.setStatus('synced');
+    }catch(e){
+      console.error('Cloud init failed:', e);
+      this.lastError = e.message;
+      this.setStatus('error');
+    }
+  },
+
+  setStatus(s){
+    const el = document.getElementById('sync-status');
+    if(!el) return;
+    const map = {
+      local:   ['#94a3b8', '◌ Local only',     'Cloud sync disabled (no config)'],
+      syncing: ['#f59e0b', '⟳ Syncing…',       'Pushing changes to cloud'],
+      synced:  ['#059669', '☁ Synced',         'All changes saved to cloud'],
+      error:   ['#dc2626', '⚠ Sync error',     this.lastError || 'Cloud unreachable — using local cache'],
+      offline: ['#94a3b8', '⚠ Offline',        'No internet — changes will sync when reconnected']
+    };
+    const [color, text, tip] = map[s] || map.local;
+    el.innerHTML = `<span style="color:${color};font-weight:600">${text}</span>`;
+    el.title = tip;
+  },
+
+  async fetchAll(){
+    if(!this.enabled) return;
+    const [rec, veh, cells, ups] = await Promise.all([
+      this.client.from('records').select('*'),
+      this.client.from('vehicles').select('*'),
+      this.client.from('cells').select('*'),
+      this.client.from('uploads').select('*').order('uploaded_at', {ascending: false}).limit(100)
+    ]);
+    if(rec.error) throw rec.error;
+    if(veh.error) throw veh.error;
+    if(cells.error) throw cells.error;
+    if(ups.error) throw ups.error;
+
+    // Records — overwrite from cloud (cloud is source of truth)
+    state.records = (rec.data || []).map(r => ({
+      vehicle: r.vehicle, date: r.date,
+      km: r.km, hmr: r.hmr, fuel: r.fuel,
+      branch: r.branch, data: r.data || {}
+    })).sort((a,b)=> a.date.localeCompare(b.date) || a.vehicle.localeCompare(b.vehicle));
+
+    // Vehicles
+    state.sites = {}; state.models = {};
+    (veh.data || []).forEach(v => {
+      if(v.site_name) state.sites[v.vehicle] = v.site_name;
+      if(v.model) state.models[v.vehicle] = v.model;
+    });
+
+    // Cell overrides
+    state.fillOverrides = {}; state.workHourOverrides = {};
+    state.siteFills = {}; state.siteHMRs = {};
+    (cells.data || []).forEach(c => {
+      const k = `${c.vehicle}|${c.date}`;
+      if(c.fill_override !== null && c.fill_override !== undefined) state.fillOverrides[k] = +c.fill_override;
+      if(c.wh_override !== null && c.wh_override !== undefined) state.workHourOverrides[k] = +c.wh_override;
+      if(c.site_fill !== null && c.site_fill !== undefined) state.siteFills[k] = +c.site_fill;
+      if(c.site_hmr !== null && c.site_hmr !== undefined) state.siteHMRs[k] = +c.site_hmr;
+    });
+
+    // Uploads
+    state.uploads = (ups.data || []).map(u => ({
+      file: u.file,
+      when: u.uploaded_at,
+      count: u.count,
+      dates: u.dates || []
+    }));
+
+    saveLocal();
+    refreshAll();
+  },
+
+  schedulePush(){
+    if(!this.enabled) return;
+    if(this.pushTimer) clearTimeout(this.pushTimer);
+    this.setStatus('syncing');
+    this.pushTimer = setTimeout(()=> this.pushVehiclesAndCells(), 1500);
+  },
+
+  async pushVehiclesAndCells(){
+    if(!this.enabled || this.pushing) return;
+    this.pushing = true;
+    try{
+      // Vehicles upsert
+      const allV = new Set([...Object.keys(state.sites), ...Object.keys(state.models)]);
+      state.records.forEach(r => allV.add(r.vehicle));
+      const vehRows = [...allV].map(v => ({
+        vehicle: v,
+        site_name: state.sites[v] || null,
+        model: state.models[v] || null
+      }));
+      if(vehRows.length){
+        const { error } = await this.client.from('vehicles').upsert(vehRows, {onConflict: 'vehicle'});
+        if(error) throw error;
+      }
+      // Cells upsert (one row per vehicle×date with any override)
+      const keys = new Set([
+        ...Object.keys(state.fillOverrides),
+        ...Object.keys(state.workHourOverrides),
+        ...Object.keys(state.siteFills),
+        ...Object.keys(state.siteHMRs)
+      ]);
+      const cellRows = [];
+      keys.forEach(k => {
+        const idx = k.indexOf('|'); if(idx < 0) return;
+        cellRows.push({
+          vehicle: k.substring(0, idx),
+          date: k.substring(idx+1),
+          fill_override: state.fillOverrides[k] ?? null,
+          wh_override: state.workHourOverrides[k] ?? null,
+          site_fill: state.siteFills[k] ?? null,
+          site_hmr: state.siteHMRs[k] ?? null
+        });
+      });
+      for(let i=0; i<cellRows.length; i+=500){
+        const { error } = await this.client.from('cells').upsert(cellRows.slice(i, i+500), {onConflict: 'vehicle,date'});
+        if(error) throw error;
+      }
+      this.setStatus('synced');
+    }catch(e){
+      console.error('Push failed:', e);
+      this.lastError = e.message;
+      this.setStatus('error');
+    }finally{
+      this.pushing = false;
+    }
+  },
+
+  async pushRecords(newRecs){
+    if(!this.enabled || !newRecs.length) return;
+    this.setStatus('syncing');
+    try{
+      const rows = newRecs.map(r => ({
+        vehicle: r.vehicle, date: r.date,
+        km: r.km, hmr: r.hmr, fuel: r.fuel,
+        branch: r.branch, data: r.data || {}
+      }));
+      for(let i=0; i<rows.length; i+=500){
+        const { error } = await this.client.from('records').upsert(rows.slice(i, i+500), {onConflict: 'vehicle,date'});
+        if(error) throw error;
+      }
+      this.setStatus('synced');
+    }catch(e){
+      console.error('Push records failed:', e);
+      this.lastError = e.message;
+      this.setStatus('error');
+    }
+  },
+
+  async pushUploadEntry(u){
+    if(!this.enabled) return;
+    try{
+      await this.client.from('uploads').insert({
+        file: u.file, uploaded_at: u.when, count: u.count, dates: u.dates || []
+      });
+    }catch(e){ console.error('Push upload entry failed:', e); }
+  },
+
+  async deleteRecordsByDates(dates){
+    if(!this.enabled || !dates.length) return;
+    try{
+      await this.client.from('records').delete().in('date', dates);
+    }catch(e){ console.error('Delete records failed:', e); }
+  },
+
+  async clearAll(){
+    if(!this.enabled) return;
+    try{
+      await Promise.all([
+        this.client.from('records').delete().gt('id', -1),
+        this.client.from('cells').delete().not('vehicle', 'is', null),
+        this.client.from('vehicles').delete().not('vehicle', 'is', null),
+        this.client.from('uploads').delete().gt('id', -1)
+      ]);
+    }catch(e){ console.error('Clear cloud failed:', e); }
+  }
+};
+
+function saveLocal(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e){ console.warn('localStorage full — relying on cloud only', e); }
+}
+function saveState(){
+  saveLocal();
+  updateStats();
+  cloud.schedulePush();
+}
+
+/* ============================================================
+   UTILITIES
+============================================================ */
+function fmtDate(d){
+  if(!d) return '';
+  if(typeof d === 'string') return d;
+  const yr=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),da=String(d.getDate()).padStart(2,'0');
+  return `${yr}-${m}-${da}`;
+}
+function parseDateAny(v){
+  if(v===null||v===undefined||v==='') return null;
+  if(v instanceof Date && !isNaN(v)) return fmtDate(v);
+  // Excel serial number
+  if(typeof v === 'number' && v > 25000 && v < 80000){
+    const d = new Date(Math.round((v - 25569) * 86400 * 1000));
+    if(!isNaN(d)) return fmtDate(d);
+  }
+  const s = String(v).trim();
+  if(!s) return null;
+  // ISO yyyy-mm-dd
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m) return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  // dd-mm-yyyy or dd/mm/yyyy
+  m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/);
+  if(m){
+    let yr = m[3]; if(yr.length===2) yr = '20'+yr;
+    return `${yr}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  }
+  // mm/dd/yyyy fallback if first looks > 12
+  const d = new Date(s);
+  if(!isNaN(d)) return fmtDate(d);
+  return null;
+}
+function num(v){
+  if(v===null||v===undefined||v==='') return null;
+  const n = Number(String(v).replace(/[, ]/g,''));
+  return isFinite(n) ? n : null;
+}
+function fmtNum(n,d=1){
+  if(n===null||n===undefined||!isFinite(n)) return '—';
+  return Number(n).toLocaleString('en-IN',{minimumFractionDigits:d,maximumFractionDigits:d});
+}
+function fmtInt(n){
+  if(n===null||n===undefined||!isFinite(n)) return '—';
+  return Number(n).toLocaleString('en-IN',{maximumFractionDigits:0});
+}
+// Round numeric value to 1 decimal for input value attributes
+function r1(v){
+  if(v === null || v === undefined || v === '') return '';
+  if(typeof v !== 'number' || isNaN(v)) return v;
+  return Math.round(v * 10) / 10;
+}
+function fmtNiceDate(s){
+  if(!s) return '';
+  const [y,m,d] = s.split('-');
+  return new Date(`${y}-${m}-${d}`).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});
+}
+function fmtShortDate(s){
+  if(!s) return '';
+  const [y,m,d] = s.split('-');
+  return `${d}/${m}`;
+}
+
+// Normalise a raw cell value from SheetJS:
+//   '--' / '' / null  → null
+//   "03:55" (HH:MM)   → 3.917 (decimal hours)
+//   "1,234.5" (text)  → 1234.5 (number)
+//   numbers           → as-is
+//   everything else   → as-is string (e.g. "BharatBenz", "21-09-2023")
+function normaliseCellValue(v){
+  if(v===null||v===undefined||v==='') return null;
+  if(typeof v === 'number') return isFinite(v) ? v : null;
+  const s = String(v).trim();
+  if(!s || s === '--') return null;
+  // HH:MM or HH:MM:SS → decimal hours
+  if(/^\d+:\d{1,2}(:\d{1,2})?$/.test(s)){
+    const dec = parseHMR(s);
+    return dec !== null ? +dec.toFixed(3) : s;
+  }
+  // Pure number? (handles "1,234.5" and "5")
+  if(/^-?[\d,]+(\.\d+)?$/.test(s)){
+    const n = Number(s.replace(/,/g,''));
+    if(isFinite(n)) return n;
+  }
+  return s;
+}
+function toast(msg, kind=''){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + kind;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+/* ============================================================
+   COLUMN DETECTION
+   Uses exact (case-insensitive) match against known header names.
+   Handles Etrack/Trakzee fuel economy reports + generic formats.
+============================================================ */
+const VEHICLE_HEADERS = ['object','vehicle','asset','vehicle number','vehicle name','vehicle no','reg no','registration'];
+const COL_EXACT = {
+  date:    ['date','reading date','report date','data date'],
+  km:      ['distance','km','kms','total distance','distance (km)','distance run','kms run'],
+  hmr:     ['work hour','work hours','hmr','hour meter','engine hours','hour meter reading','running hours','running','run hours','hm reading'],
+  fuel:    ['consumption','fuel used','fuel consumed','fuel (l)','fuel','fuel consumption','fuel cons','liters','litres'],
+  kmpl:    ['mileage based on distance','mileage','kmpl','km/l','km/ltr','fuel economy','economy','avg mileage'],
+  branch:  ['branch','site','location','depot','site name','branch name'],
+  company: ['company','organization','client']
+};
+
+// Find the vehicle anchor column (Object/Vehicle/Asset).
+function findVehicleCol(headerRow){
+  for(let i=0;i<headerRow.length;i++){
+    const h = String(headerRow[i]||'').trim().toLowerCase();
+    if(VEHICLE_HEADERS.includes(h)) return i;
+  }
+  return -1;
+}
+
+// Etrack reports stack unit metadata in cols 0-2 (e.g. "Distance Unit | km").
+// The real header block is contiguous around the vehicle column — walk left
+// from the anchor while previous cells are non-empty to find the block start.
+function findHeaderBlockStart(headerRow, anchorIdx){
+  let start = anchorIdx;
+  while(start > 0 && String(headerRow[start-1]||'').trim() !== '') start--;
+  return start;
+}
+
+function detectColumns(headerRow, startCol){
+  // Build header-name → column-index lookup (first occurrence wins for duplicates)
+  const headerByName = {};
+  for(let i=startCol;i<headerRow.length;i++){
+    const h = String(headerRow[i]||'').trim().toLowerCase();
+    if(!h || h in headerByName) continue;
+    headerByName[h] = i;
+  }
+  // For each key, try synonyms in priority order — first matching synonym wins.
+  // This ensures e.g. "Work Hour" beats "Running" for HMR even if Running's column
+  // appears earlier in the sheet.
+  const map = {};
+  for(const key of Object.keys(COL_EXACT)){
+    for(const synonym of COL_EXACT[key]){
+      if(synonym in headerByName){
+        map[key] = headerByName[synonym];
+        break;
+      }
+    }
+  }
+  return map;
+}
+
+// "84:48" or "359:59" or "08:30:15" → decimal hours (84.8, 359.98, 8.504...)
+function parseHMR(v){
+  if(v===null||v===undefined||v==='') return null;
+  if(typeof v === 'number' && isFinite(v)) return v;
+  const s = String(v).trim();
+  if(!s || s==='--') return null;
+  const m = s.match(/^(\d+):(\d{1,2})(?::(\d{1,2}))?$/);
+  if(m){
+    const h = parseInt(m[1],10);
+    const mn = parseInt(m[2],10);
+    const sc = m[3] ? parseInt(m[3],10) : 0;
+    return h + mn/60 + sc/3600;
+  }
+  return num(v);
+}
+
+// Look for "Duration: from DD-MM-YYYY ... to DD-MM-YYYY" in early rows.
+// Uses lazy match between dates so "12:00 AM to" / "11:59 PM" don't break it.
+function findDurationDates(rows){
+  for(let i=0;i<Math.min(10,rows.length);i++){
+    const text = rows[i].map(c=>String(c||'')).join(' ');
+    const m = text.match(/from\s+(\d{1,2}[-\/.]\d{1,2}[-\/.]\d{2,4}).+?\bto\b\s+(\d{1,2}[-\/.]\d{1,2}[-\/.]\d{2,4})/i);
+    if(m){
+      const from = parseDateAny(m[1]);
+      const to = parseDateAny(m[2]);
+      if(from && to) return { from, to };
+    }
+  }
+  return null;
+}
+
+// Filename like "Fuel_Economy_17-04-2026_10-58-57_PM.xlsx" → "2026-04-17"
+function findFilenameDate(name){
+  const m = name.match(/(\d{1,2})[-_](\d{1,2})[-_](\d{4})/);
+  if(m) return parseDateAny(`${m[1]}-${m[2]}-${m[3]}`);
+  return null;
+}
+
+/* ============================================================
+   FILE UPLOAD
+============================================================ */
+function setupUpload(){
+  const fi = document.getElementById('file-input');
+  const dz = document.getElementById('dropzone');
+  fi.multiple = true;
+  fi.addEventListener('change', e=>{
+    const files = [...e.target.files];
+    if(files.length) handleFiles(files);
+    fi.value = '';
+  });
+  ['dragenter','dragover'].forEach(ev=>{
+    dz.addEventListener(ev, e=>{e.preventDefault();dz.classList.add('drag')});
+  });
+  ['dragleave','drop'].forEach(ev=>{
+    dz.addEventListener(ev, e=>{e.preventDefault();dz.classList.remove('drag')});
+  });
+  dz.addEventListener('drop', e=>{
+    const files = [...e.dataTransfer.files];
+    if(files.length) handleFiles(files);
+  });
+
+  document.getElementById('restore-input').addEventListener('change', e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = ev =>{
+      try{
+        const obj = JSON.parse(ev.target.result);
+        if(!obj.records) throw new Error('Invalid backup');
+        if(!confirm(`Restore ${obj.records.length} records? This replaces current data.`)) return;
+        state = Object.assign({records:[],sites:{},models:{},siteFills:{},siteHMRs:{},fillOverrides:{},workHourOverrides:{},uploads:[],columnOrder:[]}, obj);
+        saveState(); refreshAll();
+        toast('Restored ✓','good');
+      }catch(err){ toast('Invalid backup file','bad'); }
+    };
+    r.readAsText(f);
+    e.target.value = '';
+  });
+}
+
+async function handleFiles(files){
+  let okCount = 0, totalRows = 0;
+  const allDates = new Set();
+  const warnings = [];
+  for(const f of files){
+    try{
+      const res = await processOneFile(f);
+      if(res){
+        okCount++;
+        totalRows += res.rows;
+        res.dates.forEach(d=>allDates.add(d));
+        if(res.warning) warnings.push(`${f.name}: ${res.warning}`);
+      }
+    }catch(err){
+      console.error(err);
+      warnings.push(`${f.name}: ${err.message}`);
+    }
+  }
+  saveState();
+  refreshAll();
+  if(okCount){
+    toast(`Imported ${totalRows} rows from ${okCount} file(s) across ${allDates.size} day(s) ✓`,'good');
+  } else {
+    toast('No valid data found in file(s)','bad');
+  }
+  if(warnings.length){
+    setTimeout(()=>toast('⚠ '+warnings[0],'warn'), 3000);
+  }
+}
+
+function processOneFile(file){
+  return new Promise((resolve, reject)=>{
+    const r = new FileReader();
+    r.onload = ev =>{
+      try{
+        const data = new Uint8Array(ev.target.result);
+        const wb = XLSX.read(data, {type:'array', cellDates:true});
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, {header:1, raw:false, defval:''});
+        const result = processRows(rows, file.name);
+        resolve(result);
+      }catch(err){ reject(err); }
+    };
+    r.onerror = ()=> reject(new Error('Read failed'));
+    r.readAsArrayBuffer(file);
+  });
+}
+
+function processRows(rows, filename){
+  if(!rows.length){ throw new Error('Empty file'); }
+
+  // --- Date detection (priority: explicit override > duration row > filename) ---
+  const overrideDate = document.getElementById('upload-date').value || null;
+  const duration = findDurationDates(rows);
+  const filenameDate = findFilenameDate(filename);
+  let warning = null;
+
+  // --- Header detection: scan first 12 rows for one containing Object/Vehicle/Asset ---
+  let hdrIdx = -1;
+  for(let i=0;i<Math.min(12,rows.length);i++){
+    const joined = rows[i].map(x=>String(x||'')).join(' ').toLowerCase();
+    if(/\bobject\b|\bvehicle\b|\basset\b/.test(joined) && /distance|km|hour|consumption|fuel/.test(joined)){
+      hdrIdx = i; break;
+    }
+  }
+  if(hdrIdx === -1) throw new Error('Could not find header row (need Object/Vehicle column)');
+
+  const headers = rows[hdrIdx];
+  const vehicleCol = findVehicleCol(headers);
+  if(vehicleCol === -1) throw new Error('Vehicle/Object column not detected');
+  const startCol = findHeaderBlockStart(headers, vehicleCol);
+  const cols = detectColumns(headers, startCol);
+  cols.vehicle = vehicleCol;
+
+  // Capture ALL column headers in order (excluding the vehicle column itself —
+  // the vehicle is shown separately in reports)
+  const allColIdx = []; // [{idx, name}]
+  for(let c = startCol; c < headers.length; c++){
+    const name = String(headers[c]||'').trim();
+    if(!name || c === vehicleCol) continue;
+    allColIdx.push({idx: c, name});
+  }
+  // Update master column order (union, preserving first-seen order)
+  if(!state.columnOrder) state.columnOrder = [];
+  allColIdx.forEach(({name})=>{
+    if(!state.columnOrder.includes(name)) state.columnOrder.push(name);
+  });
+
+  // Determine the date for rows that don't have a date column
+  let defaultDate = overrideDate;
+  if(!defaultDate && duration){
+    defaultDate = duration.from;
+    if(duration.from !== duration.to){
+      warning = `Multi-day file (${duration.from} → ${duration.to}). Used start date.`;
+    }
+  }
+  if(!defaultDate && filenameDate) defaultDate = filenameDate;
+
+  const newRecs = [];
+  const datesSeen = new Set();
+  const branchByVehicle = {};
+
+  for(let i = hdrIdx+1; i < rows.length; i++){
+    const row = rows[i];
+    if(!row || row.every(c=>c===''||c===null||c===undefined)) continue;
+
+    const veh = String(row[cols.vehicle]||'').trim();
+    if(!veh || /^total|^grand|^summary|^average/i.test(veh)) continue;
+
+    let date = cols.date !== undefined ? parseDateAny(row[cols.date]) : null;
+    if(!date) date = defaultDate;
+    if(!date) continue;
+
+    const km   = cols.km   !== undefined ? num(row[cols.km])   : null;
+    const hmr  = cols.hmr  !== undefined ? parseHMR(row[cols.hmr])  : null;
+    const fuel = cols.fuel !== undefined ? num(row[cols.fuel]) : null;
+    let kmpl   = cols.kmpl !== undefined ? num(row[cols.kmpl]) : null;
+    if(kmpl===null && km && fuel && fuel>0) kmpl = km / fuel;
+
+    if(km===null && hmr===null && fuel===null) continue;
+
+    // Capture branch for auto-mapping
+    let branchValue = null;
+    if(cols.branch !== undefined){
+      const br = String(row[cols.branch]||'').trim();
+      if(br && br !== '--'){
+        branchByVehicle[veh] = br;
+        branchValue = br;
+      }
+    }
+
+    // Capture ALL columns into data (with HH:MM auto-converted to decimal hours,
+    // '--' and empty → null, numeric strings → numbers, everything else as-is)
+    const data = {};
+    for(const {idx, name} of allColIdx){
+      const raw = row[idx];
+      data[name] = normaliseCellValue(raw);
+    }
+
+    newRecs.push({date, vehicle:veh, km, hmr, fuel, kmpl, branch:branchValue, data});
+    datesSeen.add(date);
+  }
+
+  if(!newRecs.length) throw new Error('No valid rows');
+
+  // Note: site names are NOT auto-filled from upload data — they come ONLY from
+  // the Master List import (Admin page) or manual entry on Page 2 / Page 3.
+
+  // Merge: replace records for (date, vehicle) combos in this upload
+  const keysInUpload = new Set(newRecs.map(r=>`${r.date}|${r.vehicle}`));
+  state.records = state.records.filter(r=>!keysInUpload.has(`${r.date}|${r.vehicle}`));
+  state.records.push(...newRecs);
+  state.records.sort((a,b)=> a.date.localeCompare(b.date) || a.vehicle.localeCompare(b.vehicle));
+
+  state.uploads.unshift({
+    file: filename,
+    when: new Date().toISOString(),
+    count: newRecs.length,
+    dates: [...datesSeen].sort()
+  });
+  state.uploads = state.uploads.slice(0,30);
+
+  // Push the new records and upload entry to the cloud (fire-and-forget)
+  cloud.pushRecords(newRecs);
+  cloud.pushUploadEntry(state.uploads[0]);
+
+  return { rows: newRecs.length, dates: [...datesSeen], warning };
+}
+
+function renderUploadList(){
+  const wrap = document.getElementById('upload-list');
+  if(!state.uploads.length){
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:10px">No uploads yet</div>';
+    return;
+  }
+  wrap.innerHTML = state.uploads.map((u, idx)=>{
+    const uploadedAt = new Date(u.when).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+    let sheetDateLine;
+    if(u.dates && u.dates.length === 1){
+      sheetDateLine = fmtNiceDate(u.dates[0]);
+    } else if(u.dates && u.dates.length > 1){
+      sheetDateLine = `${fmtNiceDate(u.dates[0])} → ${fmtNiceDate(u.dates[u.dates.length-1])} (${u.dates.length} days)`;
+    } else {
+      sheetDateLine = '—';
+    }
+    return `
+    <div class="upload-item">
+      <div class="info">
+        <div class="fn" title="${escapeHtml(u.file)}">${escapeHtml(u.file)}</div>
+        <div class="dates">
+          <div class="dline"><b>Uploaded:</b><span class="dval">${escapeHtml(uploadedAt)}</span></div>
+          <div class="dline"><b>Sheet date:</b><span class="dval">${escapeHtml(sheetDateLine)}</span></div>
+        </div>
+      </div>
+      <div class="actions">
+        <span class="badge good">${u.count} rows</span>
+        ${u.autoMapped?`<span class="badge">+${u.autoMapped} sites</span>`:''}
+        <button class="x-btn" onclick="removeUpload(${idx})" title="Remove this upload &amp; its records">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function removeUpload(idx){
+  const u = state.uploads[idx];
+  if(!u) return;
+  const datesList = (u.dates && u.dates.length) ? u.dates.map(fmtNiceDate).join(', ') : 'this upload';
+  const msg = `Remove upload "${u.file}" and delete all records for ${datesList}?\n\nThis cannot be undone.`;
+  if(!confirm(msg)) return;
+  // Drop records that came from these specific dates
+  const dateSet = new Set(u.dates || []);
+  if(dateSet.size){
+    const before = state.records.length;
+    state.records = state.records.filter(r => !dateSet.has(r.date));
+    var droppedRecs = before - state.records.length;
+    // Mirror deletion to cloud
+    cloud.deleteRecordsByDates([...dateSet]);
+  } else {
+    var droppedRecs = 0;
+  }
+  // Also remove the uploads-table row if cloud is enabled
+  if(cloud.enabled && u.when){
+    cloud.client.from('uploads').delete().eq('uploaded_at', u.when).then(()=>{}, ()=>{});
+  }
+  state.uploads.splice(idx, 1);
+  saveState();
+  refreshAll();
+  toast(`Removed upload · ${droppedRecs} record${droppedRecs===1?'':'s'} deleted`,'warn');
+}
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+/* ============================================================
+   CALENDAR
+============================================================ */
+let calCursor = new Date();
+calCursor.setDate(1);
+
+function renderCalendar(){
+  const yr = calCursor.getFullYear(), mo = calCursor.getMonth();
+  const monthName = calCursor.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  document.getElementById('cal-title').textContent = monthName;
+
+  const firstDay = new Date(yr, mo, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(yr, mo+1, 0).getDate();
+  const today = fmtDate(new Date());
+  const datesWithData = new Set(state.records.map(r=>r.date));
+  const selDate = document.getElementById('upload-date').value;
+
+  const dows = ['S','M','T','W','T','F','S'];
+  let html = dows.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<firstDay;i++) html += `<div class="cal-day empty"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const ds = `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cls = ['cal-day'];
+    if(datesWithData.has(ds)) cls.push('has-data');
+    if(ds === today) cls.push('today');
+    if(ds === selDate) cls.push('selected');
+    html += `<div class="${cls.join(' ')}" onclick="pickDate('${ds}')">${d}${datesWithData.has(ds)?'<div class="check">✓</div>':''}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML = html;
+}
+function calNav(delta){
+  calCursor.setMonth(calCursor.getMonth()+delta);
+  renderCalendar();
+}
+function pickDate(ds){
+  document.getElementById('upload-date').value = ds;
+  renderCalendar();
+  toast('Date set: '+fmtNiceDate(ds));
+}
+
+/* ============================================================
+   PAGE 2: VEHICLES & SITES
+============================================================ */
+function setVehRange(days){
+  const all = [...new Set(state.records.map(r=>r.date))].sort();
+  if(!all.length) return;
+  const to = all[all.length-1];
+  const fromD = new Date(to); fromD.setDate(fromD.getDate()-days+1);
+  document.getElementById('veh-from').value = fmtDate(fromD);
+  document.getElementById('veh-to').value = to;
+  renderVehicles();
+}
+function setVehRangeAll(){
+  const all = [...new Set(state.records.map(r=>r.date))].sort();
+  if(!all.length) return;
+  document.getElementById('veh-from').value = all[0];
+  document.getElementById('veh-to').value = all[all.length-1];
+  renderVehicles();
+}
+
+function renderVehicles(){
+  const body = document.getElementById('vehicles-body');
+  if(!state.records.length){
+    body.innerHTML = emptyState('No data yet','Upload a fuel economy file from Page 1 to get started.');
+    return;
+  }
+  const fromD = document.getElementById('veh-from').value;
+  const toD   = document.getElementById('veh-to').value;
+  const search = (document.getElementById('veh-search').value||'').toLowerCase().trim();
+
+  const recs = state.records.filter(r=>
+    (!fromD || r.date >= fromD) && (!toD || r.date <= toD)
+  );
+  if(!recs.length){
+    body.innerHTML = emptyState('No data in this range','Adjust the date filter or pick a different range.');
+    return;
+  }
+  // Build pivot: vehicles × dates
+  const dates = [...new Set(recs.map(r=>r.date))].sort();
+  const vehMap = {};
+  recs.forEach(r=>{
+    if(!vehMap[r.vehicle]) vehMap[r.vehicle] = {};
+    vehMap[r.vehicle][r.date] = r;
+  });
+  // Sort by Branch then vehicle name — matches Page 3 date-wise report ordering
+  const vehBranch = {};
+  recs.forEach(r=>{
+    if(!(r.vehicle in vehBranch)){
+      vehBranch[r.vehicle] = r.branch || (r.data && r.data['Branch']) || '';
+    }
+  });
+  let vehicles = Object.keys(vehMap).sort((a,b)=>{
+    const ba = vehBranch[a] || '', bb = vehBranch[b] || '';
+    return ba.localeCompare(bb) || a.localeCompare(b);
+  });
+  if(search){
+    vehicles = vehicles.filter(v=>{
+      const site = (state.sites[v]||'').toLowerCase();
+      const br = (vehBranch[v]||'').toLowerCase();
+      return v.toLowerCase().includes(search) || site.includes(search) || br.includes(search);
+    });
+  }
+  if(!vehicles.length){
+    body.innerHTML = emptyState('No matches','Try a different search.');
+    return;
+  }
+
+  // Build 3-col-per-date pivot (Online Fill / Site Fill / Site HMR)
+  let html = '<div class="table-wrap"><table class="pivot pivot3">';
+  html += '<thead><tr>';
+  html += `<th rowspan="2" class="sticky-branch">Branch</th>`;
+  html += `<th rowspan="2" class="sticky-veh">Vehicle</th>`;
+  html += `<th rowspan="2" class="sticky-site">Site Name</th>`;
+  dates.forEach(d=>{
+    html += `<th colspan="3" class="date-grp">${fmtShortDate(d)}</th>`;
+  });
+  html += '</tr><tr>';
+  dates.forEach(()=>{
+    html += `<th class="metric num m-fill">Online&nbsp;Fill</th>`;
+    html += `<th class="metric num m-sfill">Site&nbsp;Fill</th>`;
+    html += `<th class="metric num m-hmr">Site&nbsp;HMR</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  let prevBranch = null;
+  vehicles.forEach(v=>{
+    const branch = vehBranch[v] || '';
+    const isNewBranchGroup = (branch !== prevBranch);
+    prevBranch = branch;
+    html += `<tr${isNewBranchGroup ? ' class="branch-start"' : ''}>`;
+    html += `<td class="sticky-branch">${branch ? escapeHtml(branch) : '<span style="color:var(--muted)">—</span>'}</td>`;
+    html += `<td class="sticky-veh"><span class="veh-pill">${escapeHtml(v)}</span></td>`;
+    html += `<td class="sticky-site"><input type="text" class="site-name-inp" data-vehicle="${escapeAttr(v)}" value="${escapeAttr(state.sites[v]||'')}" onchange="updateSiteNameInline(this)" placeholder="—" /></td>`;
+    dates.forEach(d=>{
+      const r = vehMap[v][d];
+      const k = `${v}|${d}`;
+      const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k] : ((r && r.data && 'Fill' in r.data) ? r.data['Fill'] : null);
+      const siteFill   = (k in state.siteFills)     ? state.siteFills[k]     : null;
+      const siteHMR    = (k in state.siteHMRs)      ? state.siteHMRs[k]      : null;
+      const noRec = !r ? ' no-rec' : '';
+      html += `<td class="num metric-cell cell-fill${noRec}"><input type="number" step="0.01" class="fill-inp" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(onlineFill) ?? ''}" oninput="updateFillOverride(this)" placeholder="—" /></td>`;
+      html += `<td class="num metric-cell cell-sfill${noRec}"><input type="number" step="0.01" class="site-fill-inp" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(siteFill) ?? ''}" oninput="updateSiteFill(this)" placeholder="—" /></td>`;
+      html += `<td class="num metric-cell cell-shmr${noRec}"><input type="number" step="0.01" class="site-hmr-inp" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(siteHMR) ?? ''}" oninput="updateSiteHMR(this)" placeholder="—" /></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  body.innerHTML = html;
+}
+
+function updateSite(vehicle, site){
+  if(site && site.trim()){
+    state.sites[vehicle] = site.trim();
+  } else {
+    delete state.sites[vehicle];
+  }
+  saveState();
+  toast('Site saved','good');
+}
+function escapeAttr(s){return String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}
+
+function emptyState(title, msg){
+  return `<div class="empty-state"><div class="ic">📭</div><h3>${title}</h3><p>${msg}</p></div>`;
+}
+
+/* ============================================================
+   PAGE 3: REPORTS
+============================================================ */
+let curRTab = 'date';
+function setRTab(t){
+  curRTab = t;
+  document.querySelectorAll('.rtab').forEach(b=>b.classList.toggle('active', b.dataset.rtab===t));
+  document.getElementById('rtb-date').style.display = t==='date' ? '' : 'none';
+  document.getElementById('rtb-vehicle').style.display = t==='vehicle' ? '' : 'none';
+  renderReport();
+}
+function populateReportFilters(){
+  const dates = [...new Set(state.records.map(r=>r.date))].sort().reverse();
+  const sel = document.getElementById('rep-date');
+  sel.innerHTML = dates.map(d=>`<option value="${d}">${fmtNiceDate(d)}</option>`).join('') || '<option value="">— no data —</option>';
+  sel.onchange = renderReport;
+
+  const vehicles = [...new Set(state.records.map(r=>r.vehicle))].sort();
+  const vsel = document.getElementById('rep-vehicle');
+  vsel.innerHTML = vehicles.map(v=>{
+    const s = state.sites[v]?` (${escapeHtml(state.sites[v])})`:'';
+    return `<option value="${escapeAttr(v)}">${escapeHtml(v)}${s}</option>`;
+  }).join('') || '<option value="">— no data —</option>';
+  vsel.onchange = renderReport;
+
+  if(dates.length){
+    const to = dates[0], from = dates[Math.min(dates.length-1, 29)];
+    if(!document.getElementById('rep-from').value) document.getElementById('rep-from').value = from;
+    if(!document.getElementById('rep-to').value) document.getElementById('rep-to').value = to;
+  }
+}
+
+function renderReport(){
+  const body = document.getElementById('report-body');
+  const ph = document.getElementById('print-header');
+  const ptitle = document.getElementById('print-title');
+  const pmeta = document.getElementById('print-meta');
+
+  if(!state.records.length){
+    body.innerHTML = emptyState('No data','Upload data first to view reports.');
+    return;
+  }
+
+  if(curRTab === 'date'){
+    const date = document.getElementById('rep-date').value;
+    if(!date){ body.innerHTML = emptyState('Pick a date',''); return; }
+    const recs = state.records.filter(r=>r.date===date)
+      .sort((a,b)=> (state.sites[a.vehicle]||'').localeCompare(state.sites[b.vehicle]||'') || a.vehicle.localeCompare(b.vehicle));
+    ptitle.textContent = `Date Report — ${fmtNiceDate(date)}`;
+    pmeta.textContent = `${recs.length} vehicles · Generated ${new Date().toLocaleString('en-IN')}`;
+    body.innerHTML = renderDateReport(recs, date);
+  } else {
+    const v = document.getElementById('rep-vehicle').value;
+    const fromD = document.getElementById('rep-from').value;
+    const toD = document.getElementById('rep-to').value;
+    if(!v){ body.innerHTML = emptyState('Pick a vehicle',''); return; }
+    const recs = state.records.filter(r=>r.vehicle===v && (!fromD||r.date>=fromD) && (!toD||r.date<=toD))
+      .sort((a,b)=>a.date.localeCompare(b.date));
+    ptitle.textContent = `Vehicle Report — ${v}`;
+    const site = state.sites[v]?` · ${state.sites[v]}`:'';
+    pmeta.textContent = `${recs.length} days · ${fmtNiceDate(fromD)} → ${fmtNiceDate(toD)}${site} · Generated ${new Date().toLocaleString('en-IN')}`;
+    body.innerHTML = renderVehicleReport(recs, v, fromD, toD);
+  }
+}
+
+// ---- Helpers for curated reports ----
+function getRecField(r, name){
+  // Lookup helper that prefers user overrides, then semantic shortcuts, then data{}
+  const k = `${r.vehicle}|${r.date}`;
+  if(name === 'Distance') return r.km;
+  if(name === 'Work Hour'){
+    if(k in state.workHourOverrides) return state.workHourOverrides[k];
+    return r.hmr;
+  }
+  if(name === 'Fill'){
+    if(k in state.fillOverrides) return state.fillOverrides[k];
+    return (r.data && 'Fill' in r.data) ? r.data['Fill'] : null;
+  }
+  if(name === 'Object Model'){
+    if(state.models[r.vehicle]) return state.models[r.vehicle];
+    return (r.data && r.data['Object Model']) || '';
+  }
+  if(name === 'Consumption'){
+    // User-requested formula: Start Fuel + Online Fill − End Fuel
+    // Negative result (e.g. End Fuel > Start + Fill due to sensor refill blip) → treat as 0.
+    const startF = r.data && r.data['Start Fuel Level'];
+    const fill = getRecField(r, 'Fill');
+    const endF = r.data && r.data['End Fuel Level'];
+    if(typeof startF === 'number' && typeof fill === 'number' && typeof endF === 'number'){
+      const cons = startF + fill - endF;
+      return cons < 0 ? 0 : cons;
+    }
+    return null;
+  }
+  if(name === 'Branch') return r.branch || (r.data && r.data['Branch']) || '';
+  if(name === 'MILEAGE'){
+    const cons = getRecField(r, 'Consumption');
+    if(MILEAGE_DISTANCE_BASED.has(r.vehicle)){
+      // Road vehicles — Distance ÷ Consumption (km/L)
+      if(typeof cons === 'number' && cons > 0 && typeof r.km === 'number') return r.km / cons;
+      return null;
+    }
+    // Default — Consumption ÷ Work Hour (L/hr). NA work-hour → mileage null.
+    const wh = getEffectiveWorkHour(r);
+    if(typeof wh === 'number' && wh > 0 && typeof cons === 'number') return cons / wh;
+    return null;
+  }
+  return (r.data && (name in r.data)) ? r.data[name] : null;
+}
+function fmtCell(v){
+  if(v===null||v===undefined||v==='') return '<span style="color:var(--muted)">—</span>';
+  if(typeof v === 'number'){
+    if(Number.isInteger(v)) return v.toLocaleString('en-IN');
+    return v.toLocaleString('en-IN',{maximumFractionDigits:1});
+  }
+  return escapeHtml(String(v));
+}
+function diffSign(d){
+  if(d === null || d === undefined || isNaN(d)) return '';
+  if(Math.abs(d) < 0.5) return 'diff-ok';
+  return d > 0 ? 'diff-bad' : 'diff-warn';
+}
+function getSiteFill(vehicle, date){
+  // Per spec: Site Fill on reports requires user to enter BOTH Site Fill AND Site HMR
+  // (the manual pair) on Page 2. Either missing → Site Fill column on report stays empty.
+  // Online HMR (state.workHourOverrides / r.hmr) is NOT the gating field — that's telematics.
+  const k = `${vehicle}|${date}`;
+  if(!(k in state.siteFills)) return null;
+  if(!(k in state.siteHMRs)) return null;
+  return state.siteFills[k];
+}
+function getRawSiteFill(vehicle, date){
+  const k = `${vehicle}|${date}`;
+  return (k in state.siteFills) ? state.siteFills[k] : null;
+}
+// Click NA → swap the cell to an editable input so the user can override the value.
+function editNAWorkHour(span, v, d){
+  const td = span.parentNode;
+  const k = `${v}|${d}`;
+  const cur = (k in state.workHourOverrides) ? state.workHourOverrides[k] : '';
+  td.innerHTML = `<input type="number" step="0.1" class="wh-inp" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(cur) ?? ''}" oninput="updateWorkHourOverride(this)" placeholder="—" />`;
+  const inp = td.querySelector('input');
+  if(inp){ inp.focus(); inp.select(); }
+}
+
+function getRawSiteHMR(vehicle, date){
+  const k = `${vehicle}|${date}`;
+  return (k in state.siteHMRs) ? state.siteHMRs[k] : null;
+}
+
+// Page 3 Work Hour display logic (NA rules):
+//   1) HMR == 23:59 (≈23.9833 hours) — telematics sentinel for "no work" → NA
+//   2) HMR == 00:00 AND (Start Fuel + Online Fill − End Fuel) > 5L — fuel consumed
+//      but no work logged (data anomaly) → NA
+// Returns 'NA' (string) when either rule fires; otherwise the numeric work hour.
+function getEffectiveWorkHour(r){
+  const k = `${r.vehicle}|${r.date}`;
+  const wh = (k in state.workHourOverrides) ? state.workHourOverrides[k] : r.hmr;
+  if(wh == null) return null;
+  // Rule 1: 23:59 sentinel (HH:MM "23:59" → 23 + 59/60 = 23.9833…)
+  if(Math.abs(wh - 23.9833) < 0.01) return 'NA';
+  // Rule 2: 0 hours but fuel anomaly
+  if(wh === 0){
+    const startF = (r.data && r.data['Start Fuel Level']);
+    const endF   = (r.data && r.data['End Fuel Level']);
+    const fill   = getRecField(r, 'Fill');
+    if(typeof startF === 'number' && typeof endF === 'number' && typeof fill === 'number'){
+      const consumed = startF + fill - endF;
+      if(consumed > 5) return 'NA';
+    }
+  }
+  return wh;
+}
+function getDiff(r){
+  const fill = getRecField(r, 'Fill');
+  const sf = getSiteFill(r.vehicle, r.date);
+  if(fill == null || sf == null) return null;
+  return fill - sf;
+}
+
+// Inline edit handlers
+function updateSiteNameInline(input){
+  const v = input.dataset.vehicle;
+  const newName = input.value.trim();
+  if(newName) state.sites[v] = newName;
+  else delete state.sites[v];
+  saveState();
+  // Sync other inputs for the same vehicle on screen
+  document.querySelectorAll('.site-name-inp').forEach(inp=>{
+    if(inp.dataset.vehicle === v && inp !== input) inp.value = newName;
+  });
+}
+function updateModelInline(input){
+  const v = input.dataset.vehicle;
+  const val = input.value.trim();
+  if(val) state.models[v] = val;
+  else delete state.models[v];
+  saveState();
+  document.querySelectorAll('.model-inp').forEach(inp=>{
+    if(inp.dataset.vehicle === v && inp !== input) inp.value = val;
+  });
+}
+function updateFillOverride(input){
+  // Online Fill — overrides upload's Fill value, syncs Page 2 ↔ Page 3 inputs
+  const v = input.dataset.vehicle, d = input.dataset.date, k = `${v}|${d}`;
+  const num = input.value === '' ? null : parseFloat(input.value);
+  if(num === null || isNaN(num)) delete state.fillOverrides[k];
+  else state.fillOverrides[k] = num;
+  saveState();
+  // Sync other Online Fill inputs on screen for this v×d (Page 2 pivot ↔ Page 3 reports)
+  const synced = (num !== null && !isNaN(num)) ? num : '';
+  document.querySelectorAll('.fill-inp').forEach(inp=>{
+    if(inp !== input && inp.dataset.vehicle === v && inp.dataset.date === d) inp.value = synced;
+  });
+  refreshDiffCells(v, d);
+}
+function updateWorkHourOverride(input){
+  // Online HMR override — overrides upload's Work Hour. Used by Page 3 Work Hour column.
+  // Does NOT gate Site Fill (that's Site HMR's job, see updateSiteHMR).
+  const v = input.dataset.vehicle, d = input.dataset.date, k = `${v}|${d}`;
+  const num = input.value === '' ? null : parseFloat(input.value);
+  if(num === null || isNaN(num)) delete state.workHourOverrides[k];
+  else state.workHourOverrides[k] = num;
+  saveState();
+  const synced = (num !== null && !isNaN(num)) ? num : '';
+  document.querySelectorAll('.wh-inp').forEach(inp=>{
+    if(inp !== input && inp.dataset.vehicle === v && inp.dataset.date === d) inp.value = synced;
+  });
+}
+function updateSiteHMR(input){
+  // Site HMR — manual entry paired with Site Fill on Page 2.
+  // Gates Site Fill display on Page 3: both Site Fill AND Site HMR must be present.
+  const v = input.dataset.vehicle, d = input.dataset.date, k = `${v}|${d}`;
+  const num = input.value === '' ? null : parseFloat(input.value);
+  if(num === null || isNaN(num)) delete state.siteHMRs[k];
+  else state.siteHMRs[k] = num;
+  saveState();
+  const synced = (num !== null && !isNaN(num)) ? num : '';
+  document.querySelectorAll('.site-hmr-inp').forEach(inp=>{
+    if(inp !== input && inp.dataset.vehicle === v && inp.dataset.date === d) inp.value = synced;
+  });
+  // Site HMR change toggles Site Fill visibility on Page 3 → refresh
+  refreshSiteFillAndDiff(v, d);
+}
+function refreshDiffCells(v, d){
+  const rec = state.records.find(r=>r.vehicle===v && r.date===d);
+  if(!rec) return;
+  const fill = getRecField(rec, 'Fill');
+  document.querySelectorAll('.cell-diff').forEach(cell=>{
+    if(cell.dataset.vehicle === v && cell.dataset.date === d){
+      const sf = getSiteFill(v, d);
+      const diff = (fill != null && sf != null) ? fill - sf : null;
+      cell.innerHTML = fmtCell(diff);
+      cell.className = 'num cell-diff ' + diffSign(diff);
+    }
+  });
+}
+function refreshSiteFillAndDiff(v, d){
+  // Page 3 SITE FILL is a display cell (gated by HMR + Site Fill both present).
+  // Page 2 SITE FILL inputs are NOT gated — they show what the user typed.
+  // This helper updates Page 3 display cells and DIFF cells live.
+  const sfReport = getSiteFill(v, d);  // gated value
+  document.querySelectorAll('.cell-sfill-display').forEach(cell=>{
+    if(cell.dataset.vehicle === v && cell.dataset.date === d){
+      cell.innerHTML = fmtCell(sfReport);
+    }
+  });
+  refreshDiffCells(v, d);
+}
+function updateSiteFill(input){
+  // Site Fill — written only when user explicitly types in Site Fill input.
+  // Page 3 shows Site Fill only if BOTH this AND Site HMR are present (gating in getSiteFill).
+  const v = input.dataset.vehicle;
+  const d = input.dataset.date;
+  const k = `${v}|${d}`;
+  const raw = input.value;
+  const num = raw === '' ? null : parseFloat(raw);
+  if(num === null || isNaN(num)) delete state.siteFills[k];
+  else state.siteFills[k] = num;
+  saveState();
+  // Sync Site Fill inputs across pages
+  const synced = (num !== null && !isNaN(num)) ? num : '';
+  document.querySelectorAll('.site-fill-inp').forEach(inp=>{
+    if(inp !== input && inp.dataset.vehicle === v && inp.dataset.date === d) inp.value = synced;
+  });
+  refreshSiteFillAndDiff(v, d);
+}
+
+// ---- Renderers ----
+function renderDateReport(recs, date){
+  if(!recs.length) return emptyState('No data for this date','');
+  // Sort by Branch then vehicle for cleaner grouping
+  recs = recs.slice().sort((a,b)=>{
+    const ba = (a.branch||''), bb = (b.branch||'');
+    return ba.localeCompare(bb) || a.vehicle.localeCompare(b.vehicle);
+  });
+  const totals = computeTotals(recs);
+
+  // Split totals into road-vehicle subset (km/L) and hour-meter subset (L/hr) so the
+  // "average mileage" line is meaningful — formulas differ per vehicle.
+  let kmRoad = 0, fuelRoad = 0;
+  let fuelHr = 0, hrHr = 0;
+  recs.forEach(r=>{
+    if(MILEAGE_DISTANCE_BASED.has(r.vehicle)){
+      kmRoad += +r.km || 0;
+      fuelRoad += +r.fuel || 0;
+    } else {
+      const eff = getEffectiveWorkHour(r);
+      if(typeof eff === 'number' && eff > 0){
+        fuelHr += +r.fuel || 0;
+        hrHr += eff;
+      }
+    }
+  });
+  const avgKmpl = fuelRoad > 0 ? kmRoad / fuelRoad : null;
+  const avgLph  = hrHr   > 0 ? fuelHr  / hrHr     : null;
+
+  let html = renderSummaryGrid({
+    items: [
+      ['Vehicles', recs.length, ''],
+      ['Total Distance', fmtNum(totals.km,1), ''],
+      ['Total Work Hr', fmtNum(totals.hmr,1), ''],
+      ['Total Fill', fmtNum(totals.fill,1), 'L'],
+      ['Total Site Fill', totals.sfCount?fmtNum(totals.siteFill,1):'—', totals.sfCount?'L · '+totals.sfCount+' rows':''],
+      ['Total Diff', totals.sfCount?fmtNum(totals.diff,1):'—', totals.sfCount?'L':''],
+      ['Total Consumption', fmtNum(totals.fuel,1), 'L'],
+      ['Avg L/hr (machines)', avgLph!=null?fmtNum(avgLph,1):'—', avgLph!=null?'L/hr':''],
+      ['Avg km/L (road veh)', avgKmpl!=null?fmtNum(avgKmpl,1):'—', avgKmpl!=null?'km/L':'']
+    ]
+  });
+
+  html += `<div class="table-wrap"><table class="report-tbl">
+    <thead><tr>
+      <th class="rcol-1">Branch</th>
+      <th>Object</th>
+      <th>SITE NAME</th>
+      <th>Object Model</th>
+      <th class="num">Distance</th>
+      <th class="num">Work Hour</th>
+      <th class="num">Start Fuel Level</th>
+      <th class="num">Max Speed</th>
+      <th class="num cell-fill">ONLINE FILL</th>
+      <th class="num cell-sfill">SITE FILL</th>
+      <th class="num">DIFF</th>
+      <th class="num">End Fuel Level</th>
+      <th class="num">Consumption</th>
+      <th class="num">MILEAGE</th>
+    </tr></thead><tbody>`;
+  recs.forEach(r=>{
+    const fill = getRecField(r, 'Fill');
+    const sf = getSiteFill(r.vehicle, r.date);
+    const diff = (fill != null && sf != null) ? fill - sf : null;
+    html += `<tr>
+      <td class="rcol-1">${escapeHtml(r.branch || (r.data && r.data['Branch']) || '')}</td>
+      <td><span class="veh-pill">${escapeHtml(r.vehicle)}</span></td>
+      <td><input type="text" class="site-name-inp" data-vehicle="${escapeAttr(r.vehicle)}" value="${escapeAttr(state.sites[r.vehicle]||'')}" onchange="updateSiteNameInline(this)" placeholder="—" /></td>
+      <td><input type="text" class="model-inp" data-vehicle="${escapeAttr(r.vehicle)}" value="${escapeAttr(getRecField(r,'Object Model')||'')}" onchange="updateModelInline(this)" placeholder="—" /></td>
+      <td class="num">${fmtCell(getRecField(r,'Distance'))}</td>
+      <td class="num">${(()=>{const wh = getEffectiveWorkHour(r); return wh === 'NA' ? `<span class="cell-na" title="Click to enter manually" onclick="editNAWorkHour(this,'${escapeAttr(r.vehicle)}','${r.date}')">NA</span>` : `<input type="number" step="0.1" class="wh-inp" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}" value="${r1(wh) ?? ''}" oninput="updateWorkHourOverride(this)" placeholder="—" />`;})()}</td>
+      <td class="num">${fmtCell(getRecField(r,'Start Fuel Level'))}</td>
+      <td class="num">${fmtCell(getRecField(r,'Max Speed'))}</td>
+      <td class="num cell-fill"><input type="number" step="0.01" class="fill-inp" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}" value="${r1(fill) ?? ''}" oninput="updateFillOverride(this)" placeholder="—" /></td>
+      <td class="num cell-sfill cell-sfill-display" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}">${fmtCell(sf)}</td>
+      <td class="num cell-diff ${diffSign(diff)}" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}">${fmtCell(diff)}</td>
+      <td class="num">${fmtCell(getRecField(r,'End Fuel Level'))}</td>
+      <td class="num">${fmtCell(getRecField(r,'Consumption'))}</td>
+      <td class="num">${fmtCell(getRecField(r,'MILEAGE'))}</td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+  return html;
+}
+
+function renderVehicleReport(recs, vehicle, fromD, toD){
+  if(!recs.length) return emptyState('No data for this vehicle/range','');
+  const totals = computeTotals(recs);
+  const branch = (recs[0].branch) || (recs[0].data && recs[0].data['Branch']) || '';
+  const objectModel = (recs[0].data && recs[0].data['Object Model']) || '';
+
+  // Per-vehicle Avg Mileage: km/L for road vehicles, L/hr for hour-meter vehicles.
+  let avgMil, avgUnit;
+  if(MILEAGE_DISTANCE_BASED.has(vehicle)){
+    avgMil = totals.fuel > 0 ? totals.km / totals.fuel : null;
+    avgUnit = 'km/L';
+  } else {
+    avgMil = totals.hmr > 0 ? totals.fuel / totals.hmr : null;
+    avgUnit = 'L/hr';
+  }
+
+  let html = renderSummaryGrid({
+    items: [
+      ['Days', recs.length, ''],
+      ['Branch', branch||'—', ''],
+      ['Object Model', objectModel||'—', ''],
+      ['Total Distance', fmtNum(totals.km,1), ''],
+      ['Total Work Hr', fmtNum(totals.hmr,1), ''],
+      ['Total Fill', fmtNum(totals.fill,1), 'L'],
+      ['Total Site Fill', totals.sfCount?fmtNum(totals.siteFill,1):'—', totals.sfCount?'L':''],
+      ['Total Diff', totals.sfCount?fmtNum(totals.diff,1):'—', totals.sfCount?'L':''],
+      ['Total Consumption', fmtNum(totals.fuel,1), 'L'],
+      ['Avg Mileage', avgMil!=null?fmtNum(avgMil,1):'—', avgMil!=null?avgUnit:'']
+    ]
+  });
+
+  html += `<div class="table-wrap"><table class="report-tbl">
+    <thead><tr>
+      <th class="rcol-date">DATE</th>
+      <th>Branch</th>
+      <th>Object</th>
+      <th>SITE NAME</th>
+      <th>Object Model</th>
+      <th class="num">Distance</th>
+      <th class="num">Work Hour</th>
+      <th class="num">Start Fuel Level</th>
+      <th class="num">Max Speed</th>
+      <th class="num cell-fill">ONLINE FILL</th>
+      <th class="num cell-sfill">SITE FILL</th>
+      <th class="num">DIFF</th>
+      <th class="num">End Fuel Level</th>
+      <th class="num">Consumption</th>
+      <th class="num">MILEAGE</th>
+    </tr></thead><tbody>`;
+  recs.forEach(r=>{
+    const fill = getRecField(r, 'Fill');
+    const sf = getSiteFill(r.vehicle, r.date);
+    const diff = (fill != null && sf != null) ? fill - sf : null;
+    html += `<tr>
+      <td class="rcol-date">${fmtNiceDate(r.date)}</td>
+      <td>${escapeHtml(r.branch || (r.data && r.data['Branch']) || '')}</td>
+      <td><span class="veh-pill">${escapeHtml(r.vehicle)}</span></td>
+      <td><input type="text" class="site-name-inp" data-vehicle="${escapeAttr(r.vehicle)}" value="${escapeAttr(state.sites[r.vehicle]||'')}" onchange="updateSiteNameInline(this)" placeholder="—" /></td>
+      <td><input type="text" class="model-inp" data-vehicle="${escapeAttr(r.vehicle)}" value="${escapeAttr(getRecField(r,'Object Model')||'')}" onchange="updateModelInline(this)" placeholder="—" /></td>
+      <td class="num">${fmtCell(getRecField(r,'Distance'))}</td>
+      <td class="num">${(()=>{const wh = getEffectiveWorkHour(r); return wh === 'NA' ? `<span class="cell-na" title="Click to enter manually" onclick="editNAWorkHour(this,'${escapeAttr(r.vehicle)}','${r.date}')">NA</span>` : `<input type="number" step="0.1" class="wh-inp" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}" value="${r1(wh) ?? ''}" oninput="updateWorkHourOverride(this)" placeholder="—" />`;})()}</td>
+      <td class="num">${fmtCell(getRecField(r,'Start Fuel Level'))}</td>
+      <td class="num">${fmtCell(getRecField(r,'Max Speed'))}</td>
+      <td class="num cell-fill"><input type="number" step="0.01" class="fill-inp" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}" value="${r1(fill) ?? ''}" oninput="updateFillOverride(this)" placeholder="—" /></td>
+      <td class="num cell-sfill cell-sfill-display" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}">${fmtCell(sf)}</td>
+      <td class="num cell-diff ${diffSign(diff)}" data-vehicle="${escapeAttr(r.vehicle)}" data-date="${r.date}">${fmtCell(diff)}</td>
+      <td class="num">${fmtCell(getRecField(r,'End Fuel Level'))}</td>
+      <td class="num">${fmtCell(getRecField(r,'Consumption'))}</td>
+      <td class="num">${fmtCell(getRecField(r,'MILEAGE'))}</td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+  return html;
+}
+
+function computeTotals(recs){
+  const t = {km:0, hmr:0, fuel:0, fill:0, siteFill:0, diff:0, sfCount:0};
+  recs.forEach(r=>{
+    t.km   += +r.km   || 0;
+    // Work Hour: NA cases (rule 1 or 2) count as 0 — matches Page 3 display
+    const eff = getEffectiveWorkHour(r);
+    if(typeof eff === 'number') t.hmr += eff;
+    // Consumption: use computed formula (Start + Fill - End)
+    const cons = getRecField(r, 'Consumption');
+    if(typeof cons === 'number') t.fuel += cons;
+    const fill = getRecField(r,'Fill');
+    if(typeof fill === 'number') t.fill += fill;
+    const sf = getSiteFill(r.vehicle, r.date);
+    if(sf != null){
+      t.siteFill += sf;
+      t.sfCount++;
+      if(typeof fill === 'number') t.diff += fill - sf;
+    }
+  });
+  t.avgMileage = t.fuel > 0 ? t.km / t.fuel : null;
+  return t;
+}
+
+function renderSummaryGrid({items}){
+  let h = `<div class="summary-grid">`;
+  items.forEach(([lbl, val, delta])=>{
+    h += `<div class="summary-card"><div class="lbl">${escapeHtml(lbl)}</div>`;
+    h += `<div class="val" style="${typeof val==='string' && val.length>10?'font-size:13px;line-height:1.3':''}">${typeof val==='number'?fmtNum(val,1):escapeHtml(String(val))}</div>`;
+    if(delta) h += `<div class="delta">${escapeHtml(delta)}</div>`;
+    h += `</div>`;
+  });
+  h += `</div>`;
+  return h;
+}
+
+/* ============================================================
+   EXPORTS
+============================================================ */
+function exportVehiclesXLSX(){
+  const fromD = document.getElementById('veh-from').value;
+  const toD   = document.getElementById('veh-to').value;
+  const recs = state.records.filter(r=>(!fromD||r.date>=fromD)&&(!toD||r.date<=toD));
+  if(!recs.length){ toast('Nothing to export','warn'); return; }
+  const dates = [...new Set(recs.map(r=>r.date))].sort();
+  // Sort by Branch then vehicle — matches on-screen pivot
+  const vehBranchE = {};
+  recs.forEach(r=>{
+    if(!(r.vehicle in vehBranchE)){
+      vehBranchE[r.vehicle] = r.branch || (r.data && r.data['Branch']) || '';
+    }
+  });
+  const vehicles = [...new Set(recs.map(r=>r.vehicle))].sort((a,b)=>{
+    const ba = vehBranchE[a] || '', bb = vehBranchE[b] || '';
+    return ba.localeCompare(bb) || a.localeCompare(b);
+  });
+  const lookup = {};
+  recs.forEach(r=>{ lookup[`${r.vehicle}|${r.date}`] = r; });
+
+  const head1 = ['Branch','Vehicle','Site Name'];
+  const head2 = ['','',''];
+  dates.forEach(d=>{
+    head1.push(fmtShortDate(d), '', '');
+    head2.push('Online Fill','Site Fill','Site HMR');
+  });
+  const data = [head1, head2];
+  vehicles.forEach(v=>{
+    const row = [vehBranchE[v]||'', v, state.sites[v]||''];
+    dates.forEach(d=>{
+      const r = lookup[`${v}|${d}`];
+      const k = `${v}|${d}`;
+      const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k] : ((r && r.data && 'Fill' in r.data) ? r.data['Fill'] : '');
+      const siteFill   = (k in state.siteFills)     ? state.siteFills[k]     : '';
+      const siteHMR    = (k in state.siteHMRs) ? state.siteHMRs[k] : '';
+      row.push(onlineFill ?? '', siteFill ?? '', siteHMR ?? '');
+    });
+    data.push(row);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  // Merge date headers across 3 cols each (offset by Branch col)
+  ws['!merges'] = ws['!merges'] || [];
+  for(let i=0;i<dates.length;i++){
+    ws['!merges'].push({s:{r:0,c:3+i*3},e:{r:0,c:5+i*3}});
+  }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Vehicles × Dates');
+  XLSX.writeFile(wb, `FuelEconomy_DataEntry_${fromD||'all'}_to_${toD||'all'}.xlsx`);
+  toast('Exported ✓','good');
+}
+
+/* ============================================================
+   PAGE 4: MILEAGE PIVOT
+============================================================ */
+function setMilRange(days){
+  const all = [...new Set(state.records.map(r=>r.date))].sort();
+  if(!all.length) return;
+  const to = all[all.length-1];
+  const fromD = new Date(to); fromD.setDate(fromD.getDate()-days+1);
+  document.getElementById('mil-from').value = fmtDate(fromD);
+  document.getElementById('mil-to').value = to;
+  renderMileagePivot();
+}
+function setMilRangeAll(){
+  const all = [...new Set(state.records.map(r=>r.date))].sort();
+  if(!all.length) return;
+  document.getElementById('mil-from').value = all[0];
+  document.getElementById('mil-to').value = all[all.length-1];
+  renderMileagePivot();
+}
+
+// Compute Site Mileage map — keyed by `${vehicle}|${date}`. NA on first event for a
+// vehicle, NA where HMR delta is non-positive. Uses ALL Site Fill events for a vehicle
+// (regardless of visible date range), so the previous-fill anchor can be outside range.
+//
+// Formula varies by vehicle type:
+//   • Hour-meter (default):   current fill ÷ (current HMR − previous HMR)        [L/hr]
+//   • Road vehicle (the 3):  (current HMR − previous HMR) ÷ current fill         [km/L]
+function computeSiteMileageMap(vehicles){
+  const result = {};
+  vehicles.forEach(v => {
+    const isRoad = MILEAGE_DISTANCE_BASED.has(v);
+    const events = [];
+    Object.keys(state.siteFills).forEach(k => {
+      const idx = k.indexOf('|');
+      if(idx < 0) return;
+      const veh = k.substring(0, idx);
+      const date = k.substring(idx+1);
+      if(veh !== v) return;
+      if(!(k in state.siteHMRs)) return;          // need both Fill AND HMR
+      events.push({date, fill: state.siteFills[k], hmr: state.siteHMRs[k]});
+    });
+    events.sort((a,b)=> a.date.localeCompare(b.date));
+    events.forEach((e, i) => {
+      if(i === 0){
+        result[`${v}|${e.date}`] = 'NA';          // first fill — no previous
+      } else {
+        const prev = events[i-1];
+        const delta = e.hmr - prev.hmr;
+        if(delta > 0){
+          if(isRoad){
+            // Road vehicle: km/L = HMR delta ÷ current fill
+            result[`${v}|${e.date}`] = e.fill > 0 ? delta / e.fill : 'NA';
+          } else {
+            // Hour-meter: L/hr = current fill ÷ HMR delta
+            result[`${v}|${e.date}`] = e.fill / delta;
+          }
+        } else {
+          result[`${v}|${e.date}`] = 'NA';        // bad data: HMR didn't increase
+        }
+      }
+    });
+  });
+  return result;
+}
+
+function fmtMileage(v){
+  if(v === undefined || v === null || v === '' || v === 'NA') return '<span class="mile-empty">—</span>';
+  if(typeof v !== 'number' || !isFinite(v) || isNaN(v)) return '<span class="mile-empty">—</span>';
+  return `<span class="mile-val">${fmtNum(v, 1)}</span>`;
+}
+
+function renderMileagePivot(){
+  const body = document.getElementById('mileage-body');
+  if(!state.records.length){
+    body.innerHTML = emptyState('No data yet','Upload a fuel economy file from Page 1 to get started.');
+    return;
+  }
+  const fromD = document.getElementById('mil-from').value;
+  const toD   = document.getElementById('mil-to').value;
+  const search = (document.getElementById('mil-search').value||'').toLowerCase().trim();
+
+  const recs = state.records.filter(r=>(!fromD||r.date>=fromD)&&(!toD||r.date<=toD));
+  if(!recs.length){
+    body.innerHTML = emptyState('No data in this range','Adjust the date filter or pick a different range.');
+    return;
+  }
+
+  const dates = [...new Set(recs.map(r=>r.date))].sort();
+  const vehMap = {};
+  recs.forEach(r=>{
+    if(!vehMap[r.vehicle]) vehMap[r.vehicle] = {};
+    vehMap[r.vehicle][r.date] = r;
+  });
+
+  const vehBranch = {};
+  recs.forEach(r=>{
+    if(!(r.vehicle in vehBranch)){
+      vehBranch[r.vehicle] = r.branch || (r.data && r.data['Branch']) || '';
+    }
+  });
+  let vehicles = Object.keys(vehMap).sort((a,b)=>{
+    const ba = vehBranch[a]||'', bb = vehBranch[b]||'';
+    return ba.localeCompare(bb) || a.localeCompare(b);
+  });
+  if(search){
+    vehicles = vehicles.filter(v=>{
+      const site = (state.sites[v]||'').toLowerCase();
+      const br = (vehBranch[v]||'').toLowerCase();
+      return v.toLowerCase().includes(search) || site.includes(search) || br.includes(search);
+    });
+  }
+  if(!vehicles.length){
+    body.innerHTML = emptyState('No matches','Try a different search.');
+    return;
+  }
+
+  const siteMileageByVD = computeSiteMileageMap(vehicles);
+
+  let html = '<div class="table-wrap"><table class="pivot pivot-mileage">';
+  html += '<thead><tr>';
+  html += `<th rowspan="2" class="sticky-branch">Branch</th>`;
+  html += `<th rowspan="2" class="sticky-veh">Vehicle</th>`;
+  html += `<th rowspan="2" class="sticky-site">Site Name</th>`;
+  dates.forEach(d=>{
+    html += `<th colspan="2" class="date-grp">${fmtShortDate(d)}</th>`;
+  });
+  html += '</tr><tr>';
+  dates.forEach(()=>{
+    html += `<th class="metric num m-omil">Online&nbsp;Mileage</th>`;
+    html += `<th class="metric num m-smil">Site&nbsp;Mileage</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  let prevBranch = null;
+  vehicles.forEach(v=>{
+    const branch = vehBranch[v] || '';
+    const isNewBranchGroup = (branch !== prevBranch);
+    prevBranch = branch;
+    html += `<tr${isNewBranchGroup ? ' class="branch-start"' : ''}>`;
+    html += `<td class="sticky-branch">${branch ? escapeHtml(branch) : '<span style="color:var(--muted)">—</span>'}</td>`;
+    html += `<td class="sticky-veh"><span class="veh-pill">${escapeHtml(v)}</span></td>`;
+    html += `<td class="sticky-site">${escapeHtml(state.sites[v]||'—')}</td>`;
+    dates.forEach((d, di)=>{
+      const r = vehMap[v][d];
+      const siteMil = siteMileageByVD[`${v}|${d}`];
+      const startCls = ' date-start';
+      if(MILEAGE_DISTANCE_BASED.has(v)){
+        // Road vehicle: single merged cell using the km/L formula
+        const merged = (siteMil === undefined) ? '<span class="mile-empty">—</span>' : fmtMileage(siteMil);
+        html += `<td colspan="2" class="num metric-cell cell-roadmil${startCls}">${merged}</td>`;
+      } else {
+        // Hour-meter vehicle: two separate cells (Online + Site)
+        const onlineMil = r ? getRecField(r, 'MILEAGE') : null;
+        html += `<td class="num metric-cell cell-omil${startCls}">${fmtMileage(onlineMil)}</td>`;
+        html += `<td class="num metric-cell cell-smil">${siteMil === undefined ? '<span class="mile-empty">—</span>' : fmtMileage(siteMil)}</td>`;
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  body.innerHTML = html;
+}
+
+function exportMileageXLSX(){
+  const fromD = document.getElementById('mil-from').value;
+  const toD   = document.getElementById('mil-to').value;
+  const recs = state.records.filter(r=>(!fromD||r.date>=fromD)&&(!toD||r.date<=toD));
+  if(!recs.length){ toast('Nothing to export','warn'); return; }
+
+  const dates = [...new Set(recs.map(r=>r.date))].sort();
+  const lookup = {};
+  recs.forEach(r=>{ lookup[`${r.vehicle}|${r.date}`] = r; });
+  const vehBranchE = {};
+  recs.forEach(r=>{
+    if(!(r.vehicle in vehBranchE)){
+      vehBranchE[r.vehicle] = r.branch || (r.data && r.data['Branch']) || '';
+    }
+  });
+  const vehicles = [...new Set(recs.map(r=>r.vehicle))].sort((a,b)=>{
+    const ba = vehBranchE[a]||'', bb = vehBranchE[b]||'';
+    return ba.localeCompare(bb) || a.localeCompare(b);
+  });
+  const siteMileageByVD = computeSiteMileageMap(vehicles);
+
+  const head1 = ['Branch','Vehicle','Site Name'];
+  const head2 = ['','',''];
+  dates.forEach(d=>{
+    head1.push(fmtShortDate(d), '');
+    head2.push('Online Mileage','Site Mileage');
+  });
+  const data = [head1, head2];
+  const round1 = v => (typeof v === 'number' && isFinite(v)) ? Math.round(v*10)/10 : v;
+  const roadMergeRows = [];   // collect (rowIdx, dateIdx) pairs to merge per road-veh cell
+  vehicles.forEach((v, vi)=>{
+    const isRoad = MILEAGE_DISTANCE_BASED.has(v);
+    const row = [vehBranchE[v]||'', v, state.sites[v]||''];
+    dates.forEach((d, di)=>{
+      const r = lookup[`${v}|${d}`];
+      const sm = siteMileageByVD[`${v}|${d}`];
+      const smOut = (sm === undefined || sm === null || sm === 'NA') ? '' : round1(sm);
+      if(isRoad){
+        // Merged cell — write the value once, leave the next col blank, queue a merge
+        row.push(smOut, '');
+        roadMergeRows.push({r: 2 + vi, c: 3 + di*2});  // +2 for two header rows; +3 for Branch/Vehicle/Site cols
+      } else {
+        const om = r ? getRecField(r,'MILEAGE') : null;
+        row.push(
+          (om == null || om === 'NA' || (typeof om === 'number' && isNaN(om))) ? '' : round1(om),
+          smOut
+        );
+      }
+    });
+    data.push(row);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!merges'] = ws['!merges'] || [];
+  // Date-header merges (row 0)
+  for(let i=0;i<dates.length;i++){
+    ws['!merges'].push({s:{r:0,c:3+i*2},e:{r:0,c:4+i*2}});
+  }
+  // Road-vehicle per-cell merges
+  roadMergeRows.forEach(m=>{
+    ws['!merges'].push({s:{r:m.r,c:m.c},e:{r:m.r,c:m.c+1}});
+  });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Mileage');
+  XLSX.writeFile(wb, `Mileage_${fromD||'all'}_to_${toD||'all'}.xlsx`);
+  toast('Exported ✓','good');
+}
+
+function exportReportXLSX(){
+  if(!state.records.length){ toast('No data','warn'); return; }
+  let data, filename;
+
+  const buildRow = (r) => {
+    const fill = getRecField(r, 'Fill');
+    const sf = getSiteFill(r.vehicle, r.date);
+    const diff = (fill != null && sf != null) ? fill - sf : '';
+    return [
+      r.branch || (r.data && r.data['Branch']) || '',
+      r.vehicle,
+      state.sites[r.vehicle] || '',
+      (r.data && r.data['Object Model']) || '',
+      getRecField(r,'Distance') ?? '',
+      (()=>{ const wh = getEffectiveWorkHour(r); return wh === 'NA' ? 'NA' : (wh ?? ''); })(),
+      getRecField(r,'Start Fuel Level') ?? '',
+      getRecField(r,'Max Speed') ?? '',
+      fill ?? '',
+      sf ?? '',
+      diff,
+      getRecField(r,'End Fuel Level') ?? '',
+      getRecField(r,'Consumption') ?? '',
+      getRecField(r,'MILEAGE') ?? ''
+    ];
+  };
+  const colHeaders = ['Branch','Object','SITE NAME','Object Model','Distance','Work Hour','Start Fuel Level','Max Speed','Online Fill','SITE FILL','DIFF','End Fuel Level','Consumption','MILEAGE'];
+
+  if(curRTab==='date'){
+    const date = document.getElementById('rep-date').value;
+    const recs = state.records.filter(r=>r.date===date)
+      .sort((a,b)=> (a.branch||'').localeCompare(b.branch||'') || a.vehicle.localeCompare(b.vehicle));
+    data = [['DATE', ...colHeaders]];
+    recs.forEach(r=> data.push([fmtNiceDate(r.date), ...buildRow(r)]));
+    filename = `Report_Date_${date}.xlsx`;
+  } else {
+    const v = document.getElementById('rep-vehicle').value;
+    const fromD = document.getElementById('rep-from').value;
+    const toD = document.getElementById('rep-to').value;
+    const recs = state.records
+      .filter(r=>r.vehicle===v && (!fromD||r.date>=fromD) && (!toD||r.date<=toD))
+      .sort((a,b)=>a.date.localeCompare(b.date));
+    data = [['DATE', ...colHeaders]];
+    recs.forEach(r=> data.push([fmtNiceDate(r.date), ...buildRow(r)]));
+    filename = `Report_${v.replace(/[^\w]/g,'_')}_${fromD}_to_${toD}.xlsx`;
+  }
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Report');
+  XLSX.writeFile(wb, filename);
+  toast('Exported ✓','good');
+}
+
+function exportBackup(){
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `FuelEconomy_Backup_${fmtDate(new Date())}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('Backup downloaded ✓','good');
+}
+
+function clearAllData(){
+  if(!confirm('Clear ALL data? This deletes all uploaded records and site mappings. Cannot be undone.')) return;
+  if(!confirm('Really sure? Last chance.')) return;
+  if(cloud.enabled){
+    if(!confirm('Cloud sync is ON — this will also wipe ALL data on the server. Proceed?')) return;
+    cloud.clearAll();
+  }
+  state = {records:[], sites:{}, models:{}, siteFills:{}, siteHMRs:{}, fillOverrides:{}, workHourOverrides:{}, uploads:[], columnOrder:[]};
+  saveState();
+  refreshAll();
+  toast('All data cleared','warn');
+}
+
+/* ============================================================
+   MASTER LIST (Vehicle → Model + Site Name)
+============================================================ */
+const MASTER_LIST_DEFAULT = `Object\tMODEL\tSITE NAME
+AP31DM7885\tLOADER LIUGONG CLG836\tAP31DM7934
+AP31DM7934\tLOADER LIUGONG CLG836\tAP31DM7934
+AP31DM8660\tHINDUSTAN2021LOADER\tAP31DM8660
+AP39AX9318\tBACKHO LOADER CAT 424 B\tAP39AX9318
+AP39AY5203\tLOADER LIUGONG CLG 856 H\tAP39AY5203
+AP39NF4082\tLOADER JCB 455 WHEEL LOADER\tAP39NF4082
+AP39TY2494\tWATER TANKER\tAP39TY2494
+EXR-05\tCLAMPSHELL CLG922E\tLIUGONG EXR-05
+Liugong exr-01\tCLAMPSHELL CLG920 D\tLIUGONG EXR -01
+LIULONG EXR-02\tCLAMPSHELL CLG920 D\tLIUGONG EXR -02
+LIULONG EXR-03\tCLAMPSHELL CLG920 D\tLIUGONG EXR -03
+LIULONG EXR-04\tCLAMPSHELL CLG920 D\tLIUGONG EXR -04
+01 CG04MG5875\tJCB 3DX BACKOH JCB 3DX\t01 CG04MG5875 - BACKHOE LOADER
+03-LG922 E-4\tCAMPSHELL CLG922 E HYDRAULICEXCAVATOR\t03-LG922 E-4 - 01245
+04-LG922 E-3\tCAMPSHELL CLG922 E HYDRAULICEXCAVATOR\t04-LG922 E-3 - 01246
+05-LG922D-1\tCLAMPSHELL 922D HD\t05-LG922D-1 - 109568
+06-LG922D-2\tCLAMPSHELL 922D HD\t06-LG922D-2 - 108098
+07-CLG922-E-5\tAMPSHELL CLG922 E HYDRAULICEXCAVATOR\t07-CLG922-E-5 - EXR-5
+08 HM 6\tLOADER HM2021LOADER\t08 HM 6 - CG04DT3051
+09 HM 7\tLOADER HINDUSTAN 2021 Z BARLOADER\t09 HM 7 - CG04NE4638
+10 HM 8\tLOADER HINDUSTAN 2021 Z BARLOADER\t10 HM 8 - CG04NE5754
+11 JCB 433 LOADER-1\tLOADER JCB 433-4\t11 JCB 433 LOADER-1 - CG04NR3840
+12 JCB 433 LOADER-2\tLOADER JCB 433-4\t12 JCB 433 LOADER-2 - CG04NR7126
+13 LG856 BS3-1\tLOADER LG856BS3\t13 LG856 BS3-1 - CG04M8428
+14 LG856 H-3\tLUIGONG LOADER CLG856 WHEELLOADER\t14 LG856 H-3 - CG04NL2353
+15 LG856H-2\tLOADER LG 856 BS 4\t15 LG856H-2 - CG04NE7214
+16-LNT9020\tLOADER LG938L\t16-LNT9020 - CG04L4237
+20 TATA LOADER 340 H-1\tLOADER Tata wheel loader\t20 TATA LOADER 340 H-1 - CG04NQ9045
+21 TATA LOADER 340 H-2\tLOADER Tata wheel loader\t21 TATA LOADER 340 H-2 - CG04NQ9390
+22 TATA 340 H-3\tLOADER Tata wheel loader\t22 TATA 340 H-3 - CG04NQ9622
+23 TATA 200-1\tCLAMPSHELL TATA EX200 LC\t23 TATA 200-1 - SP20-57627
+24 TATA-I\tBACKHOE LOADER Tata wheelloader\t24 TATA-I - CG04NQ9852
+25 TATA-II\tBACKHOE LOADER Tata wheelloader\t25 TATA-II - CG04PG4305
+26 TATA 200-2\tCLAMPSHELL TATA EX200 LC\t26 TATA 200-2 - SP20-57646
+CG04QF3186\tNEW LOADER JCB\t440-3
+Liugong-no-06\tCLAMPSHELL 922E\t922 E -6
+EX200-32388\tTATA HITACHI 210\tTATA HITACHI 210 323388
+EXC-3515019\tJCB EXCAVATOR 225\tJCB EXVT. 225 M
+EXR-01 L and T 90\tL& T 90 CLAMPSHELL\tEXR-01 L and T 90 - Excavator
+EXR200-32393\tTATA HITACHI 210\tTATA HITACHI 210 32393
+LG50825\tLIUGONG 856 LOADER\tMH34CJ 8744
+LG50826\tLIUGONG 856 LOADER\tMH34CJ 8746
+LG50864\tLIUGONG 856 LOADER\tMH34CJ B8745
+Liulong Loader-MH34BV2497\tLIUGONG 856 LOADER\tLiulong Loader-MH34BV2497
+MH32BZ0277\tPICKUP\tMH32BZ0277
+MH34AB9738\tWATER TANKER\tMH34AB9738
+MH34BV5872\tCLG856H WHEEL LOADER\tMH34BV5872
+MH34BZ0942\tBOLERO\tMH34BZ0942
+MH34BZ4289\tWATER TANKER\tMH34BZ4289
+MH34CD4743\tLIUGONG CLG 856 LOADER\tMH34CD4743
+MH34CJ4573\tJCB 440 LOADER\tMH34CJ 4573
+MH34L9889-BHO\tJCB 3DX\tMH34L9889-BHO - Backhoe Loader
+TATA Hitachi -01\tCLAMPSHELL\tTATA HITACHI EX 220 SP20-29470
+WARDHA Tata Hitachi -02\tCLAMPSHELL\tTATA HITACHI EX 220 SP20-29465
+02 CG04MQ8367\tLOADER\t02 CG04MQ8367 - LOADER
+CAT-02\tLOADER\tCAT-02 - LOADER-CG04LC2769
+HM-V2\tLOADER HM 2021 Z BAR\tHM-V2 - LOADER (CG04L4106)
+JCB 433 LOADER\tBAIKHO LOADER JCB WHEELLOADER\tJCB 433 LOADER - CG04NT1438
+LIUGONG 922D-2\tCLAMPSHELL CLG 922D\tLIUGONG 922D-2 - EXCAVATOR-LGC922DZKJC107279
+LIUGONG 922D-3\tCLAMPSHELL CLG 922D\tLIUGONG 922D-3 - LGC922DZPJC107281
+LIUGONG 922D-4\tCLAMPSHELL CLG 922D\tLIUGONG 922D-4 - LGI922DZVLN112166
+CAT-01\tBAIKHO LOADER CAT 424B2\tCAT-01 - CG04MG4697
+CG04NC3441\tLOADER JCB 432ZX\tCG04NC3441 - JCB 432ZX
+Escort Hydra-2\tLOADER HM2021Z BAR LOADER\tEscort Hydra-2 - CG04NH4489
+HM-V1\tLOADER HM 2021 Z BAR\tHM-V1 - CG04L3595-LOADER
+HM13\tBAIKHO LOADER JCB 455 WHEELLOADER\tHM13 - WHEEL LOADER (CG04DT3988)
+JCB-455\tLOADER HM 2021 Z BAR\tJCB-455 - CG04NT1454
+LIUGONG 836 V3\tLOADER CLG 856 H\tLIUGONG 836 V3 - WHEEL LOADER (CG04L4206)
+LIUGONG 856 V4\tCLAMPSHELL CLG 922D\tLIUGONG 856 V4 - LOADER-CG04MK5179
+LIUGONG 922D-1\tBACKHO EXCAVATOR HYDROULICExcavator\tLIUGONG 922D-1 - EXCAVATOR-CLG922DZJJC107610
+PC-71\tPC\tPC -71 HYDROULIC EXCAVATOR
+EXR200-32376\tCLAMPSHELL\tNEW Clamashell No.2
+EXR200-32386\tCLAMPSHELL\tNEW Clamashell No.1
+LG-31523\tLOADER\tNew (LUVGONG) PAY LODER NO. 4
+Liugong loader -01\tLOADER\t(LUVGONG) PAY LODER NO. 1`;
+
+const MASTER_LIST_HEADER_TOKENS = new Set([
+  'object','vehicle','vehicle name','vehicle no','vehicle number',
+  'fe name','asset','name','reg no','registration'
+]);
+
+// Smart parser: auto-detects format (tab, multi-space, comma, 3-line cycles, or
+// vehicle-anchor for fully concatenated text). Returns {items, strategy}.
+// Skips header rows, blank rows, and #N/A.
+function parseMasterList(text){
+  if(!text || !text.trim()) return {items:[], strategy:'none'};
+  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  if(!lines.length) return {items:[], strategy:'none'};
+
+  // Strategy 1: Tab-separated (Excel / Sheets paste)
+  if(lines.some(l => l.includes('\t'))){
+    const items = parseDelimItems(text, '\t');
+    if(items.length) return {items, strategy:'tab-separated'};
+  }
+  // Strategy 2: Multi-space (2+ spaces between columns)
+  if(lines.some(l => /\S\s{2,}\S/.test(l))){
+    const items = parseRegexItems(text, /\s{2,}/);
+    if(items.length) return {items, strategy:'multi-space'};
+  }
+  // Strategy 3: Comma-separated
+  if(lines.length > 1 && lines.every(l => l.includes(','))){
+    const items = lines.map(l => splitCSVLine(l).map(s=>s.trim()))
+      .filter(parts => parts[0] && !MASTER_LIST_HEADER_TOKENS.has(parts[0].toLowerCase()) && parts[0] !== '#N/A')
+      .map(parts => ({vehicle: parts[0], model: parts[1]||'', site: parts[2]||''}));
+    if(items.length) return {items, strategy:'comma-separated'};
+  }
+  // Strategy 4: 3-line cycles (each field on its own line)
+  const filtered = lines.filter(l => !MASTER_LIST_HEADER_TOKENS.has(l.toLowerCase()) && l !== '#N/A');
+  if(filtered.length >= 3 && filtered.length % 3 === 0){
+    const items = [];
+    for(let i=0;i<filtered.length;i+=3){
+      items.push({vehicle: filtered[i], model: filtered[i+1]||'', site: filtered[i+2]||''});
+    }
+    if(items.length) return {items, strategy:'3-line cycles'};
+  }
+  // Strategy 5: Vehicle-anchor — for fully concatenated text with no delimiters.
+  // Uses the dictionary of known vehicles (records + master list + embedded default)
+  // to find row boundaries.
+  const known = getKnownVehicles();
+  if(known.length){
+    const items = parseAnchoredItems(text, known);
+    if(items.length) return {items, strategy:'vehicle anchors'};
+  }
+  // Fallback: each non-header line is a vehicle-only entry
+  return {
+    items: filtered.map(l => ({vehicle: l, model:'', site:''})),
+    strategy: filtered.length ? 'vehicles only' : 'none'
+  };
+}
+
+function parseDelimItems(text, delim){
+  const items = [];
+  for(const line of text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean)){
+    const parts = line.split(delim).map(s=>s.trim());
+    const obj = parts[0];
+    if(!obj || MASTER_LIST_HEADER_TOKENS.has(obj.toLowerCase()) || obj === '#N/A') continue;
+    items.push({vehicle: obj, model: parts[1]||'', site: parts[2]||''});
+  }
+  return items;
+}
+function parseRegexItems(text, regex){
+  const items = [];
+  for(const line of text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean)){
+    const parts = line.split(regex).map(s=>s.trim()).filter(Boolean);
+    const obj = parts[0];
+    if(!obj || MASTER_LIST_HEADER_TOKENS.has(obj.toLowerCase()) || obj === '#N/A') continue;
+    items.push({vehicle: obj, model: parts[1]||'', site: parts[2]||''});
+  }
+  return items;
+}
+function parseAnchoredItems(text, knownVehicles){
+  // Match longest names first to avoid partial overlaps
+  const sorted = [...knownVehicles].filter(v => v && v.length >= 3).sort((a,b)=>b.length-a.length);
+  const consumed = new Array(text.length).fill(false);
+  const matches = [];
+  for(const v of sorted){
+    let pos = 0;
+    while((pos = text.indexOf(v, pos)) !== -1){
+      const end = pos + v.length;
+      let overlap = false;
+      for(let i=pos;i<end;i++){ if(consumed[i]){ overlap=true; break; } }
+      if(!overlap){
+        matches.push({vehicle: v, start: pos, end});
+        for(let i=pos;i<end;i++) consumed[i] = true;
+      }
+      pos = end;
+    }
+  }
+  matches.sort((a,b)=>a.start-b.start);
+  // Pair them: matches[0]=vehicle, matches[1]=site, matches[2]=vehicle, ...
+  const items = [];
+  for(let i=0; i+1<matches.length; i+=2){
+    const v = matches[i], s = matches[i+1];
+    const model = text.substring(v.end, s.start).trim();
+    items.push({vehicle: v.vehicle, model, site: s.vehicle});
+  }
+  return items;
+}
+function getKnownVehicles(){
+  const set = new Set();
+  state.records.forEach(r => set.add(r.vehicle));
+  Object.keys(state.models||{}).forEach(v => set.add(v));
+  Object.keys(state.sites||{}).forEach(v => set.add(v));
+  // Also include site-name VALUES — they're often vehicle-like IDs that act as
+  // row boundaries in concatenated paste text (e.g. "LIUGONG EXR-05")
+  Object.values(state.sites||{}).forEach(v => { if(v) set.add(v); });
+  // Embedded default — both column 1 (vehicle) and column 3 (site name)
+  MASTER_LIST_DEFAULT.split(/\r?\n/).slice(1).forEach(line => {
+    const parts = line.split('\t');
+    const v = (parts[0]||'').trim();
+    const s = (parts[2]||'').trim();
+    if(v && v !== 'Object') set.add(v);
+    if(s) set.add(s);
+  });
+  return [...set];
+}
+
+function refreshMasterListPreview(){
+  const text = document.getElementById('ml-smart-paste')?.value || '';
+  const preview = document.getElementById('ml-smart-preview');
+  if(!preview) return;
+  if(!text.trim()){ preview.innerHTML = ''; return; }
+  const result = parseMasterList(text);
+  const items = result.items;
+  if(!items.length){
+    preview.innerHTML = `<div style="padding:12px;color:var(--muted);text-align:center;font-size:12px;background:var(--panel-2);border-radius:8px;border:1px dashed var(--line-2)">
+      Couldn't detect any rows. Try pasting tab-separated data, comma-separated, or one field per line.
+    </div>`;
+    return;
+  }
+  const filled = items.filter(it => it.model || it.site).length;
+  let html = `<div style="font-size:11px;color:var(--ink-2);margin-bottom:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;align-items:center">
+    <span><b style="color:var(--primary)">${items.length}</b> rows · <b>${filled}</b> with model/site</span>
+    <span style="color:var(--muted)">Format: <b style="color:var(--ink-2)">${escapeHtml(result.strategy)}</b></span>
+  </div>`;
+  html += `<div class="ml-preview-wrap"><table class="ml-preview"><thead><tr><th>OBJECT</th><th>MODEL</th><th>SITE NAME</th></tr></thead><tbody>`;
+  const cap = Math.min(items.length, 30);
+  for(let i=0;i<cap;i++){
+    const it = items[i];
+    html += `<tr>
+      <td>${escapeHtml(it.vehicle)}</td>
+      <td>${it.model ? escapeHtml(it.model) : '<span style="color:var(--muted)">—</span>'}</td>
+      <td>${it.site ? escapeHtml(it.site) : '<span style="color:var(--muted)">—</span>'}</td>
+    </tr>`;
+  }
+  if(items.length > cap){
+    html += `<tr><td colspan="3" style="text-align:center;color:var(--muted);font-style:italic;padding:6px">…and ${items.length - cap} more rows</td></tr>`;
+  }
+  html += '</tbody></table></div>';
+  preview.innerHTML = html;
+}
+
+function importMasterListFromSmartPaste(){
+  const text = document.getElementById('ml-smart-paste').value;
+  const result = parseMasterList(text);
+  const items = result.items;
+  if(!items.length){ toast('No valid rows detected — see preview','warn'); return; }
+  let mUpd = 0, sUpd = 0;
+  for(const it of items){
+    if(it.model){ state.models[it.vehicle] = it.model; mUpd++; }
+    if(it.site){ state.sites[it.vehicle] = it.site; sUpd++; }
+  }
+  saveState();
+  refreshAll();
+  renderMasterListStats();
+  toast(`Imported ${items.length} via ${result.strategy} · ${mUpd} models, ${sUpd} sites ✓`,'good');
+}
+
+// Minimal CSV line splitter — handles "double quoted, fields"
+function splitCSVLine(line){
+  const out = [];
+  let cur = '', inQuotes = false;
+  for(let i=0;i<line.length;i++){
+    const ch = line[i];
+    if(ch === '"'){
+      if(inQuotes && line[i+1] === '"'){ cur += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if(ch === ',' && !inQuotes){
+      out.push(cur); cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur);
+  return out;
+}
+
+function importThreeColumnMaster(){
+  const splitLines = id => document.getElementById(id).value.split(/\r?\n/).map(s=>s.trim());
+  const objs   = splitLines('ml-col-obj');
+  const models = splitLines('ml-col-model');
+  const sites  = splitLines('ml-col-site');
+
+  // Trim trailing blanks (so user can paste extra newlines harmlessly)
+  while(objs.length   && !objs[objs.length-1])   objs.pop();
+  while(models.length && !models[models.length-1]) models.pop();
+  while(sites.length  && !sites[sites.length-1])  sites.pop();
+
+  const maxLen = Math.max(objs.length, models.length, sites.length);
+  if(!maxLen){ toast('All boxes are empty — paste data first','warn'); return; }
+
+  // Skip a header row if first lines look like column titles
+  let startIdx = 0;
+  const isHeader = s => /^(object|fe\s*name|vehicle|model|site\s*name)$/i.test((s||'').trim());
+  if(isHeader(objs[0]) || isHeader(models[0]) || isHeader(sites[0])) startIdx = 1;
+
+  // Warn if column lengths mismatch (likely paste mistake)
+  const lens = [objs.length, models.length, sites.length].filter(n=>n>0);
+  const mismatched = lens.length > 1 && Math.min(...lens) !== Math.max(...lens);
+
+  let mUpd = 0, sUpd = 0, count = 0, skipped = 0;
+  for(let i = startIdx; i < maxLen; i++){
+    const obj = (objs[i]||'').trim();
+    if(!obj){ skipped++; continue; }
+    if(obj === '#N/A' || obj.toLowerCase() === 'object'){ skipped++; continue; }
+    const model = (models[i]||'').trim();
+    const site  = (sites[i]||'').trim();
+    if(model){ state.models[obj] = model; mUpd++; }
+    if(site){ state.sites[obj] = site; sUpd++; }
+    count++;
+  }
+
+  saveState();
+  refreshAll();
+  renderMasterListStats();
+  let msg = `Imported ${count} vehicles · ${mUpd} models, ${sUpd} sites updated ✓`;
+  if(skipped) msg += ` · ${skipped} skipped`;
+  toast(msg, 'good');
+  if(mismatched){
+    setTimeout(()=>toast(`⚠ Column lengths differ: Object=${objs.length}, Model=${models.length}, Site=${sites.length}`,'warn'), 2800);
+  }
+}
+
+function loadDefaultMasterListIntoUI(){
+  const items = parseMasterList(MASTER_LIST_DEFAULT).items;
+  // Fill the smart-paste textarea with the original TSV
+  const sp = document.getElementById('ml-smart-paste');
+  if(sp){ sp.value = MASTER_LIST_DEFAULT; refreshMasterListPreview(); }
+  // Fill the 3-column textareas
+  document.getElementById('ml-col-obj').value   = items.map(it=>it.vehicle).join('\n');
+  document.getElementById('ml-col-model').value = items.map(it=>it.model).join('\n');
+  document.getElementById('ml-col-site').value  = items.map(it=>it.site).join('\n');
+  toast(`Loaded ${items.length} default rows — click Import to apply`,'warn');
+}
+
+function loadCurrentStateIntoUI(){
+  const allVeh = new Set([...Object.keys(state.models), ...Object.keys(state.sites)]);
+  state.records.forEach(r=>allVeh.add(r.vehicle));
+  const sorted = [...allVeh].sort();
+  if(!sorted.length){ toast('Nothing in state yet — paste data or load default','warn'); return; }
+  // Fill smart-paste
+  const sp = document.getElementById('ml-smart-paste');
+  if(sp){
+    const tsv = ['Object\tMODEL\tSITE NAME', ...sorted.map(v => `${v}\t${state.models[v]||''}\t${state.sites[v]||''}`)].join('\n');
+    sp.value = tsv;
+    refreshMasterListPreview();
+  }
+  // Fill 3-column
+  document.getElementById('ml-col-obj').value   = sorted.join('\n');
+  document.getElementById('ml-col-model').value = sorted.map(v => state.models[v] || '').join('\n');
+  document.getElementById('ml-col-site').value  = sorted.map(v => state.sites[v]  || '').join('\n');
+  toast(`Loaded ${sorted.length} vehicles from current state`,'good');
+}
+
+function clearMasterList(){
+  if(!confirm('Clear all Models and Site Names? Records and Site Fills are kept.')) return;
+  state.models = {};
+  state.sites = {};
+  saveState();
+  refreshAll();
+  renderMasterListStats();
+  toast('Cleared models & sites','warn');
+}
+
+function cleanupBranchAsSiteLeftovers(){
+  // Older versions of the parser auto-filled state.sites[v] with the BRANCH name when
+  // sites were empty. This helper removes those leftovers — i.e. site entries whose
+  // value matches a known branch name from any upload record.
+  const branches = new Set();
+  state.records.forEach(r=>{
+    const b = r.branch || (r.data && r.data['Branch']) || '';
+    if(b) branches.add(b);
+  });
+  if(!branches.size){ toast('No branch info in records','warn'); return; }
+  const candidates = [];
+  for(const [v, site] of Object.entries(state.sites)){
+    if(branches.has(site)) candidates.push(v);
+  }
+  if(!candidates.length){ toast('Nothing to clean up','good'); return; }
+  if(!confirm(`Found ${candidates.length} vehicle${candidates.length===1?'':'s'} whose Site Name equals a branch name (likely leftover from old auto-fill).\n\nRemove these site name entries? (Master list and manual entries are kept; only branch-as-site values are cleared.)`)) return;
+  candidates.forEach(v => delete state.sites[v]);
+  saveState();
+  refreshAll();
+  renderMasterListStats();
+  toast(`Cleaned ${candidates.length} branch-as-site leftover${candidates.length===1?'':'s'}`,'good');
+}
+
+function exportMasterListXLSX(){
+  // Build vehicle list from records ∪ models ∪ sites
+  const allVeh = new Set();
+  state.records.forEach(r=>allVeh.add(r.vehicle));
+  Object.keys(state.models).forEach(v=>allVeh.add(v));
+  Object.keys(state.sites).forEach(v=>allVeh.add(v));
+  if(!allVeh.size){ toast('Nothing to export','warn'); return; }
+  const rows = [['Object','MODEL','SITE NAME']];
+  [...allVeh].sort().forEach(v=>{
+    rows.push([v, state.models[v]||'', state.sites[v]||'']);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Master List');
+  XLSX.writeFile(wb, `MasterList_${fmtDate(new Date())}.xlsx`);
+  toast('Exported ✓','good');
+}
+
+function renderMasterListStats(){
+  const el = document.getElementById('master-list-stats');
+  if(!el) return;
+  const m = Object.keys(state.models).length;
+  const s = Object.keys(state.sites).length;
+  el.innerHTML = `<span><b>${m}</b>models</span><span><b>${s}</b>site names</span><span><b>${Object.keys(state.siteFills).length}</b>site fills</span><span><b>${Object.keys(state.siteHMRs).length}</b>site HMRs</span><span><b>${Object.keys(state.fillOverrides).length}</b>online fill overrides</span>`;
+}
+
+/* ============================================================
+   STATS & TABS
+============================================================ */
+function updateStats(){
+  const days = new Set(state.records.map(r=>r.date)).size;
+  const veh = new Set(state.records.map(r=>r.vehicle)).size;
+  document.getElementById('stat-days').textContent = days;
+  document.getElementById('stat-veh').textContent = veh;
+  document.getElementById('stat-rec').textContent = state.records.length;
+}
+
+function setupTabs(){
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById('page-'+t.dataset.tab).classList.add('active');
+      if(t.dataset.tab==='vehicles' && !document.getElementById('veh-from').value){ setVehRangeAll(); }
+      if(t.dataset.tab==='reports'){ populateReportFilters(); renderReport(); }
+      if(t.dataset.tab==='mileage'){
+        if(!document.getElementById('mil-from').value){ setMilRangeAll(); }
+        else { renderMileagePivot(); }
+      }
+      if(t.dataset.tab==='admin'){ syncAdminLockState(); }
+    });
+  });
+}
+
+/* ============================================================
+   ADMIN PAGE — PIN gate (PIN = 3456, persisted for the session)
+============================================================ */
+const ADMIN_PIN = '3456';
+let pinBuffer = '';
+
+function syncAdminLockState(){
+  const unlocked = sessionStorage.getItem('fet_admin_unlocked') === '1';
+  document.getElementById('admin-lock').style.display    = unlocked ? 'none' : '';
+  document.getElementById('admin-content').style.display = unlocked ? '' : 'none';
+  if(!unlocked){ pinClear(); }
+}
+
+function renderPinDots(){
+  document.querySelectorAll('.pin-dot').forEach((dot,i)=>{
+    dot.classList.toggle('filled', i < pinBuffer.length);
+    dot.classList.remove('error');
+  });
+  document.getElementById('pin-error').textContent = '';
+}
+
+function pinPress(digit){
+  if(pinBuffer.length >= 4) return;
+  pinBuffer += digit;
+  renderPinDots();
+  if(pinBuffer.length === 4){
+    if(pinBuffer === ADMIN_PIN){
+      setTimeout(unlockAdmin, 120);
+    } else {
+      // Wrong PIN — shake + clear
+      document.querySelectorAll('.pin-dot').forEach(d=>d.classList.add('error'));
+      document.getElementById('pin-error').textContent = 'Incorrect PIN';
+      setTimeout(()=>{ pinBuffer = ''; renderPinDots(); }, 600);
+    }
+  }
+}
+function pinBack(){
+  if(!pinBuffer) return;
+  pinBuffer = pinBuffer.slice(0, -1);
+  renderPinDots();
+}
+function pinClear(){
+  pinBuffer = '';
+  renderPinDots();
+}
+function unlockAdmin(){
+  sessionStorage.setItem('fet_admin_unlocked', '1');
+  syncAdminLockState();
+  toast('Admin unlocked','good');
+}
+function lockAdmin(){
+  sessionStorage.removeItem('fet_admin_unlocked');
+  pinBuffer = '';
+  syncAdminLockState();
+  toast('Admin locked','warn');
+}
+
+// Keyboard support — digits/backspace work when the Admin lock screen is active
+document.addEventListener('keydown', (e)=>{
+  const adminPage = document.getElementById('page-admin');
+  const lockEl = document.getElementById('admin-lock');
+  if(!adminPage || !adminPage.classList.contains('active')) return;
+  if(!lockEl || lockEl.style.display === 'none') return;
+  if(/^[0-9]$/.test(e.key)){ pinPress(e.key); e.preventDefault(); }
+  else if(e.key === 'Backspace'){ pinBack(); e.preventDefault(); }
+  else if(e.key === 'Escape'){ pinClear(); }
+});
+
+function refreshAll(){
+  renderCalendar();
+  renderUploadList();
+  renderVehicles();
+  populateReportFilters();
+  renderReport();
+  if(document.getElementById('mil-from')) renderMileagePivot();
+  renderMasterListStats();
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+document.addEventListener('DOMContentLoaded', async ()=>{
+  loadState();
+  setupTabs();
+  setupUpload();
+  document.getElementById('upload-date').addEventListener('change', renderCalendar);
+  // Smart paste live preview (debounced)
+  const sp = document.getElementById('ml-smart-paste');
+  if(sp){
+    let t;
+    sp.addEventListener('input', ()=>{
+      clearTimeout(t);
+      t = setTimeout(refreshMasterListPreview, 250);
+    });
+  }
+  refreshAll();
+  updateStats();
+  // Init cloud sync after first paint — pulls latest from server, then re-renders
+  cloud.init();
+});
+</script>
+</body>
+</html>
