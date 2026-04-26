@@ -1137,6 +1137,7 @@ const cloud = {
       this.enabled = true;
       this.setStatus('syncing');
       await this.fetchAll();
+      this.setupRealtime();
       this.setStatus('synced');
     }catch(e){
       console.error('Cloud init failed:', e);
@@ -1151,7 +1152,7 @@ const cloud = {
     const map = {
       local:   ['#94a3b8', '◌ Local only',     'Cloud sync disabled (no config)'],
       syncing: ['#f59e0b', '⟳ Syncing…',       'Pushing changes to cloud'],
-      synced:  ['#059669', '☁ Synced',         'All changes saved to cloud'],
+      synced:  ['#10b981', '☁ Live',           'Connected · changes auto-sync from any device'],
       error:   ['#dc2626', '⚠ Sync error',     this.lastError || 'Cloud unreachable — using local cache'],
       offline: ['#94a3b8', '⚠ Offline',        'No internet — changes will sync when reconnected']
     };
@@ -1313,6 +1314,112 @@ const cloud = {
         this.client.from('uploads').delete().gt('id', -1)
       ]);
     }catch(e){ console.error('Clear cloud failed:', e); }
+  },
+ 
+  /* ─── REALTIME SUBSCRIPTIONS ─────────────────────────────
+     Listens for INSERT/UPDATE/DELETE on cells, records, vehicles.
+     When a worker saves on mobile (or another PC user edits),
+     state is updated and Pages 2 & 3 auto-refresh within ~1.5s.
+     Refresh is deferred while the user is typing in an input.
+  ───────────────────────────────────────────────────────────── */
+  channel: null,
+  pendingChanges: null,
+  refreshTimer: null,
+ 
+  setupRealtime(){
+    if(!this.enabled || this.channel) return;
+    this.pendingChanges = new Set();
+    try{
+      this.channel = this.client
+        .channel('fet-realtime')
+        .on('postgres_changes', {event:'*', schema:'public', table:'cells'},    p => this._applyCellChange(p))
+        .on('postgres_changes', {event:'*', schema:'public', table:'records'},  p => this._applyRecordChange(p))
+        .on('postgres_changes', {event:'*', schema:'public', table:'vehicles'}, p => this._applyVehicleChange(p))
+        .subscribe();
+    }catch(e){ console.error('Realtime setup failed:', e); }
+  },
+ 
+  _applyCellChange(payload){
+    const ev = payload.eventType;
+    const row = payload.new || payload.old;
+    if(!row) return;
+    const k = `${row.vehicle}|${row.date}`;
+    if(ev === 'DELETE'){
+      delete state.siteFills[k];
+      delete state.siteHMRs[k];
+      delete state.fillOverrides[k];
+      delete state.workHourOverrides[k];
+    } else {
+      const n = payload.new;
+      if(n.fill_override != null) state.fillOverrides[k] = +n.fill_override; else delete state.fillOverrides[k];
+      if(n.wh_override != null) state.workHourOverrides[k] = +n.wh_override; else delete state.workHourOverrides[k];
+      if(n.site_fill != null) state.siteFills[k] = +n.site_fill; else delete state.siteFills[k];
+      if(n.site_hmr != null) state.siteHMRs[k] = +n.site_hmr; else delete state.siteHMRs[k];
+    }
+    saveLocal();
+    this._scheduleRefresh(`${row.vehicle} · ${row.date}`);
+  },
+ 
+  _applyRecordChange(payload){
+    const ev = payload.eventType;
+    if(ev === 'DELETE'){
+      const o = payload.old;
+      if(!o) return;
+      state.records = state.records.filter(r => !(r.vehicle === o.vehicle && r.date === o.date));
+    } else {
+      const n = payload.new;
+      if(!n) return;
+      const idx = state.records.findIndex(r => r.vehicle === n.vehicle && r.date === n.date);
+      const rec = {
+        vehicle: n.vehicle, date: n.date,
+        km: n.km, hmr: n.hmr, fuel: n.fuel,
+        branch: n.branch, data: n.data || {}
+      };
+      if(idx >= 0) state.records[idx] = rec;
+      else state.records.push(rec);
+    }
+    saveLocal();
+    this._scheduleRefresh(`record ${payload.new?.vehicle || payload.old?.vehicle || ''}`);
+  },
+ 
+  _applyVehicleChange(payload){
+    const ev = payload.eventType;
+    const o = payload.old, n = payload.new;
+    if(ev === 'DELETE'){
+      if(!o) return;
+      delete state.sites[o.vehicle];
+      delete state.models[o.vehicle];
+    } else {
+      if(!n) return;
+      if(n.site_name) state.sites[n.vehicle] = n.site_name; else delete state.sites[n.vehicle];
+      if(n.model) state.models[n.vehicle] = n.model; else delete state.models[n.vehicle];
+    }
+    saveLocal();
+    this._scheduleRefresh('vehicle metadata');
+  },
+ 
+  _scheduleRefresh(label){
+    this.pendingChanges.add(label);
+    if(this.refreshTimer) clearTimeout(this.refreshTimer);
+    this.refreshTimer = setTimeout(() => this._doRefresh(), 1500);
+  },
+ 
+  _doRefresh(){
+    // Don't yank focus / re-render while user is typing — defer
+    const ae = document.activeElement;
+    const isTyping = ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable);
+    if(isTyping){
+      this.refreshTimer = setTimeout(() => this._doRefresh(), 2000);
+      return;
+    }
+    const labels = [...this.pendingChanges];
+    this.pendingChanges.clear();
+    refreshAll();
+    if(labels.length === 1){
+      toast(`☁ Updated: ${labels[0]}`, 'good');
+    } else if(labels.length > 1){
+      toast(`☁ ${labels.length} cloud updates applied`, 'good');
+    }
   }
 };
  
