@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0d8585">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TASR Fuel">
+<title>TASR Fuel Entry</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230d8585'/%3E%3Ctext x='50' y='62' text-anchor='middle' font-family='system-ui' font-size='38' font-weight='800' fill='white'%3E⛽%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --primary:#0d8585; --primary-dark:#075c5c;
+    --ink:#0f172a; --ink-2:#475569; --muted:#64748b;
+    --line:#e2e8f0; --bg:#f1f5f9; --card:#fff;
+    --good:#059669; --warn:#f59e0b; --bad:#dc2626;
+  }
+  html,body{margin:0;padding:0;height:100%;overflow-x:hidden}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:16px;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  /* Header */
+  header{
+    background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
+    color:#fff;padding:14px 16px;position:sticky;top:0;z-index:50;
+    padding-top:calc(14px + env(safe-area-inset-top));
+    box-shadow:0 2px 8px rgba(0,0,0,.1);
+  }
+  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .hd-right{display:flex;align-items:center;gap:8px}
+  #logout-btn{
+    background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15);
+    width:32px;height:32px;border-radius:8px;font-size:14px;cursor:pointer;
+    display:grid;place-items:center;
+  }
+  #logout-btn:active{background:rgba(255,255,255,.2)}
+ 
+  /* === LOGIN PAGE === */
+  .login-card{
+    margin:30px auto 12px;text-align:center;padding:30px 24px 24px;
+  }
+  .login-icon{font-size:42px;margin-bottom:6px}
+  .login-title{margin:0 0 4px;font-size:22px;font-weight:700}
+  .login-sub{margin:0 0 22px;color:var(--muted);font-size:13px}
+  .login-card .field{text-align:left}
+  .login-card select{
+    width:100%;font-size:16px;padding:13px 14px;
+    border:2px solid var(--line);border-radius:10px;background:#fff;
+    font-family:inherit;color:var(--ink);-webkit-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center;background-size:14px;padding-right:36px;
+  }
+  .login-card #login-pin{
+    text-align:center;font-size:24px;letter-spacing:.4em;font-weight:700;
+  }
+  #login-btn{
+    width:100%;padding:16px;
+    background:linear-gradient(135deg,#0d8585 0%,#075c5c 100%);
+    color:#fff;border:none;border-radius:12px;
+    font-size:16px;font-weight:700;letter-spacing:.06em;
+    cursor:pointer;font-family:inherit;
+    box-shadow:0 4px 14px rgba(13,133,133,.3);
+  }
+  #login-btn:active{transform:translateY(1px)}
+  #login-btn:disabled{opacity:.6}
+  .login-error{
+    margin-top:12px;padding:10px 12px;background:#fee2e2;border:1px solid #fca5a5;
+    border-radius:8px;color:#991b1b;font-size:13px;font-weight:600;
+  }
+  .login-foot{
+    text-align:center;color:var(--muted);font-size:11px;padding:18px 12px;line-height:1.6;
+  }
+ 
+  /* === ADMIN PAGE === */
+  .admin-tabs{
+    display:flex;gap:4px;background:#fff;border-radius:12px;padding:4px;
+    margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04);
+  }
+  .atab{
+    flex:1;padding:10px 6px;background:transparent;border:none;
+    font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;
+    border-radius:8px;font-family:inherit;
+    transition:all .15s;
+  }
+  .atab.active{background:var(--primary);color:#fff;box-shadow:0 2px 6px rgba(13,133,133,.25)}
+  .atab-add{
+    width:100%;padding:12px;background:#0f172a;color:#fff;
+    border:none;border-radius:10px;font-size:14px;font-weight:700;
+    cursor:pointer;font-family:inherit;margin-bottom:12px;
+  }
+  .atab-add:active{transform:translateY(1px)}
+  .atab-mini{
+    flex:1;padding:7px 4px;background:#f1f5f9;border:1px solid var(--line);
+    border-radius:7px;font-size:11px;font-weight:600;color:var(--ink-2);
+    cursor:pointer;font-family:inherit;
+  }
+  .atab-mini.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+ 
+  /* Manager card */
+  .mgr-card{
+    background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;
+    border:1px solid var(--line);
+  }
+  .mgr-card .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .mgr-card .nm{font-size:15px;font-weight:700}
+  .mgr-card .role{
+    font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;
+    text-transform:uppercase;letter-spacing:.04em;
+  }
+  .mgr-card .role.admin{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+  .mgr-card .role.mgr{background:#dbeafe;color:#1e40af;border:1px solid #93c5fd}
+  .mgr-card .meta{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6}
+  .mgr-card .actions{display:flex;gap:6px;margin-top:10px}
+  .mgr-card .actions button{
+    flex:1;padding:8px;border-radius:8px;font-size:12px;font-weight:600;
+    cursor:pointer;font-family:inherit;border:1px solid var(--line);
+  }
+  .mgr-edit{background:#dbeafe;color:#1e40af;border-color:#93c5fd !important}
+  .mgr-pin{background:#fef3c7;color:#92400e;border-color:#fcd34d !important}
+  .mgr-del{background:#fee2e2;color:#991b1b;border-color:#fca5a5 !important}
+ 
+  /* Assignment card */
+  .assign-card{
+    background:#fff;border-radius:10px;padding:11px 12px;margin-bottom:6px;
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+  }
+  .assign-card .veh{font-weight:600;font-size:14px}
+  .assign-card .meta{font-size:11px;color:var(--muted);margin-top:2px}
+  .assign-card select{
+    font-size:13px;padding:7px 24px 7px 10px;border:1px solid var(--line);
+    border-radius:7px;background:#fff;max-width:140px;
+    -webkit-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 6px center;background-size:12px;
+  }
+  .assign-card.unassigned{background:#fffbeb;border-color:#fcd34d}
+ 
+  /* Audit log card */
+  .audit-card{
+    background:#fff;border-radius:10px;padding:11px 12px;margin-bottom:6px;
+    border:1px solid var(--line);
+    border-left:3px solid var(--primary);
+  }
+  .audit-card.create{border-left-color:#10b981}
+  .audit-card.update{border-left-color:#3b82f6}
+  .audit-card.delete{border-left-color:#dc2626}
+  .audit-card .top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px}
+  .audit-card .when{color:var(--muted);font-variant-numeric:tabular-nums}
+  .audit-card .act{font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:10px;padding:2px 7px;border-radius:99px}
+  .audit-card .act.create{background:#dcfce7;color:#065f46}
+  .audit-card .act.update{background:#dbeafe;color:#1e40af}
+  .audit-card .act.delete{background:#fee2e2;color:#991b1b}
+  .audit-card .veh-line{font-size:14px;font-weight:600;margin:6px 0 2px}
+  .audit-card .by{font-size:11px;color:var(--muted)}
+  .audit-card .delta{
+    margin-top:6px;font-size:12px;font-variant-numeric:tabular-nums;
+    background:#f8fafc;padding:6px 8px;border-radius:6px;
+  }
+ 
+  /* === MODAL === */
+  .modal{
+    position:fixed;inset:0;z-index:1000;
+    display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+  .modal[hidden]{display:none !important}
+  .modal-backdrop{
+    position:absolute;inset:0;background:rgba(15,23,42,.55);
+    -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
+  }
+  .modal-content{
+    position:relative;background:#fff;border-radius:14px;
+    width:100%;max-width:420px;max-height:90vh;overflow-y:auto;
+    box-shadow:0 20px 60px rgba(0,0,0,.3);
+  }
+  .modal-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 18px;border-bottom:1px solid var(--line);
+    position:sticky;top:0;background:#fff;
+  }
+  .modal-head h3{margin:0;font-size:16px;font-weight:700}
+  #modal-close{
+    background:#f1f5f9;border:none;width:32px;height:32px;
+    border-radius:8px;font-size:14px;cursor:pointer;
+  }
+  #modal-body{padding:18px}
+  #modal-body .field input,#modal-body .field select{
+    width:100%;font-size:15px;padding:11px 12px;
+    border:2px solid var(--line);border-radius:10px;background:#fff;
+    font-family:inherit;-webkit-appearance:none;appearance:none;
+  }
+  #modal-body .modal-actions{display:flex;gap:8px;margin-top:16px}
+  #modal-body .modal-actions button{
+    flex:1;padding:12px;border:none;border-radius:10px;
+    font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;
+  }
+  #modal-body .btn-primary{background:var(--primary);color:#fff}
+  #modal-body .btn-secondary{background:#f1f5f9;color:var(--ink-2);border:1px solid var(--line)}
+  #modal-body .btn-danger{background:#dc2626;color:#fff}
+  .brand{display:flex;align-items:center;gap:10px}
+  .logo{
+    width:36px;height:36px;border-radius:9px;
+    background:linear-gradient(135deg,#0d8585 0%,#075c5c 100%);
+    display:grid;place-items:center;font-size:18px;
+  }
+  .title{font-size:15px;font-weight:700;letter-spacing:-.01em}
+  .subtitle{font-size:11px;opacity:.65;margin-top:1px}
+  #sync-status{
+    font-size:11px;padding:4px 10px;border-radius:99px;
+    background:rgba(255,255,255,.08);font-weight:600;cursor:pointer;
+    border:1px solid rgba(255,255,255,.1);
+  }
+  /* Main */
+  main{padding:18px 16px;max-width:520px;margin:0 auto}
+ 
+  .card{
+    background:var(--card);border-radius:14px;padding:16px;margin-bottom:14px;
+    box-shadow:0 1px 3px rgba(0,0,0,.04);
+  }
+  .field{margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  label{
+    display:block;font-size:11px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:6px;
+  }
+  input[type="date"],input[type="text"],input[type="number"]{
+    width:100%;font-size:17px;padding:13px 14px;
+    border:2px solid var(--line);border-radius:10px;background:#fff;
+    font-family:inherit;color:var(--ink);
+    -webkit-appearance:none;appearance:none;
+    transition:border-color .15s;
+  }
+  input:focus{outline:none;border-color:var(--primary)}
+  input[type="number"]{font-variant-numeric:tabular-nums;font-weight:600}
+ 
+  .big-num{font-size:22px !important;font-weight:700 !important;text-align:center}
+ 
+  /* Vehicle picker */
+  .v-search-wrap{position:relative}
+  .v-search-wrap input{padding-right:36px}
+  .v-chevron{
+    position:absolute;right:12px;top:50%;transform:translateY(-50%);
+    color:var(--muted);font-size:10px;pointer-events:none;
+    transition:transform .2s;
+  }
+  .v-search-wrap input:focus + .v-chevron{transform:translateY(-50%) rotate(180deg);color:var(--primary)}
+  .v-results{
+    position:absolute;top:calc(100% + 4px);left:0;right:0;
+    background:#fff;border-radius:12px;
+    box-shadow:0 8px 24px rgba(0,0,0,.12);
+    max-height:55vh;overflow-y:auto;z-index:20;
+    border:1px solid var(--line);
+  }
+  .v-results:empty{display:none}
+  .v-list-head{
+    position:sticky;top:0;background:#f8fafc;
+    padding:8px 14px;font-size:11px;font-weight:600;
+    color:var(--muted);text-transform:uppercase;letter-spacing:.04em;
+    border-bottom:1px solid var(--line);
+  }
+  .v-result{
+    display:block;width:100%;text-align:left;
+    padding:12px 14px;border:none;background:#fff;
+    border-bottom:1px solid #f1f5f9;font-size:15px;
+    cursor:pointer;font-family:inherit;
+  }
+  .v-result:active{background:var(--bg)}
+  .v-result.selected{background:#ecfdf5;border-left:3px solid var(--good)}
+  .v-result:last-child{border-bottom:none}
+  .v-result b{display:block;color:var(--ink);font-weight:600}
+  .v-result span{
+    display:block;font-size:12px;color:var(--muted);margin-top:2px;
+  }
+  .v-info{
+    margin-top:8px;background:#ecfdf5;border:1px solid #a7f3d0;
+    border-radius:10px;padding:10px 12px;font-size:13px;color:#065f46;
+  }
+  .v-info .v-tag{
+    display:inline-block;background:#fff;color:#047857;border:1px solid #a7f3d0;
+    padding:2px 8px;border-radius:4px;font-weight:700;font-size:12px;margin-right:6px;
+  }
+  .v-info .row{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+  .v-info .row b{font-variant-numeric:tabular-nums}
+  .v-info .stale{color:#92400e;background:#fffbeb;border-color:#fcd34d;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600}
+ 
+  /* Save button */
+  #save-btn{
+    width:100%;padding:18px;
+    background:linear-gradient(135deg,var(--good) 0%,#047857 100%);
+    color:#fff;border:none;border-radius:14px;
+    font-size:17px;font-weight:700;letter-spacing:.04em;
+    cursor:pointer;font-family:inherit;
+    box-shadow:0 4px 14px rgba(5,150,105,.35);
+    transition:all .15s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #save-btn:active{transform:translateY(1px);box-shadow:0 2px 8px rgba(5,150,105,.35)}
+  #save-btn:disabled{opacity:.5;cursor:not-allowed}
+  #save-btn.saved{background:linear-gradient(135deg,#10b981 0%,#059669 100%);animation:pop .3s}
+  @keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+ 
+  /* Today's entries */
+  .ent-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:10px;
+  }
+  .ent-head h3{
+    margin:0;font-size:11px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .ent-count{
+    font-size:11px;font-weight:700;color:var(--primary);
+    background:#e6fffa;padding:2px 8px;border-radius:99px;
+  }
+  .ent-list{list-style:none;padding:0;margin:0}
+  .ent-item{
+    display:flex;align-items:center;gap:6px;
+    padding:0;background:#fff;border-radius:10px;margin-bottom:6px;
+    border:1px solid var(--line);overflow:hidden;
+  }
+  .ent-tap{
+    flex:1;display:flex;align-items:center;justify-content:space-between;
+    padding:11px 12px;background:transparent;border:none;
+    text-align:left;font-family:inherit;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .ent-tap:active{background:var(--bg)}
+  .ent-veh{font-weight:600;font-size:14px;color:var(--ink)}
+  .ent-vals{font-size:12px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+  .ent-edit-hint{
+    font-size:14px;color:var(--primary);opacity:.5;
+    background:#e6fffa;padding:4px 8px;border-radius:6px;
+  }
+  .ent-tap:active .ent-edit-hint{opacity:1}
+  .ent-del{
+    background:#fee2e2;color:#b91c1c;border:none;
+    width:34px;height:34px;border-radius:50%;font-size:14px;cursor:pointer;
+    display:grid;place-items:center;margin-right:8px;flex-shrink:0;
+  }
+  .ent-del:active{background:#fecaca}
+  .ent-empty{
+    text-align:center;color:#94a3b8;padding:18px 12px;
+    background:#fff;border-radius:10px;font-size:13px;
+    border:1px dashed var(--line);
+  }
+ 
+  /* Save button - edit mode */
+  #save-btn.editing{
+    background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);
+    box-shadow:0 4px 14px rgba(37,99,235,.35);
+  }
+ 
+  /* Download section */
+  .dl-quick{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+  .dl-quick button{
+    flex:1;min-width:60px;padding:8px 10px;
+    background:#f1f5f9;border:1px solid var(--line);border-radius:8px;
+    font-size:12px;font-weight:600;color:var(--ink-2);cursor:pointer;
+    font-family:inherit;
+  }
+  .dl-quick button:active,.dl-quick button.active{
+    background:var(--primary);color:#fff;border-color:var(--primary);
+  }
+  #dl-btn{
+    width:100%;padding:14px;
+    background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%);
+    color:#fff;border:none;border-radius:12px;
+    font-size:15px;font-weight:700;letter-spacing:.04em;
+    cursor:pointer;font-family:inherit;
+    box-shadow:0 4px 14px rgba(124,58,237,.3);
+  }
+  #dl-btn:active{transform:translateY(1px)}
+  #dl-btn:disabled{opacity:.5;cursor:not-allowed}
+ 
+  /* Toast */
+  #toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:#fff;
+    padding:12px 18px;border-radius:99px;
+    font-size:13px;font-weight:600;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);
+    opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;
+    z-index:100;max-width:90vw;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.warn{background:#92400e}
+  #toast.bad{background:#991b1b}
+ 
+  /* Sync states */
+  .sync-good{color:#10b981 !important}
+  .sync-warn{color:#fbbf24 !important}
+  .sync-bad{color:#fca5a5 !important}
+  .sync-pending{color:#fbbf24 !important}
+ 
+  /* Utility */
+  .row{display:flex;gap:10px}
+  .row > .field{flex:1}
+ 
+  /* Loading */
+  .loading{
+    display:grid;place-items:center;padding:40px 20px;color:var(--muted);
+  }
+  .spinner{
+    width:24px;height:24px;border:2.5px solid #e2e8f0;border-top-color:var(--primary);
+    border-radius:50%;animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+ 
+  /* Mobile-specific tweaks */
+  @media (max-width:380px){
+    main{padding:14px 12px}
+    .card{padding:14px}
+    .title{font-size:14px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="hd-row">
+    <div class="brand">
+      <div class="logo">⛽</div>
+      <div>
+        <div class="title">TASR Fuel Entry</div>
+        <div class="subtitle" id="header-sub">Sign in to continue</div>
+      </div>
+    </div>
+    <div class="hd-right">
+      <span id="sync-status" title="Cloud sync status">◌ …</span>
+      <button id="logout-btn" type="button" hidden title="Sign out">↗</button>
+    </div>
+  </div>
+</header>
+ 
+<!-- ============ LOGIN PAGE ============ -->
+<main id="page-login" hidden>
+  <div class="card login-card">
+    <div class="login-icon">🔐</div>
+    <h2 class="login-title">Sign In</h2>
+    <p class="login-sub">Pick your site and enter the PIN</p>
+    <div class="field">
+      <label>Site / Role</label>
+      <select id="login-site"><option>Loading…</option></select>
+    </div>
+    <div class="field">
+      <label>PIN</label>
+      <input type="password" id="login-pin" inputmode="numeric" maxlength="6" placeholder="••••" autocomplete="off">
+    </div>
+    <button id="login-btn" type="button">SIGN IN</button>
+    <div id="login-error" class="login-error" hidden></div>
+  </div>
+  <div class="login-foot">
+    No account? Ask your admin to create one.<br>
+    <span style="opacity:.6">First-time setup: log in as <b>Admin</b> with PIN <b>9999</b></span>
+  </div>
+</main>
+ 
+<!-- ============ ENTRY PAGE (site managers) ============ -->
+<main id="page-entry" hidden>
+  <div class="card">
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="date">
+    </div>
+ 
+    <div class="field">
+      <label>Vehicle</label>
+      <div class="v-search-wrap">
+        <input type="text" id="v-search" placeholder="Tap to choose vehicle…" autocomplete="off">
+        <div class="v-chevron">▼</div>
+        <div class="v-results" id="v-results"></div>
+      </div>
+      <div id="v-info"></div>
+    </div>
+ 
+    <div class="row">
+      <div class="field">
+        <label>Site Fill (L)</label>
+        <input type="number" id="site-fill" inputmode="decimal" step="0.1" placeholder="0.0" class="big-num">
+      </div>
+      <div class="field">
+        <label>HMR</label>
+        <input type="number" id="site-hmr" inputmode="decimal" step="0.1" placeholder="0.0" class="big-num">
+      </div>
+    </div>
+ 
+    <button id="save-btn" type="button">SAVE ENTRY</button>
+    <button id="cancel-edit" type="button" style="display:none;width:100%;padding:14px;margin-top:10px;background:#f1f5f9;color:var(--ink-2);border:1px solid var(--line);border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Cancel Edit</button>
+  </div>
+ 
+  <div class="card">
+    <div class="ent-head">
+      <h3>Entries on this date</h3>
+      <span class="ent-count" id="ent-count">0</span>
+    </div>
+    <ul class="ent-list" id="ent-list">
+      <div class="loading"><div class="spinner"></div></div>
+    </ul>
+  </div>
+ 
+  <div class="card">
+    <div class="ent-head">
+      <h3>📥 Download Excel</h3>
+    </div>
+    <div class="dl-quick">
+      <button type="button" data-range="today">Today</button>
+      <button type="button" data-range="week">7 days</button>
+      <button type="button" data-range="month" class="active">This Month</button>
+      <button type="button" data-range="all">All</button>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>From</label>
+        <input type="date" id="dl-from">
+      </div>
+      <div class="field">
+        <label>To</label>
+        <input type="date" id="dl-to">
+      </div>
+    </div>
+    <div class="field">
+      <label>Branch Filter</label>
+      <select id="dl-branch" style="width:100%;font-size:16px;padding:13px 14px;border:2px solid var(--line);border-radius:10px;background:#fff;font-family:inherit;color:var(--ink);-webkit-appearance:none;appearance:none;background-image:url(&quot;data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 12px center;background-size:14px;padding-right:36px">
+        <option value="">All branches (separate sheets)</option>
+      </select>
+    </div>
+    <button id="dl-btn" type="button">📥 DOWNLOAD EXCEL</button>
+    <div id="dl-info" style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center"></div>
+  </div>
+ 
+  <div style="text-align:center;color:var(--muted);font-size:11px;padding:14px 0 24px">
+    Synced with TASR BharatNext fleet system<br>
+    Same data as the office PC dashboard
+  </div>
+</main>
+ 
+<!-- ============ ADMIN PAGE ============ -->
+<main id="page-admin" hidden>
+  <div class="admin-tabs">
+    <button class="atab active" type="button" data-atab="managers">👥 Managers</button>
+    <button class="atab" type="button" data-atab="assignments">🚗 Assignments</button>
+    <button class="atab" type="button" data-atab="audit">📋 Audit Log</button>
+  </div>
+ 
+  <!-- Managers tab -->
+  <div id="atab-managers" class="atab-content">
+    <button class="atab-add" type="button" id="add-manager-btn">+ Add New Manager</button>
+    <div id="managers-list">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+ 
+  <!-- Assignments tab -->
+  <div id="atab-assignments" class="atab-content" hidden>
+    <div class="card" style="padding:12px">
+      <input type="text" id="assign-search" placeholder="Search vehicle, site or branch…" autocomplete="off" style="font-size:15px;padding:11px 12px;width:100%;border:2px solid var(--line);border-radius:10px;-webkit-appearance:none">
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <button class="atab-mini" type="button" data-afilter="all">All</button>
+        <button class="atab-mini active" type="button" data-afilter="unassigned">Unassigned</button>
+        <button class="atab-mini" type="button" data-afilter="assigned">Assigned</button>
+      </div>
+      <button class="atab-add" type="button" id="auto-assign-btn" style="margin-top:10px">⚡ Auto-assign by Branch</button>
+    </div>
+    <div id="assignments-list">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+ 
+  <!-- Audit Log tab -->
+  <div id="atab-audit" class="atab-content" hidden>
+    <div class="card" style="padding:12px">
+      <div class="row">
+        <div class="field" style="margin-bottom:0">
+          <label>From</label>
+          <input type="date" id="audit-from">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>To</label>
+          <input type="date" id="audit-to">
+        </div>
+      </div>
+      <div class="field" style="margin-top:10px;margin-bottom:0">
+        <label>Manager</label>
+        <select id="audit-manager" style="width:100%;font-size:15px;padding:11px 12px;border:2px solid var(--line);border-radius:10px;background:#fff;-webkit-appearance:none">
+          <option value="">All managers</option>
+        </select>
+      </div>
+      <button class="atab-add" type="button" id="audit-load-btn" style="margin-top:10px">Reload</button>
+    </div>
+    <div id="audit-list">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+</main>
+ 
+<!-- ============ MODAL (manager edit / assign) ============ -->
+<div id="modal" class="modal" hidden>
+  <div class="modal-backdrop"></div>
+  <div class="modal-content">
+    <div class="modal-head">
+      <h3 id="modal-title">Title</h3>
+      <button id="modal-close" type="button">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+ 
+<div id="toast"></div>
+ 
+<script>
+/* =========================================================
+   TASR Fuel Entry — Mobile field app
+   Same Supabase backend as the PC dashboard.
+   Writes to: cells (vehicle, date, site_fill, site_hmr)
+   Reads:     vehicles, cells
+   Offline-safe: queues writes in localStorage if no network
+========================================================= */
+const SUPABASE_URL = 'https://nmupuithswsfqidrpxbc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tdXB1aXRoc3dzZnFpZHJweGJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMDY0MzAsImV4cCI6MjA5Mjc4MjQzMH0.lfTE0kqfa4Fg0EwPpZBrv9XLVlPGJgobfS-NltcFCBM';
+const QUEUE_KEY = 'tasr_fuel_mobile_queue_v1';
+ 
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+ 
+/* ========== SESSION / AUTH ========== */
+const SESSION_KEY = 'tasr_session_v1';
+let session = null;  // {managerId, managerName, branch, isAdmin}
+ 
+function loadSession(){
+  try{
+    const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+    if(s && s.managerId){ session = s; return true; }
+  }catch(e){}
+  return false;
+}
+function saveSession(){ localStorage.setItem(SESSION_KEY, JSON.stringify(session)); }
+function clearSession(){ session = null; localStorage.removeItem(SESSION_KEY); }
+ 
+function showPage(name){
+  ['login','entry','admin'].forEach(p => {
+    const el = document.getElementById('page-'+p);
+    if(el) el.hidden = (p !== name);
+  });
+  const sub = document.getElementById('header-sub');
+  const logoutBtn = document.getElementById('logout-btn');
+  if(name === 'login'){
+    sub.textContent = 'Sign in to continue';
+    logoutBtn.hidden = true;
+  } else if(name === 'entry'){
+    sub.textContent = `${session.managerName}${session.branch?' · '+session.branch:''}`;
+    logoutBtn.hidden = false;
+  } else if(name === 'admin'){
+    sub.textContent = '🔒 Admin Panel';
+    logoutBtn.hidden = false;
+  }
+}
+ 
+async function logout(){
+  if(!confirm('Sign out?')) return;
+  clearSession();
+  vehicles = []; lastSiteHMR = {}; selectedVeh = null;
+  showPage('login');
+  await loadLoginOptions();
+}
+ 
+// State (existing)
+let vehicles = [];
+let lastSiteHMR = {};   // vehicle → { hmr, date }
+let selectedVeh = null;
+ 
+/* ========== Toast / status ========== */
+function toast(msg, kind){
+  const t = document.getElementById('toast');
+  t.className = ''; if(kind) t.classList.add(kind);
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=> t.classList.remove('show'), 2400);
+}
+function setSync(state, text){
+  const el = document.getElementById('sync-status');
+  const cls = {good:'sync-good',warn:'sync-warn',bad:'sync-bad',pending:'sync-pending'}[state] || '';
+  el.className = ''; if(cls) el.className = cls;
+  el.textContent = text;
+}
+ 
+/* ========== Offline queue ========== */
+function loadQueue(){
+  try{ return JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]') }
+  catch(e){ return [] }
+}
+function saveQueue(q){ localStorage.setItem(QUEUE_KEY, JSON.stringify(q)) }
+function queueSize(){ return loadQueue().length }
+ 
+async function flushQueue(silent){
+  const q = loadQueue();
+  if(!q.length){ updateSyncStatus(); return; }
+  if(!silent) setSync('pending', `⟳ ${q.length} pending…`);
+  const stillPending = [];
+  for(const entry of q){
+    try{
+      // Read-merge-write so we don't clobber other override columns
+      const { data: existing, error: e1 } = await sb.from('cells').select('*')
+        .eq('vehicle', entry.vehicle).eq('date', entry.date).maybeSingle();
+      if(e1) throw e1;
+      const merged = {
+        vehicle: entry.vehicle, date: entry.date,
+        fill_override: existing?.fill_override ?? null,
+        wh_override: existing?.wh_override ?? null,
+        site_fill: entry.site_fill,
+        site_hmr: entry.site_hmr
+      };
+      const { error: e2 } = await sb.from('cells').upsert(merged, {onConflict:'vehicle,date'});
+      if(e2) throw e2;
+      // Update local hint cache
+      lastSiteHMR[entry.vehicle] = { hmr: entry.site_hmr, date: entry.date };
+    }catch(e){
+      console.error('Queue replay failed:', e);
+      stillPending.push(entry);
+    }
+  }
+  saveQueue(stillPending);
+  updateSyncStatus();
+  if(stillPending.length === 0 && q.length > 0){
+    toast(`✓ Synced ${q.length} pending entr${q.length===1?'y':'ies'}`);
+  }
+}
+function updateSyncStatus(){
+  const q = queueSize();
+  if(!navigator.onLine){
+    setSync('warn', `⚠ Offline${q?` · ${q} queued`:''}`);
+  }else if(q > 0){
+    setSync('pending', `⟳ ${q} pending`);
+  }else{
+    setSync('good', '☁ Synced');
+  }
+}
+ 
+window.addEventListener('online', ()=> { toast('Back online — syncing…'); flushQueue(); });
+window.addEventListener('offline', ()=> { toast('Offline — entries will sync later','warn'); updateSyncStatus(); });
+setInterval(()=> { if(navigator.onLine) flushQueue(true); }, 30000);
+ 
+/* ========== Loading data ========== */
+async function loadVehicles(){
+  try{
+    const { data, error } = await sb.from('vehicles').select('*').order('vehicle');
+    if(error) throw error;
+    const allVehicles = data || [];
+    if(session && !session.isAdmin){
+      // Filter to assigned vehicles only
+      const { data: assigns } = await sb.from('vehicle_assignments')
+        .select('vehicle').eq('manager_id', session.managerId);
+      const assignedSet = new Set((assigns||[]).map(a => a.vehicle));
+      vehicles = allVehicles.filter(v => assignedSet.has(v.vehicle));
+      if(!vehicles.length){
+        toast('No vehicles assigned yet — ask admin','warn');
+      }
+    } else {
+      vehicles = allVehicles;
+    }
+    if(!vehicles.length && !session){
+      toast('No vehicles in database — upload Excel from PC first','warn');
+    }
+  }catch(e){
+    console.error('loadVehicles failed:',e);
+    toast('Could not load vehicles','bad');
+  }
+}
+ 
+async function loadLastHMRs(){
+  try{
+    const { data, error } = await sb.from('cells')
+      .select('vehicle,date,site_hmr')
+      .not('site_hmr','is',null)
+      .order('date',{ascending:false});
+    if(error) throw error;
+    lastSiteHMR = {};
+    (data||[]).forEach(c=>{
+      if(!lastSiteHMR[c.vehicle]) lastSiteHMR[c.vehicle] = { hmr:c.site_hmr, date:c.date };
+    });
+  }catch(e){
+    console.error('loadLastHMRs failed:',e);
+  }
+}
+ 
+async function loadEntriesForDate(){
+  const date = document.getElementById('date').value;
+  if(!date) return;
+  const list = document.getElementById('ent-list');
+  list.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try{
+    const { data, error } = await sb.from('cells')
+      .select('vehicle,date,site_fill,site_hmr')
+      .eq('date', date)
+      .not('site_fill','is',null)
+      .order('vehicle');
+    if(error) throw error;
+    renderEntries(data || []);
+  }catch(e){
+    list.innerHTML = '<div class="ent-empty" style="color:#b91c1c">Could not load entries</div>';
+    document.getElementById('ent-count').textContent = '—';
+  }
+}
+ 
+function renderEntries(rows){
+  const list = document.getElementById('ent-list');
+  document.getElementById('ent-count').textContent = rows.length;
+  if(!rows.length){
+    list.innerHTML = '<div class="ent-empty">No entries yet for this date</div>';
+    return;
+  }
+  list.innerHTML = rows.map(c=>`
+    <li class="ent-item">
+      <button type="button" class="ent-tap" onclick="editEntry('${escapeAttr(c.vehicle)}','${c.date}',${+c.site_fill},${+c.site_hmr})">
+        <div>
+          <div class="ent-veh">${escapeHtml(c.vehicle)}</div>
+          <div class="ent-vals">${fmt(c.site_fill)} L · HMR ${fmt(c.site_hmr)}</div>
+        </div>
+        <span class="ent-edit-hint">✏</span>
+      </button>
+      <button type="button" class="ent-del" onclick="deleteEntry('${escapeAttr(c.vehicle)}','${c.date}')" title="Remove">✕</button>
+    </li>
+  `).join('');
+}
+function fmt(n){ return (n==null)?'—':(+n).toFixed(1).replace(/\.0$/,'') }
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])) }
+function escapeAttr(s){ return String(s||'').replace(/'/g,"\\'") }
+ 
+window.deleteEntry = async function(vehicle, date){
+  if(!confirm(`Remove entry for ${vehicle} on ${date}?`)) return;
+  try{
+    // Capture before-state for audit
+    const { data: existing } = await sb.from('cells').select('*')
+      .eq('vehicle', vehicle).eq('date', date).maybeSingle();
+    // Null out site_fill + site_hmr but keep the row so we don't kill other override fields
+    const { error } = await sb.from('cells').update({
+      site_fill: null, site_hmr: null
+    }).eq('vehicle', vehicle).eq('date', date);
+    if(error) throw error;
+    // Refresh hint cache
+    if(lastSiteHMR[vehicle] && lastSiteHMR[vehicle].date === date){
+      delete lastSiteHMR[vehicle];
+      await loadLastHMRs();
+    }
+    // Audit
+    if(existing){
+      logAudit(vehicle, date, 'delete',
+        {site_fill: existing.site_fill, site_hmr: existing.site_hmr}, null);
+    }
+    toast('Entry removed');
+    loadEntriesForDate();
+  }catch(e){
+    toast('Could not remove: '+e.message,'bad');
+  }
+};
+ 
+/* ========== Edit mode ========== */
+let editMode = false;
+ 
+window.editEntry = function(vehicle, date, fill, hmr){
+  const v = vehicles.find(x => x.vehicle === vehicle);
+  if(!v){ toast('Vehicle not found','warn'); return; }
+  editMode = true;
+  selectedVeh = v;
+  searchInput.value = vehicle;
+  document.getElementById('date').value = date;
+  document.getElementById('site-fill').value = fill;
+  document.getElementById('site-hmr').value = hmr;
+  searchResults.innerHTML = '';
+  renderVehicleInfo();
+ 
+  // Update UI to show edit state
+  const btn = document.getElementById('save-btn');
+  btn.textContent = '✏ UPDATE ENTRY';
+  btn.classList.add('editing');
+  document.getElementById('cancel-edit').style.display = 'block';
+ 
+  // Scroll to top so they can see the form
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+ 
+function exitEditMode(){
+  editMode = false;
+  const btn = document.getElementById('save-btn');
+  btn.textContent = 'SAVE ENTRY';
+  btn.classList.remove('editing');
+  const ce = document.getElementById('cancel-edit');
+  if(ce) ce.style.display = 'none';
+}
+ 
+document.getElementById('cancel-edit').addEventListener('click', ()=>{
+  exitEditMode();
+  document.getElementById('site-fill').value = '';
+  document.getElementById('site-hmr').value = '';
+  searchInput.value = '';
+  selectedVeh = null;
+  document.getElementById('v-info').innerHTML = '';
+  toast('Edit cancelled');
+});
+ 
+/* ========== Vehicle search / picker ========== */
+const searchInput = document.getElementById('v-search');
+const searchResults = document.getElementById('v-results');
+ 
+searchInput.addEventListener('input', e=>{
+  showVehicleDropdown(e.target.value.trim().toLowerCase());
+});
+searchInput.addEventListener('focus', e=>{
+  // Show full list immediately when tapped (acts as a searchable dropdown)
+  showVehicleDropdown(e.target.value.trim().toLowerCase());
+});
+ 
+function showVehicleDropdown(q){
+  if(!vehicles.length){
+    searchResults.innerHTML = `<div style="padding:14px;color:var(--muted);font-size:13px;text-align:center">No vehicles in database<br><span style="font-size:11px">Upload Excel from PC first</span></div>`;
+    return;
+  }
+  const matches = !q ? vehicles : vehicles.filter(v=>{
+    const name = (v.vehicle||'').toLowerCase();
+    const site = (v.site_name||'').toLowerCase();
+    const model = (v.model||'').toLowerCase();
+    return name.includes(q) || site.includes(q) || model.includes(q);
+  });
+  if(!matches.length){
+    searchResults.innerHTML = `<div style="padding:12px 14px;color:var(--muted);font-size:13px">No matching vehicle</div>`;
+    return;
+  }
+  // Header showing count when displaying full list
+  const header = !q ? `<div class="v-list-head">${matches.length} vehicles · type to filter</div>` : '';
+  searchResults.innerHTML = header + matches.map(v=>{
+    const isSelected = selectedVeh && selectedVeh.vehicle === v.vehicle;
+    return `
+    <button type="button" class="v-result${isSelected?' selected':''}" onclick="pickVehicle('${escapeAttr(v.vehicle)}')">
+      <b>${escapeHtml(v.vehicle)}</b>
+      <span>${escapeHtml(v.site_name||'(no site name)')}${v.model?' · '+escapeHtml(v.model):''}</span>
+    </button>`;
+  }).join('');
+}
+searchInput.addEventListener('blur', ()=> {
+  // Delay so click on result button registers
+  setTimeout(()=> { searchResults.innerHTML = ''; }, 200);
+});
+ 
+window.pickVehicle = function(vehName){
+  selectedVeh = vehicles.find(v=>v.vehicle === vehName);
+  if(!selectedVeh) return;
+  searchInput.value = vehName;
+  searchResults.innerHTML = '';
+  renderVehicleInfo();
+  // Auto-focus the fill input
+  setTimeout(()=> document.getElementById('site-fill').focus(), 50);
+};
+ 
+function renderVehicleInfo(){
+  const info = document.getElementById('v-info');
+  if(!selectedVeh){ info.innerHTML = ''; return; }
+  const last = lastSiteHMR[selectedVeh.vehicle];
+  let lastHtml = '';
+  if(last){
+    const daysAgo = daysBetween(last.date, document.getElementById('date').value);
+    const stale = daysAgo > 7;
+    lastHtml = `
+      <div class="row">
+        <span>Last HMR: <b>${fmt(last.hmr)}</b></span>
+        <span class="${stale?'stale':''}">${formatDate(last.date)}${daysAgo>0?` · ${daysAgo}d ago`:''}</span>
+      </div>`;
+  }else{
+    lastHtml = `<div class="row"><span>Last HMR: —</span><span style="font-size:11px;color:var(--muted)">no previous fill</span></div>`;
+  }
+  info.innerHTML = `
+    <div class="v-info">
+      <div><span class="v-tag">${escapeHtml(selectedVeh.vehicle)}</span> ${escapeHtml(selectedVeh.site_name||'(no site set)')}</div>
+      ${selectedVeh.model?`<div style="font-size:12px;color:#047857;margin-top:4px">${escapeHtml(selectedVeh.model)}</div>`:''}
+      ${lastHtml}
+    </div>`;
+}
+function daysBetween(d1, d2){
+  if(!d1||!d2) return 0;
+  const a = new Date(d1), b = new Date(d2);
+  return Math.round((b-a)/(1000*60*60*24));
+}
+function formatDate(s){
+  if(!s) return '';
+  const [y,m,d] = s.split('-');
+  return `${d}/${m}`;
+}
+ 
+/* ========== Save ========== */
+document.getElementById('save-btn').addEventListener('click', saveEntry);
+ 
+async function saveEntry(){
+  const date = document.getElementById('date').value;
+  const fillStr = document.getElementById('site-fill').value;
+  const hmrStr = document.getElementById('site-hmr').value;
+  if(!selectedVeh){ toast('Pick a vehicle first','warn'); searchInput.focus(); return; }
+  if(!date){ toast('Pick a date','warn'); return; }
+  if(fillStr === '' || isNaN(+fillStr)){ toast('Enter Site Fill (L)','warn'); document.getElementById('site-fill').focus(); return; }
+  if(hmrStr === '' || isNaN(+hmrStr)){ toast('Enter HMR','warn'); document.getElementById('site-hmr').focus(); return; }
+  const fill = +fillStr;
+  const hmr = +hmrStr;
+  if(fill <= 0){ toast('Site Fill must be > 0','warn'); return; }
+  if(hmr < 0){ toast('HMR cannot be negative','warn'); return; }
+ 
+  // HMR sanity check
+  const last = lastSiteHMR[selectedVeh.vehicle];
+  if(last && hmr < last.hmr){
+    if(!confirm(`HMR ${hmr} is less than last recorded ${last.hmr} (${last.date}).\n\nIs the new reading correct?`)) return;
+  }
+ 
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+ 
+  const entry = {
+    vehicle: selectedVeh.vehicle, date,
+    site_fill: fill, site_hmr: hmr
+  };
+ 
+  let ok = false;
+  let beforeState = null; // for audit
+  if(navigator.onLine){
+    try{
+      const { data: existing, error: e1 } = await sb.from('cells').select('*')
+        .eq('vehicle', entry.vehicle).eq('date', entry.date).maybeSingle();
+      if(e1) throw e1;
+      beforeState = existing;
+      const merged = {
+        vehicle: entry.vehicle, date: entry.date,
+        fill_override: existing?.fill_override ?? null,
+        wh_override: existing?.wh_override ?? null,
+        site_fill: entry.site_fill, site_hmr: entry.site_hmr
+      };
+      const { error: e2 } = await sb.from('cells').upsert(merged, {onConflict:'vehicle,date'});
+      if(e2) throw e2;
+      ok = true;
+      lastSiteHMR[entry.vehicle] = { hmr: entry.site_hmr, date: entry.date };
+      // Audit log (fire-and-forget)
+      const action = (existing && existing.site_fill != null) ? 'update' : 'create';
+      logAudit(entry.vehicle, entry.date, action,
+        existing ? {site_fill: existing.site_fill, site_hmr: existing.site_hmr} : null,
+        {site_fill: entry.site_fill, site_hmr: entry.site_hmr});
+    }catch(e){
+      console.error('Save failed, queueing:', e);
+    }
+  }
+  if(!ok){
+    // Queue offline
+    const q = loadQueue();
+    q.push(entry);
+    saveQueue(q);
+    lastSiteHMR[entry.vehicle] = { hmr: entry.site_hmr, date: entry.date };
+  }
+ 
+  // Success UX
+  btn.disabled = false;
+  btn.classList.add('saved');
+  const wasEdit = editMode;
+  btn.textContent = ok ? (wasEdit ? '✓ UPDATED' : '✓ SAVED') : '✓ QUEUED';
+  toast(ok ? `${wasEdit?'Updated':'Saved'} · ${selectedVeh.vehicle}` : `Queued · will sync when online`);
+  setTimeout(()=>{
+    btn.classList.remove('saved');
+    btn.textContent = 'SAVE ENTRY';
+  }, 1800);
+ 
+  // Clear form, exit edit mode, focus search for next entry
+  exitEditMode();
+  document.getElementById('site-fill').value = '';
+  document.getElementById('site-hmr').value = '';
+  searchInput.value = '';
+  selectedVeh = null;
+  document.getElementById('v-info').innerHTML = '';
+  setTimeout(()=> searchInput.focus(), 100);
+  updateSyncStatus();
+  loadEntriesForDate();
+}
+ 
+/* ========== Excel Download ========== */
+let vehicleBranches = {}; // vehicle -> branch (latest)
+let availableBranches = [];
+ 
+async function loadVehicleBranches(){
+  try{
+    const { data, error } = await sb.from('records')
+      .select('vehicle,branch,date')
+      .not('branch','is',null)
+      .order('date',{ascending:false});
+    if(error) throw error;
+    vehicleBranches = {};
+    const branchSet = new Set();
+    (data||[]).forEach(r=>{
+      if(!vehicleBranches[r.vehicle]) vehicleBranches[r.vehicle] = r.branch;
+      branchSet.add(r.branch);
+    });
+    availableBranches = [...branchSet].sort();
+    populateBranchDropdown();
+  }catch(e){
+    console.error('loadVehicleBranches failed:',e);
+  }
+}
+ 
+function populateBranchDropdown(){
+  const sel = document.getElementById('dl-branch');
+  sel.innerHTML = '<option value="">All branches (separate sheets)</option>' +
+    availableBranches.map(b=>`<option value="${escapeHtml(b)}">${escapeHtml(b)} only</option>`).join('');
+}
+ 
+function loadScript(src){
+  return new Promise((res, rej)=>{
+    if(document.querySelector(`script[src="${src}"]`)){ res(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = ()=> rej(new Error('Failed to load '+src));
+    document.head.appendChild(s);
+  });
+}
+ 
+// Quick range handlers
+document.querySelectorAll('.dl-quick button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.dl-quick button').forEach(b=> b.classList.remove('active'));
+    btn.classList.add('active');
+    const r = btn.dataset.range;
+    const today = new Date(); today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+    const todayStr = today.toISOString().slice(0,10);
+    let from = todayStr, to = todayStr;
+    if(r === 'today'){ from = todayStr; to = todayStr; }
+    else if(r === 'week'){
+      const d = new Date(today); d.setDate(d.getDate()-6);
+      from = d.toISOString().slice(0,10); to = todayStr;
+    } else if(r === 'month'){
+      const d = new Date(today.getFullYear(), today.getMonth(), 1);
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      from = d.toISOString().slice(0,10); to = todayStr;
+    } else if(r === 'all'){
+      from = '2024-01-01'; to = todayStr;
+    }
+    document.getElementById('dl-from').value = from;
+    document.getElementById('dl-to').value = to;
+  });
+});
+ 
+document.getElementById('dl-btn').addEventListener('click', downloadExcel);
+ 
+async function downloadExcel(){
+  const from = document.getElementById('dl-from').value;
+  const to = document.getElementById('dl-to').value;
+  const branchFilter = document.getElementById('dl-branch').value;
+  if(!from || !to){ toast('Pick a date range','warn'); return; }
+  if(from > to){ toast('From date must be before To date','warn'); return; }
+ 
+  const btn = document.getElementById('dl-btn');
+  const info = document.getElementById('dl-info');
+  btn.disabled = true;
+  btn.textContent = '⟳ Loading library…';
+ 
+  try{
+    if(!window.XLSX){
+      await loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+    }
+ 
+    btn.textContent = '⟳ Fetching entries…';
+    const { data: cells, error } = await sb.from('cells')
+      .select('vehicle,date,site_fill,site_hmr,fill_override,wh_override')
+      .gte('date', from).lte('date', to)
+      .not('site_fill','is',null)
+      .order('date');
+    if(error) throw error;
+ 
+    if(!cells || !cells.length){
+      toast('No entries in that date range','warn');
+      btn.disabled = false;
+      btn.textContent = '📥 DOWNLOAD EXCEL';
+      return;
+    }
+ 
+    // Group by branch
+    const byBranch = {};
+    let unknownCount = 0;
+    cells.forEach(c=>{
+      let br = vehicleBranches[c.vehicle];
+      if(!br){ br = 'Unknown'; unknownCount++; }
+      if(branchFilter && br !== branchFilter) return; // skip if filtered out
+      if(!byBranch[br]) byBranch[br] = [];
+      byBranch[br].push(c);
+    });
+ 
+    if(!Object.keys(byBranch).length){
+      toast(`No entries for ${branchFilter || 'any branch'} in that range`,'warn');
+      btn.disabled = false;
+      btn.textContent = '📥 DOWNLOAD EXCEL';
+      return;
+    }
+ 
+    btn.textContent = '⟳ Building Excel…';
+ 
+    const wb = XLSX.utils.book_new();
+    const branches = Object.keys(byBranch).sort();
+ 
+    // Helper to build a sheet from a flat array of entries
+    function buildSheet(entries, includeBranch){
+      const headers = includeBranch
+        ? ['Date','Branch','Vehicle','Site Name','Site Fill (L)','Site HMR']
+        : ['Date','Vehicle','Site Name','Site Fill (L)','Site HMR'];
+      const rows = [headers];
+      let totalFill = 0;
+      entries
+        .slice()
+        .sort((a,b)=> a.date.localeCompare(b.date) || a.vehicle.localeCompare(b.vehicle))
+        .forEach(c=>{
+          const v = vehicles.find(x=> x.vehicle === c.vehicle);
+          const siteName = v?.site_name || '';
+          const fillVal = +c.site_fill || 0;
+          totalFill += fillVal;
+          if(includeBranch){
+            rows.push([c.date, vehicleBranches[c.vehicle]||'Unknown', c.vehicle, siteName, fillVal, +c.site_hmr]);
+          } else {
+            rows.push([c.date, c.vehicle, siteName, fillVal, +c.site_hmr]);
+          }
+        });
+      // Totals row
+      rows.push([]);
+      const totalRow = includeBranch
+        ? ['','','','TOTAL', Math.round(totalFill*10)/10, '']
+        : ['','','TOTAL', Math.round(totalFill*10)/10, ''];
+      rows.push(totalRow);
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      // Set column widths
+      ws['!cols'] = includeBranch
+        ? [{wch:11},{wch:14},{wch:18},{wch:22},{wch:13},{wch:11}]
+        : [{wch:11},{wch:18},{wch:22},{wch:13},{wch:11}];
+      return ws;
+    }
+ 
+    // First sheet: All entries (with branch column) — only if more than 1 branch
+    if(branches.length > 1){
+      const all = [];
+      branches.forEach(b => byBranch[b].forEach(c => all.push(c)));
+      const sheetAll = buildSheet(all, true);
+      XLSX.utils.book_append_sheet(wb, sheetAll, 'All Branches');
+    }
+ 
+    // One sheet per branch
+    branches.forEach(branch => {
+      const ws = buildSheet(byBranch[branch], false);
+      // Excel sheet names: max 31 chars, no \ / ? * [ ] :
+      const safe = branch.replace(/[\\\/\?\*\[\]:]/g,'').substring(0,31) || 'Branch';
+      XLSX.utils.book_append_sheet(wb, ws, safe);
+    });
+ 
+    // Filename
+    const fName = `TASR_Fuel_Entries_${from}_to_${to}${branchFilter?'_'+branchFilter.replace(/\s+/g,''):''}.xlsx`;
+    XLSX.writeFile(wb, fName);
+ 
+    info.textContent = `✓ ${cells.length} entries · ${branches.length} branch${branches.length===1?'':'es'}${unknownCount?` · ${unknownCount} unknown branch`:''}`;
+    toast(`Downloaded ${cells.length} entries`);
+  }catch(e){
+    console.error('Download failed:', e);
+    toast('Download failed: '+e.message, 'bad');
+    info.textContent = '';
+  }finally{
+    btn.disabled = false;
+    btn.textContent = '📥 DOWNLOAD EXCEL';
+  }
+}
+ 
+/* ========== Audit logger ========== */
+async function logAudit(vehicle, date, action, before, after){
+  if(!session) return;
+  try{
+    await sb.from('entry_audit').insert({
+      vehicle, entry_date: date, action,
+      manager_id: session.managerId,
+      manager_name: session.managerName,
+      before_fill: before?.site_fill ?? null,
+      after_fill: after?.site_fill ?? null,
+      before_hmr: before?.site_hmr ?? null,
+      after_hmr: after?.site_hmr ?? null
+    });
+  }catch(e){ console.error('Audit log failed:', e); }
+}
+ 
+/* ========== LOGIN ========== */
+async function loadLoginOptions(){
+  const sel = document.getElementById('login-site');
+  const errBox = document.getElementById('login-error');
+  try{
+    const { data, error } = await sb.from('site_managers')
+      .select('id,name,branch,is_admin')
+      .eq('active', true)
+      .order('is_admin', {ascending:false})
+      .order('name');
+    if(error) throw error;
+    if(!data || !data.length){
+      sel.innerHTML = '<option value="">No accounts yet</option>';
+      errBox.innerHTML = 'Run <code>access_control_schema.sql</code> in your Supabase SQL Editor first to create the default Admin account.';
+      errBox.hidden = false;
+      return;
+    }
+    sel.innerHTML = '<option value="">— Select —</option>' +
+      data.map(m =>
+        `<option value="${m.id}">${m.is_admin?'🔒 ':''}${escapeHtml(m.name)}${m.branch?' · '+escapeHtml(m.branch):''}</option>`
+      ).join('');
+    errBox.hidden = true;
+  }catch(e){
+    console.error('loadLoginOptions failed:', e);
+    sel.innerHTML = '<option value="">Setup needed</option>';
+    const msg = e.message || JSON.stringify(e);
+    if(msg.includes('site_managers') || msg.includes('relation') || msg.includes('does not exist') || e.code === '42P01'){
+      errBox.innerHTML = '⚠ The <code>site_managers</code> table is missing.<br><br>Open your Supabase SQL Editor and run the <code>access_control_schema.sql</code> file. Then refresh this page.';
+    } else {
+      errBox.innerHTML = '⚠ Could not load: ' + escapeHtml(msg);
+    }
+    errBox.hidden = false;
+  }
+}
+ 
+async function attemptLogin(){
+  const id = document.getElementById('login-site').value;
+  const pin = document.getElementById('login-pin').value.trim();
+  const errBox = document.getElementById('login-error');
+  errBox.hidden = true;
+  if(!id){ errBox.textContent='Pick your site/role first'; errBox.hidden=false; return; }
+  if(!pin){ errBox.textContent='Enter your PIN'; errBox.hidden=false; return; }
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.textContent = '⟳ Signing in…';
+  try{
+    const { data, error } = await sb.from('site_managers').select('*').eq('id', id).maybeSingle();
+    if(error) throw error;
+    if(!data || !data.active){ throw new Error('Account not found'); }
+    if(String(data.pin) !== pin){ throw new Error('Wrong PIN'); }
+    session = {
+      managerId: data.id,
+      managerName: data.name,
+      branch: data.branch || '',
+      isAdmin: !!data.is_admin
+    };
+    saveSession();
+    document.getElementById('login-pin').value = '';
+    btn.disabled = false; btn.textContent = 'SIGN IN';
+    await initAfterLogin();
+  }catch(e){
+    btn.disabled = false; btn.textContent = 'SIGN IN';
+    errBox.textContent = e.message || 'Login failed';
+    errBox.hidden = false;
+    document.getElementById('login-pin').value = '';
+  }
+}
+ 
+async function initAfterLogin(){
+  if(session.isAdmin){
+    showPage('admin');
+    initAdminPage();
+  } else {
+    showPage('entry');
+    setSync('pending','⟳ Loading…');
+    await Promise.all([loadVehicles(), loadLastHMRs(), loadVehicleBranches()]);
+    await loadEntriesForDate();
+    await flushQueue(true);
+    updateSyncStatus();
+  }
+}
+ 
+/* ========== ADMIN PANEL ========== */
+let allManagers = [];
+let allVehiclesAdmin = [];
+let allAssignments = [];  // [{vehicle, manager_id}]
+let assignFilter = 'unassigned';
+ 
+async function initAdminPage(){
+  setSync('good','☁ Synced');
+  // Show first tab
+  switchAdminTab('managers');
+  // Wire tab buttons
+  document.querySelectorAll('.atab').forEach(b=>{
+    b.onclick = ()=> switchAdminTab(b.dataset.atab);
+  });
+  // Wire add buttons
+  document.getElementById('add-manager-btn').onclick = ()=> openManagerModal(null);
+  document.getElementById('auto-assign-btn').onclick = autoAssignByBranch;
+  document.getElementById('audit-load-btn').onclick = loadAuditLog;
+  document.getElementById('assign-search').addEventListener('input', renderAssignments);
+  document.querySelectorAll('.atab-mini').forEach(b=>{
+    b.onclick = ()=>{
+      document.querySelectorAll('.atab-mini').forEach(x=> x.classList.remove('active'));
+      b.classList.add('active');
+      assignFilter = b.dataset.afilter;
+      renderAssignments();
+    };
+  });
+  // Default audit dates: last 30 days
+  const today = new Date(); today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+  const monthAgo = new Date(today); monthAgo.setDate(monthAgo.getDate()-30);
+  document.getElementById('audit-from').value = monthAgo.toISOString().slice(0,10);
+  document.getElementById('audit-to').value = today.toISOString().slice(0,10);
+  // Initial loads
+  await loadManagers();
+}
+ 
+async function switchAdminTab(name){
+  document.querySelectorAll('.atab').forEach(b=>{
+    b.classList.toggle('active', b.dataset.atab === name);
+  });
+  document.querySelectorAll('.atab-content').forEach(c=>{
+    c.hidden = (c.id !== 'atab-'+name);
+  });
+  if(name === 'managers') await loadManagers();
+  else if(name === 'assignments') await loadAssignments();
+  else if(name === 'audit') await loadAuditLog();
+}
+ 
+/* --- Managers tab --- */
+async function loadManagers(){
+  try{
+    const { data: mgrs } = await sb.from('site_managers').select('*').order('is_admin',{ascending:false}).order('name');
+    allManagers = mgrs || [];
+    // Count assigned vehicles per manager
+    const { data: va } = await sb.from('vehicle_assignments').select('manager_id');
+    const counts = {};
+    (va||[]).forEach(a => { if(a.manager_id) counts[a.manager_id] = (counts[a.manager_id]||0) + 1; });
+    renderManagers(counts);
+  }catch(e){
+    console.error('loadManagers failed:',e);
+    document.getElementById('managers-list').innerHTML = '<div class="ent-empty" style="color:#b91c1c">Could not load managers</div>';
+  }
+}
+ 
+function renderManagers(counts){
+  const wrap = document.getElementById('managers-list');
+  if(!allManagers.length){
+    wrap.innerHTML = '<div class="ent-empty">No managers yet — tap "+ Add"</div>';
+    return;
+  }
+  wrap.innerHTML = allManagers.map(m=>`
+    <div class="mgr-card">
+      <div class="top">
+        <div class="nm">${escapeHtml(m.name)}</div>
+        <span class="role ${m.is_admin?'admin':'mgr'}">${m.is_admin?'Admin':'Manager'}</span>
+      </div>
+      <div class="meta">
+        ${m.branch?'<b>Branch:</b> '+escapeHtml(m.branch)+'<br>':''}
+        <b>PIN:</b> ${'•'.repeat(String(m.pin||'').length)} (${String(m.pin||'').length} digits)<br>
+        ${!m.is_admin?'<b>Vehicles:</b> '+(counts[m.id]||0)+'<br>':''}
+        ${m.active?'':'<span style="color:#dc2626">Inactive</span>'}
+      </div>
+      <div class="actions">
+        <button class="mgr-edit" onclick="openManagerModal(${m.id})">✏ Edit</button>
+        <button class="mgr-pin" onclick="changePinModal(${m.id})">🔑 PIN</button>
+        ${session.managerId !== m.id ? `<button class="mgr-del" onclick="deleteManager(${m.id})">✕ Del</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+ 
+window.openManagerModal = function(id){
+  const m = id ? allManagers.find(x => x.id === id) : null;
+  showModal(id?'Edit Manager':'Add Manager', `
+    <div class="field">
+      <label>Name</label>
+      <input id="m-name" type="text" value="${m?escapeHtml(m.name):''}" placeholder="e.g. Anakapalle Site">
+    </div>
+    <div class="field">
+      <label>Branch (optional)</label>
+      <input id="m-branch" type="text" value="${m?escapeHtml(m.branch||''):''}" placeholder="e.g. Anakapalle">
+    </div>
+    ${!m?`<div class="field">
+      <label>PIN (4-6 digits)</label>
+      <input id="m-pin" type="password" inputmode="numeric" maxlength="6" placeholder="••••">
+    </div>`:''}
+    <div class="field">
+      <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px">
+        <input id="m-admin" type="checkbox" ${m?.is_admin?'checked':''}> Admin role
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveManager(${id||'null'})">Save</button>
+    </div>
+  `);
+};
+ 
+window.saveManager = async function(id){
+  const name = document.getElementById('m-name').value.trim();
+  const branch = document.getElementById('m-branch').value.trim();
+  const isAdmin = document.getElementById('m-admin').checked;
+  if(!name){ toast('Enter a name','warn'); return; }
+  try{
+    if(id){
+      const { error } = await sb.from('site_managers').update({
+        name, branch: branch || null, is_admin: isAdmin, updated_at: new Date().toISOString()
+      }).eq('id', id);
+      if(error) throw error;
+      toast('Manager updated');
+    } else {
+      const pin = document.getElementById('m-pin').value.trim();
+      if(!/^\d{4,6}$/.test(pin)){ toast('PIN must be 4-6 digits','warn'); return; }
+      const { error } = await sb.from('site_managers').insert({
+        name, branch: branch || null, pin, is_admin: isAdmin, active: true
+      });
+      if(error) throw error;
+      toast('Manager added');
+    }
+    closeModal();
+    await loadManagers();
+  }catch(e){
+    toast('Save failed: '+e.message,'bad');
+  }
+};
+ 
+window.changePinModal = function(id){
+  const m = allManagers.find(x => x.id === id);
+  showModal('Change PIN — '+m.name, `
+    <div class="field">
+      <label>New PIN (4-6 digits)</label>
+      <input id="new-pin" type="password" inputmode="numeric" maxlength="6" placeholder="••••" autofocus style="text-align:center;font-size:24px;letter-spacing:.4em">
+    </div>
+    <div class="field">
+      <label>Confirm PIN</label>
+      <input id="new-pin-2" type="password" inputmode="numeric" maxlength="6" placeholder="••••" style="text-align:center;font-size:24px;letter-spacing:.4em">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="savePin(${id})">Update PIN</button>
+    </div>
+  `);
+};
+ 
+window.savePin = async function(id){
+  const p1 = document.getElementById('new-pin').value.trim();
+  const p2 = document.getElementById('new-pin-2').value.trim();
+  if(!/^\d{4,6}$/.test(p1)){ toast('PIN must be 4-6 digits','warn'); return; }
+  if(p1 !== p2){ toast('PINs do not match','warn'); return; }
+  try{
+    const { error } = await sb.from('site_managers').update({pin: p1, updated_at: new Date().toISOString()}).eq('id', id);
+    if(error) throw error;
+    toast('PIN updated');
+    closeModal();
+    await loadManagers();
+  }catch(e){
+    toast('Save failed: '+e.message,'bad');
+  }
+};
+ 
+window.deleteManager = async function(id){
+  const m = allManagers.find(x => x.id === id);
+  if(!m) return;
+  if(!confirm(`Delete manager "${m.name}"?\n\nTheir assigned vehicles will become unassigned.`)) return;
+  try{
+    const { error } = await sb.from('site_managers').delete().eq('id', id);
+    if(error) throw error;
+    toast('Manager deleted');
+    await loadManagers();
+  }catch(e){
+    toast('Delete failed: '+e.message,'bad');
+  }
+};
+ 
+/* --- Assignments tab --- */
+async function loadAssignments(){
+  try{
+    const [veh, va, recs] = await Promise.all([
+      sb.from('vehicles').select('*').order('vehicle'),
+      sb.from('vehicle_assignments').select('*'),
+      sb.from('records').select('vehicle,branch,date').not('branch','is',null).order('date',{ascending:false})
+    ]);
+    allVehiclesAdmin = veh.data || [];
+    allAssignments = va.data || [];
+    // Branch lookup
+    vehicleBranches = {};
+    (recs.data||[]).forEach(r => { if(!vehicleBranches[r.vehicle]) vehicleBranches[r.vehicle] = r.branch; });
+    // Ensure managers loaded
+    if(!allManagers.length) await loadManagers();
+    renderAssignments();
+  }catch(e){
+    console.error('loadAssignments failed:',e);
+    document.getElementById('assignments-list').innerHTML = '<div class="ent-empty" style="color:#b91c1c">Could not load</div>';
+  }
+}
+ 
+function renderAssignments(){
+  const wrap = document.getElementById('assignments-list');
+  const q = (document.getElementById('assign-search').value || '').trim().toLowerCase();
+  const assignMap = {};
+  allAssignments.forEach(a => { assignMap[a.vehicle] = a.manager_id; });
+ 
+  let list = allVehiclesAdmin.map(v => ({
+    ...v,
+    manager_id: assignMap[v.vehicle] || null,
+    branch: vehicleBranches[v.vehicle] || ''
+  }));
+ 
+  if(assignFilter === 'unassigned') list = list.filter(v => !v.manager_id);
+  else if(assignFilter === 'assigned') list = list.filter(v => v.manager_id);
+ 
+  if(q){
+    list = list.filter(v =>
+      (v.vehicle||'').toLowerCase().includes(q) ||
+      (v.site_name||'').toLowerCase().includes(q) ||
+      (v.branch||'').toLowerCase().includes(q)
+    );
+  }
+ 
+  if(!list.length){
+    wrap.innerHTML = '<div class="ent-empty">No vehicles match the filter</div>';
+    return;
+  }
+ 
+  // Build manager options HTML once
+  const mgrOpts = '<option value="">— Unassigned —</option>' +
+    allManagers.filter(m => !m.is_admin && m.active).map(m =>
+      `<option value="${m.id}">${escapeHtml(m.name)}</option>`
+    ).join('');
+ 
+  wrap.innerHTML = list.map(v => `
+    <div class="assign-card${!v.manager_id?' unassigned':''}">
+      <div style="flex:1;min-width:0">
+        <div class="veh">${escapeHtml(v.vehicle)}</div>
+        <div class="meta">${escapeHtml(v.site_name||'(no site)')}${v.branch?' · '+escapeHtml(v.branch):''}</div>
+      </div>
+      <select onchange="assignVehicle('${escapeAttr(v.vehicle)}', this.value)">
+        ${mgrOpts.replace(`value="${v.manager_id}"`, `value="${v.manager_id}" selected`)}
+      </select>
+    </div>
+  `).join('');
+}
+ 
+window.assignVehicle = async function(vehicle, managerId){
+  try{
+    if(!managerId){
+      // Unassign
+      const { error } = await sb.from('vehicle_assignments').delete().eq('vehicle', vehicle);
+      if(error) throw error;
+    } else {
+      const { error } = await sb.from('vehicle_assignments').upsert({
+        vehicle, manager_id: +managerId, assigned_at: new Date().toISOString()
+      }, {onConflict:'vehicle'});
+      if(error) throw error;
+    }
+    toast('Assignment saved');
+    // Update local cache
+    allAssignments = allAssignments.filter(a => a.vehicle !== vehicle);
+    if(managerId) allAssignments.push({vehicle, manager_id: +managerId});
+  }catch(e){
+    toast('Save failed: '+e.message,'bad');
+    renderAssignments();
+  }
+};
+ 
+async function autoAssignByBranch(){
+  // For each unassigned vehicle, find a manager whose branch matches
+  const assignMap = {};
+  allAssignments.forEach(a => { assignMap[a.vehicle] = a.manager_id; });
+  const branchToMgr = {};
+  allManagers.filter(m => !m.is_admin && m.active && m.branch).forEach(m => {
+    if(!branchToMgr[m.branch]) branchToMgr[m.branch] = m.id;
+  });
+  const toAssign = [];
+  allVehiclesAdmin.forEach(v => {
+    if(assignMap[v.vehicle]) return;
+    const branch = vehicleBranches[v.vehicle];
+    if(branch && branchToMgr[branch]){
+      toAssign.push({vehicle: v.vehicle, manager_id: branchToMgr[branch], assigned_at: new Date().toISOString()});
+    }
+  });
+  if(!toAssign.length){ toast('Nothing to auto-assign — add managers with branches first','warn'); return; }
+  if(!confirm(`Auto-assign ${toAssign.length} vehicle${toAssign.length===1?'':'s'} to matching branch managers?`)) return;
+  try{
+    const { error } = await sb.from('vehicle_assignments').upsert(toAssign, {onConflict:'vehicle'});
+    if(error) throw error;
+    toast(`Auto-assigned ${toAssign.length} vehicles`);
+    await loadAssignments();
+  }catch(e){
+    toast('Failed: '+e.message,'bad');
+  }
+}
+ 
+/* --- Audit Log tab --- */
+async function loadAuditLog(){
+  const from = document.getElementById('audit-from').value;
+  const to = document.getElementById('audit-to').value;
+  const mgrId = document.getElementById('audit-manager').value;
+  const list = document.getElementById('audit-list');
+  list.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try{
+    // Populate manager dropdown if empty
+    const mgrSel = document.getElementById('audit-manager');
+    if(mgrSel.options.length <= 1 && allManagers.length){
+      mgrSel.innerHTML = '<option value="">All managers</option>' +
+        allManagers.map(m=> `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
+    }
+    let q = sb.from('entry_audit').select('*').order('created_at',{ascending:false}).limit(200);
+    if(from) q = q.gte('created_at', from + 'T00:00:00');
+    if(to) q = q.lte('created_at', to + 'T23:59:59');
+    if(mgrId) q = q.eq('manager_id', +mgrId);
+    const { data, error } = await q;
+    if(error) throw error;
+    renderAuditLog(data || []);
+  }catch(e){
+    console.error('loadAuditLog failed:',e);
+    list.innerHTML = '<div class="ent-empty" style="color:#b91c1c">Could not load audit log</div>';
+  }
+}
+ 
+function renderAuditLog(rows){
+  const list = document.getElementById('audit-list');
+  if(!rows.length){
+    list.innerHTML = '<div class="ent-empty">No audit entries in this range</div>';
+    return;
+  }
+  list.innerHTML = rows.map(r=>{
+    const dt = new Date(r.created_at);
+    const when = dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) + ' ' +
+                 dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false});
+    let delta = '';
+    if(r.action === 'create'){
+      delta = `<div class="delta">→ Fill: <b>${fmt(r.after_fill)} L</b> · HMR: <b>${fmt(r.after_hmr)}</b></div>`;
+    } else if(r.action === 'update'){
+      const fillChanged = r.before_fill !== r.after_fill;
+      const hmrChanged = r.before_hmr !== r.after_hmr;
+      delta = `<div class="delta">
+        ${fillChanged?`Fill: <b style="color:#92400e">${fmt(r.before_fill)}</b> → <b style="color:#1e40af">${fmt(r.after_fill)} L</b>`:''}
+        ${fillChanged && hmrChanged?' · ':''}
+        ${hmrChanged?`HMR: <b style="color:#92400e">${fmt(r.before_hmr)}</b> → <b style="color:#1e40af">${fmt(r.after_hmr)}</b>`:''}
+        ${!fillChanged && !hmrChanged?'<span style="color:var(--muted)">no change recorded</span>':''}
+      </div>`;
+    } else if(r.action === 'delete'){
+      delta = `<div class="delta">Removed: ${fmt(r.before_fill)} L · HMR ${fmt(r.before_hmr)}</div>`;
+    }
+    return `
+      <div class="audit-card ${r.action}">
+        <div class="top">
+          <span class="when">${when}</span>
+          <span class="act ${r.action}">${r.action}</span>
+        </div>
+        <div class="veh-line">${escapeHtml(r.vehicle)} · ${formatDate(r.entry_date)}</div>
+        <div class="by">by <b>${escapeHtml(r.manager_name||'(unknown)')}</b></div>
+        ${delta}
+      </div>`;
+  }).join('');
+}
+ 
+/* --- Modal helpers --- */
+function showModal(title, bodyHtml){
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = bodyHtml;
+  document.getElementById('modal').hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(){
+  document.getElementById('modal').hidden = true;
+  document.body.style.overflow = '';
+}
+window.closeModal = closeModal;
+ 
+document.getElementById('modal-close').onclick = closeModal;
+document.querySelector('.modal-backdrop').onclick = closeModal;
+ 
+/* ========== Init ========== */
+document.addEventListener('DOMContentLoaded', async ()=>{
+  // Default to today (local timezone)
+  const today = new Date();
+  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+  const todayStr = today.toISOString().slice(0,10);
+  document.getElementById('date').value = todayStr;
+  document.getElementById('date').addEventListener('change', ()=>{
+    loadEntriesForDate();
+    if(selectedVeh) renderVehicleInfo();
+  });
+ 
+  // Default download range
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  monthStart.setMinutes(monthStart.getMinutes() - monthStart.getTimezoneOffset());
+  document.getElementById('dl-from').value = monthStart.toISOString().slice(0,10);
+  document.getElementById('dl-to').value = todayStr;
+ 
+  // Login wiring
+  document.getElementById('login-btn').onclick = attemptLogin;
+  document.getElementById('login-pin').addEventListener('keydown', e=>{
+    if(e.key === 'Enter') attemptLogin();
+  });
+  document.getElementById('logout-btn').onclick = logout;
+ 
+  // Auth boot
+  if(loadSession()){
+    await initAfterLogin();
+  } else {
+    showPage('login');
+    await loadLoginOptions();
+  }
+});
+ 
+</script>
+</body>
+</html>
+ 
+
+
+
+
