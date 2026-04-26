@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Fuel Economy Tracker — TASR BharatNext</title>
+<title>SJP Equipment Monitoring Services — Vimla Infrastructure</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -59,8 +59,8 @@
   .brand-logo{
     width:38px;height:38px;border-radius:10px;
     background:linear-gradient(135deg,var(--primary) 0%,var(--accent) 100%);
-    display:grid;place-items:center;font-weight:700;color:#fff;font-size:18px;
-    font-family:'Space Grotesk',sans-serif;
+    display:grid;place-items:center;font-weight:800;color:#fff;font-size:14px;
+    font-family:'Space Grotesk',sans-serif;letter-spacing:0.02em;
   }
   .brand-text .t1{font-weight:700;font-size:15px;letter-spacing:0.02em;line-height:1.1}
   .brand-text .t2{font-size:11px;color:#9aafc7;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;margin-top:2px}
@@ -803,6 +803,23 @@
   .toolbar .field{margin:0;flex:1;min-width:140px}
   .toolbar .actions{display:flex;gap:8px;flex-wrap:wrap}
 
+  /* Segmented control (3-way toggle) */
+  .seg{
+    display:inline-flex;border:1px solid var(--line);border-radius:8px;
+    overflow:hidden;background:var(--panel-2);height:36px;
+  }
+  .seg-btn{
+    padding:0 14px;border:none;background:transparent;cursor:pointer;
+    font-size:12.5px;font-weight:600;color:var(--ink-2);
+    border-right:1px solid var(--line);
+    transition:all .15s;font-family:inherit;
+    white-space:nowrap;
+  }
+  .seg-btn:last-child{border-right:none}
+  .seg-btn:hover{background:#fff;color:var(--primary)}
+  .seg-btn.active{background:var(--primary);color:#fff}
+  .seg-btn.active:hover{color:#fff}
+
   /* ========== REPORT ========== */
   .report-tabs{
     display:flex;gap:4px;padding:14px 18px 0;
@@ -932,6 +949,8 @@
   .prog-sel.prog-solved   {background:#ecfdf5;color:#065f46;border-color:#6ee7b7;font-weight:700}
   .prog-sel.prog-dashrath {background:#faf5ff;color:#6b21a8;border-color:#d8b4fe}
   .prog-sel.prog-glitch   {background:#fef2f2;color:#991b1b;border-color:#fca5a5}
+  .prog-sel.prog-escalated{background:#fefce8;color:#854d0e;border-color:#fde047}
+  .prog-sel.prog-noissue  {background:#f0fdfa;color:#115e59;border-color:#5eead4}
 
   .ab-detail{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
   .ab-detail b{color:var(--ink);font-weight:700}
@@ -997,10 +1016,10 @@
 <header class="topbar">
   <div class="topbar-row">
     <div class="brand">
-      <div class="brand-logo">FE</div>
+      <div class="brand-logo">SJP</div>
       <div class="brand-text">
-        <div class="t1">Fuel Economy Tracker</div>
-        <div class="t2">TASR BharatNext</div>
+        <div class="t1">SJP EQUIPMENT MONITORING SERVICES</div>
+        <div class="t2">M/s VIMLA INFRASTRUCTURE</div>
       </div>
     </div>
     <div class="stats-pill">
@@ -1035,7 +1054,6 @@
         <div class="card-head">
           <div>
             <div class="card-title"><span class="icon">📅</span>Calendars</div>
-            <div class="card-sub">Upload status (left) · Site Fill completion (right)</div>
           </div>
         </div>
         <div class="cal-pair">
@@ -1076,14 +1094,12 @@
         <div class="card-head">
           <div>
             <div class="card-title"><span class="icon">⬆️</span>Upload Excel File</div>
-            <div class="card-sub">Single day or multi-day file — dates auto-detected</div>
           </div>
         </div>
         <div class="card-pad">
           <div class="field">
             <label>Date override (optional)</label>
             <input type="date" id="upload-date" />
-            <div style="font-size:11px;color:var(--muted);margin-top:4px">Usually leave blank — date is read from the file's "Duration:" row or filename. Set this only if both are missing or wrong.</div>
           </div>
           <label for="file-input" class="drop" id="dropzone">
             <div class="ic">⬆</div>
@@ -1124,7 +1140,6 @@
       <div class="card-head">
         <div>
           <div class="card-title"><span class="icon">🚛</span>Daily Data Entry — Vehicles × Dates</div>
-          <div class="card-sub"><span style="color:#065f46;font-weight:600">Online Fill</span> syncs ↔ Page 3 reports · <span style="color:#92400e;font-weight:600">Site Fill</span> + <span style="color:#1e3a8a;font-weight:600">Site HMR</span> are manual pair (entered together) — Site Fill shows on reports only after Site HMR is also entered</div>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn sm" onclick="exportVehiclesXLSX()">Export Excel</button>
@@ -1162,7 +1177,6 @@
       <div class="card-head no-print">
         <div>
           <div class="card-title"><span class="icon">📊</span>Reports</div>
-          <div class="card-sub">Date-wise (all vehicles) or Vehicle-wise (date range)</div>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn sm" onclick="window.print()">🖨 Print</button>
@@ -1204,7 +1218,7 @@
       </div>
 
       <div class="print-header">
-        <h1 id="print-title">Fuel Economy Report</h1>
+        <h1 id="print-title">SJP Equipment Monitoring Report</h1>
         <div class="meta" id="print-meta"></div>
       </div>
 
@@ -1218,12 +1232,6 @@
       <div class="card-head">
         <div>
           <div class="card-title"><span class="icon">⛽</span>Mileage — Vehicles × Dates</div>
-          <div class="card-sub">
-            <span class="legend-chip legend-online" title="Default: Consumption ÷ Work Hour (L/hr) · Road veh: Distance ÷ Consumption (km/L)">● Online</span>
-            <span class="legend-chip legend-site" title="Current Site Fill ÷ HMR delta (L/hr) · Road veh: HMR delta ÷ Site Fill (km/L) — needs both Site Fill + Site HMR on Page 2">● Site</span>
-            <span class="legend-chip legend-road" title="Bolero / Pickup / Water Tanker — single km/L value">● Road veh (km/L)</span>
-            <span style="color:var(--muted);margin-left:auto">— hover the chips for formulas</span>
-          </div>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn sm" onclick="exportMileageXLSX()">Export Excel</button>
@@ -1246,6 +1254,14 @@
             <button class="btn sm" onclick="setMilRangeAll()">All</button>
           </div>
         </div>
+        <div class="field" style="flex:0 0 auto;min-width:auto">
+          <label>Show</label>
+          <div class="seg" id="mil-view-seg">
+            <button class="seg-btn active" data-mil="both" onclick="setMilView('both')">Both</button>
+            <button class="seg-btn" data-mil="online" onclick="setMilView('online')">Online only</button>
+            <button class="seg-btn" data-mil="site" onclick="setMilView('site')">Site only</button>
+          </div>
+        </div>
         <div class="field" style="flex:1 1 200px">
           <label>Search vehicle / site / branch</label>
           <input type="text" id="mil-search" placeholder="Search…" oninput="renderMileagePivot()" />
@@ -1261,9 +1277,6 @@
       <div class="card-head">
         <div>
           <div class="card-title"><span class="icon">🚨</span>Abnormalities</div>
-          <div class="card-sub">
-            Auto-detected issues across all uploaded data — review and act on them.
-          </div>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn sm" onclick="exportAbnormalitiesXLSX()">Export Excel</button>
@@ -1322,7 +1335,6 @@
       <div class="card-head">
         <div>
           <div class="card-title"><span class="icon">📋</span>Merged Report</div>
-          <div class="card-sub">All data merged for a single vehicle across a date range — Online + Site + computed fields, with totals.</div>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn sm" onclick="exportMergedXLSX()">Export Excel</button>
@@ -3545,7 +3557,7 @@ function exportVehiclesXLSX(){
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Vehicles & Sites');
-  XLSX.writeFile(wb, `FuelEconomy_Vehicles_${fromD||'all'}_to_${toD||'all'}.xlsx`);
+  XLSX.writeFile(wb, `SJP_Vehicles_${fromD||'all'}_to_${toD||'all'}.xlsx`);
   toast('Exported with formulas + colors ✓','good');
 }
 
@@ -3566,6 +3578,16 @@ function setMilRangeAll(){
   if(!all.length) return;
   document.getElementById('mil-from').value = all[0];
   document.getElementById('mil-to').value = all[all.length-1];
+  renderMileagePivot();
+}
+
+// 3-way view toggle: 'both' | 'online' | 'site'
+let milView = 'both';
+function setMilView(v){
+  milView = v;
+  document.querySelectorAll('#mil-view-seg .seg-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.mil === v);
+  });
   renderMileagePivot();
 }
 
@@ -3666,6 +3688,9 @@ function renderMileagePivot(){
   }
 
   const siteMileageByVD = computeSiteMileageMap(vehicles);
+  const showOnline = (milView === 'both' || milView === 'online');
+  const showSite   = (milView === 'both' || milView === 'site');
+  const cpd = (showOnline?1:0) + (showSite?1:0);   // cells per date
 
   let html = '<div class="table-wrap"><table class="pivot pivot-mileage">';
   html += '<thead><tr>';
@@ -3673,12 +3698,12 @@ function renderMileagePivot(){
   html += `<th rowspan="2" class="sticky-veh">Vehicle</th>`;
   html += `<th rowspan="2" class="sticky-site">Site Name</th>`;
   dates.forEach(d=>{
-    html += `<th colspan="2" class="date-grp">${fmtShortDate(d)}</th>`;
+    html += `<th colspan="${cpd}" class="date-grp">${fmtShortDate(d)}</th>`;
   });
   html += '</tr><tr>';
   dates.forEach(()=>{
-    html += `<th class="metric num m-omil">Online&nbsp;Mileage</th>`;
-    html += `<th class="metric num m-smil">Site&nbsp;Mileage</th>`;
+    if(showOnline) html += `<th class="metric num m-omil">Online&nbsp;Mileage</th>`;
+    if(showSite)   html += `<th class="metric num m-smil">Site&nbsp;Mileage</th>`;
   });
   html += '</tr></thead><tbody>';
 
@@ -3694,16 +3719,23 @@ function renderMileagePivot(){
     dates.forEach((d, di)=>{
       const r = vehMap[v][d];
       const siteMil = siteMileageByVD[`${v}|${d}`];
-      const startCls = ' date-start';
-      if(MILEAGE_DISTANCE_BASED.has(v)){
-        // Road vehicle: single merged cell using the km/L formula
+      const onlineMil = r ? getRecField(r, 'MILEAGE') : null;
+      const isRoad = MILEAGE_DISTANCE_BASED.has(v);
+
+      // Road vehicle in BOTH view → keep merged-cell behavior (single km/L value)
+      if(isRoad && cpd === 2){
         const merged = (siteMil === undefined) ? '<span class="mile-empty">—</span>' : fmtMileage(siteMil);
-        html += `<td colspan="2" class="num metric-cell cell-roadmil${startCls}">${merged}</td>`;
-      } else {
-        // Hour-meter vehicle: two separate cells (Online + Site)
-        const onlineMil = r ? getRecField(r, 'MILEAGE') : null;
-        html += `<td class="num metric-cell cell-omil${startCls}">${fmtMileage(onlineMil)}</td>`;
-        html += `<td class="num metric-cell cell-smil">${siteMil === undefined ? '<span class="mile-empty">—</span>' : fmtMileage(siteMil)}</td>`;
+        html += `<td colspan="2" class="num metric-cell cell-roadmil date-start">${merged}</td>`;
+        return;
+      }
+
+      // Otherwise render the column(s) explicitly
+      if(showOnline){
+        html += `<td class="num metric-cell cell-omil date-start">${fmtMileage(onlineMil)}</td>`;
+      }
+      if(showSite){
+        const cls = `num metric-cell cell-smil${showOnline ? '' : ' date-start'}`;
+        html += `<td class="${cls}">${siteMil === undefined ? '<span class="mile-empty">—</span>' : fmtMileage(siteMil)}</td>`;
       }
     });
     html += '</tr>';
@@ -3733,15 +3765,26 @@ function exportMileageXLSX(){
   });
   const siteMileageByVD = computeSiteMileageMap(vehicles);
 
+  // Honor the on-screen toggle
+  const showOnline = (milView === 'both' || milView === 'online');
+  const showSite   = (milView === 'both' || milView === 'site');
+  const cpd = (showOnline?1:0) + (showSite?1:0);
+  const STICKY = 3;   // Branch | Vehicle | Site Name
+
   const head1 = ['Branch','Vehicle','Site Name'];
   const head2 = ['','',''];
   dates.forEach(d=>{
-    head1.push(fmtShortDate(d), '');
-    head2.push('Online Mileage','Site Mileage');
+    if(cpd === 2){
+      head1.push(fmtShortDate(d), '');
+      head2.push('Online Mileage','Site Mileage');
+    } else {
+      head1.push(fmtShortDate(d));
+      head2.push(showOnline ? 'Online Mileage' : 'Site Mileage');
+    }
   });
   const data = [head1, head2];
   const round1 = v => (typeof v === 'number' && isFinite(v)) ? Math.round(v*10)/10 : v;
-  const roadMergeRows = [];   // collect (rowIdx, dateIdx) pairs to merge per road-veh cell
+  const roadMergeRows = [];   // (row, col) pairs to merge per road-veh cell — only used in BOTH view
   vehicles.forEach((v, vi)=>{
     const isRoad = MILEAGE_DISTANCE_BASED.has(v);
     const row = [vehBranchE[v]||'', v, state.sites[v]||''];
@@ -3749,16 +3792,16 @@ function exportMileageXLSX(){
       const r = lookup[`${v}|${d}`];
       const sm = siteMileageByVD[`${v}|${d}`];
       const smOut = (sm === undefined || sm === null || sm === 'NA') ? '' : round1(sm);
-      if(isRoad){
-        // Merged cell — write the value once, leave the next col blank, queue a merge
+      const om = r ? getRecField(r,'MILEAGE') : null;
+      const omOut = (om == null || om === 'NA' || (typeof om === 'number' && isNaN(om))) ? '' : round1(om);
+
+      if(isRoad && cpd === 2){
+        // Merged road cell — value (site formula) + blank, queue merge
         row.push(smOut, '');
-        roadMergeRows.push({r: 2 + vi, c: 3 + di*2});  // +2 for two header rows; +3 for Branch/Vehicle/Site cols
+        roadMergeRows.push({r: 2 + vi, c: STICKY + di*2});
       } else {
-        const om = r ? getRecField(r,'MILEAGE') : null;
-        row.push(
-          (om == null || om === 'NA' || (typeof om === 'number' && isNaN(om))) ? '' : round1(om),
-          smOut
-        );
+        if(showOnline) row.push(omOut);
+        if(showSite)   row.push(smOut);
       }
     });
     data.push(row);
@@ -3766,41 +3809,63 @@ function exportMileageXLSX(){
 
   const ws = XLSX.utils.aoa_to_sheet(data);
   ws['!merges'] = ws['!merges'] || [];
-  // Date-header merges (row 0)
-  for(let i=0;i<dates.length;i++){
-    ws['!merges'].push({s:{r:0,c:3+i*2},e:{r:0,c:4+i*2}});
+  // Date-header merges (row 0) — only when 2 cols per date
+  if(cpd === 2){
+    for(let i=0;i<dates.length;i++){
+      ws['!merges'].push({s:{r:0,c:STICKY+i*2}, e:{r:0,c:STICKY+1+i*2}});
+    }
   }
-  // Sticky header cols span both header rows
-  for(let c=0; c<3; c++){
+  // Sticky cols span both header rows
+  for(let c=0; c<STICKY; c++){
     ws['!merges'].push({s:{r:0,c}, e:{r:1,c}});
   }
-  // Road-vehicle per-cell merges
+  // Road-vehicle per-cell merges (BOTH view only)
   roadMergeRows.forEach(m=>{
-    ws['!merges'].push({s:{r:m.r,c:m.c},e:{r:m.r,c:m.c+1}});
+    ws['!merges'].push({s:{r:m.r,c:m.c}, e:{r:m.r,c:m.c+1}});
   });
 
   // === Apply styles ===
+  let metricPattern;
+  if(cpd === 2)         metricPattern = [XS.hdrOnline, XS.hdrSite];
+  else if(showOnline)   metricPattern = [XS.hdrOnline];
+  else                  metricPattern = [XS.hdrSite];
+
+  const onlineFillCols = [], siteFillCols = [];
+  for(let i=0; i<dates.length; i++){
+    if(cpd === 2){
+      onlineFillCols.push(STICKY + i*2);
+      siteFillCols.push(STICKY + i*2 + 1);
+    } else if(showOnline){
+      onlineFillCols.push(STICKY + i);
+    } else {
+      siteFillCols.push(STICKY + i);
+    }
+  }
+
   styleSheet(ws, {
     headerRows: 2,
     dateHeaderRow: 0,
     metricSubRow: 1,
-    metricStartCol: 3,
-    metricPattern: [XS.hdrOnline, XS.hdrSite],
+    metricStartCol: STICKY,
+    metricPattern,
     vehicleCols: [1],
-    // Cells use cellOnline / cellSite alternating starting at col 3
-    onlineFillCols: dates.map((_,i)=>3+i*2),
-    siteFillCols:   dates.map((_,i)=>4+i*2),
+    onlineFillCols,
+    siteFillCols
   });
   // Column widths
   const widths = [{wch:14}, {wch:16}, {wch:22}];
-  for(let i=0; i<dates.length; i++) widths.push({wch:13}, {wch:13});
+  for(let i=0; i<dates.length; i++){
+    if(cpd === 2) widths.push({wch:13}, {wch:13});
+    else widths.push({wch:14});
+  }
   ws['!cols'] = widths;
   ws['!rows'] = [{hpt:24}, {hpt:20}];
-  ws['!views'] = [{xSplit:3, ySplit:2, state:'frozen'}];
+  ws['!views'] = [{xSplit:STICKY, ySplit:2, state:'frozen'}];
 
   const wb = XLSX.utils.book_new();
+  const tag = (milView === 'both') ? '' : `_${milView}`;
   XLSX.utils.book_append_sheet(wb, ws, 'Mileage');
-  XLSX.writeFile(wb, `Mileage_${fromD||'all'}_to_${toD||'all'}.xlsx`);
+  XLSX.writeFile(wb, `Mileage${tag}_${fromD||'all'}_to_${toD||'all'}.xlsx`);
   toast('Exported with colors ✓','good');
 }
 
@@ -3881,7 +3946,7 @@ function exportBackup(){
   const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `FuelEconomy_Backup_${fmtDate(new Date())}.json`;
+  a.href = url; a.download = `SJP_Backup_${fmtDate(new Date())}.json`;
   a.click(); URL.revokeObjectURL(url);
   toast('Backup downloaded ✓','good');
 }
@@ -4790,14 +4855,18 @@ const PROGRESS_OPTIONS = [
   'Repair Planned',
   'Solved',
   'Escalated to Dashrath Sir',
-  'Technical Glitch'
+  'Technical Glitch',
+  'Escalated',
+  'No Issue'
 ];
 const PROGRESS_CSS = {
   'Escalated to Vendor':       'prog-vendor',
   'Repair Planned':            'prog-planned',
   'Solved':                    'prog-solved',
   'Escalated to Dashrath Sir': 'prog-dashrath',
-  'Technical Glitch':          'prog-glitch'
+  'Technical Glitch':          'prog-glitch',
+  'Escalated':                 'prog-escalated',
+  'No Issue':                  'prog-noissue'
 };
 
 function updateAbnProgress(sel){
@@ -4883,7 +4952,7 @@ function exportAbnormalitiesXLSX(){
     XLSX.utils.book_append_sheet(wb, ws, typeLabel[t].replace(/\s+/g,'_'));
   });
 
-  const fname = `TASR_Abnormalities_${from}_to_${to}.xlsx`;
+  const fname = `SJP_Abnormalities_${from}_to_${to}.xlsx`;
   XLSX.writeFile(wb, fname);
   toast(`Exported ${issues.length} issues with colors ✓`,'good');
 }
@@ -4901,8 +4970,11 @@ function applyProgressColumnStyle(ws, colIdx){
       alignment:{horizontal:'center', vertical:'center'},
       border:XBORDER
     };
-    if(v.includes('solved')){
+    if(v === 'solved'){
       return {...base, font:{...base.font, color:{rgb:'065F46'}}, fill:{patternType:'solid', fgColor:{rgb:'ECFDF5'}}};
+    }
+    if(v === 'no issue'){
+      return {...base, font:{...base.font, color:{rgb:'115E59'}}, fill:{patternType:'solid', fgColor:{rgb:'F0FDFA'}}};
     }
     if(v.includes('vendor')){
       return {...base, font:{...base.font, color:{rgb:'9A3412'}}, fill:{patternType:'solid', fgColor:{rgb:'FFF7ED'}}};
@@ -4915,6 +4987,9 @@ function applyProgressColumnStyle(ws, colIdx){
     }
     if(v.includes('glitch') || v.includes('technical')){
       return {...base, font:{...base.font, color:{rgb:'991B1B'}}, fill:{patternType:'solid', fgColor:{rgb:'FEF2F2'}}};
+    }
+    if(v === 'escalated'){
+      return {...base, font:{...base.font, color:{rgb:'854D0E'}}, fill:{patternType:'solid', fgColor:{rgb:'FEFCE8'}}};
     }
     return null;
   };
@@ -5153,7 +5228,7 @@ function exportMergedXLSX(){
   const model = state.models[v] || (recs[0] && recs[0].data && recs[0].data['Object Model']) || '';
   const remark = state.remarks[v] || '';
   const headerRows = [
-    ['TASR Fuel Economy — Merged Report'],
+    ['SJP Equipment Monitoring — Merged Report'],
     [],
     ['Vehicle', v],
     ['Site', site],
@@ -5286,7 +5361,7 @@ function exportMergedXLSX(){
   const wb = XLSX.utils.book_new();
   const safeName = String(v).replace(/[\\\/\?\*\[\]:]/g,'').substring(0,31) || 'Sheet';
   XLSX.utils.book_append_sheet(wb, ws, safeName);
-  const fname = `TASR_Merged_${v}_${from}_to_${to}.xlsx`.replace(/[^\w.-]/g,'_');
+  const fname = `SJP_Merged_${v}_${from}_to_${to}.xlsx`.replace(/[^\w.-]/g,'_');
   XLSX.writeFile(wb, fname);
   toast('Exported with colors ✓','good');
 }
