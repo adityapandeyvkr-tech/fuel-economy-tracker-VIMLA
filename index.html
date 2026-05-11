@@ -232,6 +232,10 @@
     height:11px;min-width:11px;padding:0 2px;border-radius:6px;
     font-size:8px;top:1px;right:1px;line-height:1;
   }
+  /* "Uploaded but no fills" variant — green tick instead of a number */
+  .cal-grid-mini .cal-day.has-data .check.check-tick{
+    padding:0 3px;font-size:9px;font-weight:800;
+  }
   .cal-legend-mini{font-size:10px;gap:8px;margin-top:8px}
   .cal-legend-mini i{width:9px;height:9px}
 
@@ -304,25 +308,32 @@
   .pivot td.metric-cell{background:#fbfcfe}
   .pivot tr:hover td.metric-cell{background:var(--primary-3)}
 
-  /* 3-column-per-date pivot (Page 2) */
+  /* 3-column-per-date pivot (Page 2)
+     Z-INDEX LAYERING (critical for sticky-column behavior on horizontal scroll):
+       • header corners (sticky top + left)        z:8   — always on top
+       • sticky body cells (sticky left only)      z:6   — beats date headers (z:5) when scrolling horizontally
+       • regular date headers (sticky top only)    z:5   — passes UNDER sticky body cells while scrolling left
+       • regular body cells                        z:1   — bottom layer
+     Without this layering, the date headers slide LEFT and visually overlap the
+     sticky Branch/Vehicle/Site/Diff/Remark columns. */
   .pivot.pivot3 .sticky-branch{
     position:sticky;left:0;z-index:3;background:var(--bg-2);color:#fff;min-width:130px;
   }
-  .pivot.pivot3 td.sticky-branch{background:#fff;color:var(--ink);z-index:1;font-weight:600;font-size:12px}
+  .pivot.pivot3 td.sticky-branch{background:#fff;color:var(--ink);z-index:6;font-weight:600;font-size:12px}
   .pivot.pivot3 .sticky-veh{
     position:sticky;left:130px;z-index:3;background:var(--bg-2);color:#fff;min-width:140px;
   }
-  .pivot.pivot3 td.sticky-veh{background:#fff;color:var(--ink);z-index:1}
+  .pivot.pivot3 td.sticky-veh{background:#fff;color:var(--ink);z-index:6}
   .pivot.pivot3 .sticky-site{
     position:sticky;left:270px;z-index:3;background:var(--bg-2);color:#fff;min-width:170px;
   }
-  .pivot.pivot3 td.sticky-site{background:#fff;z-index:1;padding:4px 6px}
+  .pivot.pivot3 td.sticky-site{background:#fff;z-index:6;padding:4px 6px}
   /* New summary columns: DIFF (computed) + REMARK (free text) */
   .pivot.pivot3 .sticky-diff{
     position:sticky;left:440px;z-index:3;background:var(--bg-2);color:#fff;min-width:90px;text-align:right;
   }
   .pivot.pivot3 td.sticky-diff{
-    background:#fff;z-index:1;text-align:right;font-weight:700;
+    background:#fff;z-index:6;text-align:right;font-weight:700;
     font-variant-numeric:tabular-nums;font-size:12.5px;padding:6px 10px;
   }
   .pivot.pivot3 td.sticky-diff.diff-pos{color:#92400e;background:#fffbeb}
@@ -335,7 +346,7 @@
     border-right:2px solid var(--line);
   }
   .pivot.pivot3 td.sticky-rem{
-    background:#fff;z-index:1;padding:4px 6px;
+    background:#fff;z-index:6;padding:4px 6px;
     border-right:2px solid var(--line);
   }
   .pivot.pivot3 td.sticky-rem input{
@@ -423,7 +434,7 @@
     min-width:130px;letter-spacing:.04em;
   }
   .pivot.pivot-mileage td.sticky-branch{
-    background:#fff;color:var(--ink);z-index:1;font-weight:600;font-size:12px;
+    background:#fff;color:var(--ink);z-index:6;font-weight:600;font-size:12px;
     padding:10px 14px;
   }
   .pivot.pivot-mileage .sticky-veh{
@@ -431,7 +442,7 @@
     background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);color:#fff;
     min-width:140px;letter-spacing:.04em;
   }
-  .pivot.pivot-mileage td.sticky-veh{background:#fff;color:var(--ink);z-index:1;padding:8px 10px}
+  .pivot.pivot-mileage td.sticky-veh{background:#fff;color:var(--ink);z-index:6;padding:8px 10px}
   .pivot.pivot-mileage .sticky-site{
     position:sticky;left:270px;z-index:3;
     background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);color:#fff;
@@ -439,7 +450,7 @@
     border-right:2px solid var(--line);
   }
   .pivot.pivot-mileage td.sticky-site{
-    background:#fff;z-index:1;padding:8px 14px;font-size:12px;color:var(--ink-2);
+    background:#fff;z-index:6;padding:8px 14px;font-size:12px;color:var(--ink-2);
     border-right:2px solid var(--line);
   }
   /* Subtle zebra striping — only on metric cells, not sticky cols */
@@ -954,6 +965,21 @@
 
   .ab-detail{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
   .ab-detail b{color:var(--ink);font-weight:700}
+  /* When sorted by vehicle, draw a thin teal line above the first row of each
+     vehicle group so the runs of same-vehicle issues are visually obvious */
+  .ab-tbl tbody tr.ab-veh-start td{
+    border-top:2px solid var(--primary);
+  }
+  .ab-tbl tbody tr.ab-veh-start:first-child td{border-top:none}
+  /* Small pill next to a vehicle name showing the total issue count for that vehicle in range */
+  .ab-veh-count{
+    display:inline-block;margin-left:6px;
+    background:var(--primary);color:#fff;
+    font-size:10px;font-weight:700;
+    padding:1px 7px;border-radius:99px;
+    font-variant-numeric:tabular-nums;
+    vertical-align:middle;
+  }
 
   .ab-empty{
     text-align:center;padding:48px 20px;color:var(--muted);
@@ -1300,6 +1326,18 @@
             <button class="btn sm" onclick="setAbRangeAll()">All</button>
           </div>
         </div>
+        <div class="field" style="flex:0 0 auto;min-width:200px">
+          <label>Sort by</label>
+          <select id="ab-sort" onchange="renderAbnormalities()">
+            <option value="date-desc">Date (newest first)</option>
+            <option value="date-asc">Date (oldest first)</option>
+            <option value="vehicle-az">Vehicle (A → Z)</option>
+            <option value="vehicle-count">Vehicle (most issues first)</option>
+            <option value="branch">Branch, then vehicle</option>
+            <option value="type">Issue type</option>
+            <option value="progress">Progress status</option>
+          </select>
+        </div>
         <div class="field" style="flex:1 1 200px">
           <label>Search vehicle / site / branch</label>
           <input type="text" id="ab-search" placeholder="Search…" oninput="renderAbnormalities()" />
@@ -1555,14 +1593,43 @@ const cloud = {
     el.title = tip;
   },
 
+  // Supabase silently caps any .select() at 1000 rows unless you paginate.
+  // For tables that can grow past 1000 (records, cells, vehicles eventually),
+  // we page through with .range() until a short page comes back. Page size
+  // 1000 keeps each request under the cap and minimises round-trips.
+  async fetchAllPages(tableName, selectStr = '*', orderCol = null){
+    if(!this.enabled) return { data: [], error: null };
+    const PAGE = 1000;
+    const out = [];
+    let from = 0;
+    let totalSeen = 0;
+    // Safety cap so a runaway table can't loop forever — 50 pages = 50k rows,
+    // well beyond anything realistic for a fleet of <500 vehicles × years of data.
+    for(let i = 0; i < 50; i++){
+      let q = this.client.from(tableName).select(selectStr).range(from, from + PAGE - 1);
+      if(orderCol) q = q.order(orderCol);
+      const { data, error } = await q;
+      if(error) return { data: out, error };
+      if(!data || !data.length) break;
+      out.push(...data);
+      totalSeen += data.length;
+      if(data.length < PAGE) break;   // last page (short)
+      from += PAGE;
+    }
+    if(totalSeen >= 50 * 1000) console.warn(`[fetchAllPages] ${tableName}: hit safety cap of 50k rows`);
+    return { data: out, error: null };
+  },
+
   async fetchAll(){
     if(!this.enabled) return;
     const [rec, veh, cells, ups, prog] = await Promise.all([
-      this.client.from('records').select('*'),
-      this.client.from('vehicles').select('*'),
-      this.client.from('cells').select('*'),
+      // These tables grow with usage — paginate to dodge Supabase's 1000-row cap
+      this.fetchAllPages('records', '*'),
+      this.fetchAllPages('vehicles', '*'),
+      this.fetchAllPages('cells', '*'),
+      // Uploads are capped explicitly (most recent 100) — never grows unbounded for us
       this.client.from('uploads').select('*').order('uploaded_at', {ascending: false}).limit(100),
-      this.client.from('abnormality_progress').select('*')
+      this.fetchAllPages('abnormality_progress', '*')
     ]);
     if(rec.error) throw rec.error;
     if(veh.error) throw veh.error;
@@ -1572,6 +1639,7 @@ const cloud = {
     if(prog.error){
       console.warn('abnormality_progress not available (run add_progress_table.sql):', prog.error.message);
     }
+    console.log(`[fetchAll] records=${rec.data?.length || 0}, vehicles=${veh.data?.length || 0}, cells=${cells.data?.length || 0}, progress=${prog.data?.length || 0}`);
 
     // Records — overwrite from cloud (cloud is source of truth)
     state.records = (rec.data || []).map(r => ({
@@ -2359,7 +2427,17 @@ function renderCalendar(){
   const daysInMonth = new Date(yr, mo+1, 0).getDate();
   const today = fmtDate(new Date());
 
-  // Count vehicles per date that have Online Fill (>0) — same denominator as Site Fill calendar
+  // Total records uploaded per date — the calendar should mark a date green
+  // as long as ANY records exist, regardless of whether vehicles actually
+  // had a fill > 0 on that day. (Old logic used the Site-Fill "needed" count,
+  // so dates that were uploaded but had zero fills appeared blank — bug.)
+  const recordsByDate = {};
+  state.records.forEach(r => {
+    if(!r.date) return;
+    recordsByDate[r.date] = (recordsByDate[r.date] || 0) + 1;
+  });
+
+  // Fill count is still useful info — show it as the pill when > 0
   const status = getSiteFillStatusByDate();
   const selDate = document.getElementById('upload-date').value;
 
@@ -2368,13 +2446,26 @@ function renderCalendar(){
   for(let i=0;i<firstDay;i++) html += `<div class="cal-day empty"></div>`;
   for(let d=1;d<=daysInMonth;d++){
     const ds = `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const totalRecs = recordsByDate[ds] || 0;
+    const fillCnt = (status[ds] && status[ds].needed) || 0;
     const cls = ['cal-day'];
-    const cnt = (status[ds] && status[ds].needed) || 0;
-    if(cnt > 0) cls.push('has-data');
+    if(totalRecs > 0) cls.push('has-data');   // Green = any data uploaded
     if(ds === today) cls.push('today');
     if(ds === selDate) cls.push('selected');
-    const tooltip = cnt > 0 ? `${cnt} vehicle${cnt===1?'':'s'} with Online Fill` : 'No fills';
-    const mark = cnt > 0 ? `<div class="check">${cnt}</div>` : '';
+
+    let mark = '';
+    let tooltip;
+    if(fillCnt > 0){
+      // Common case: data uploaded AND some vehicles had fills → show fill count
+      mark = `<div class="check">${fillCnt}</div>`;
+      tooltip = `${totalRecs} record${totalRecs===1?'':'s'} uploaded · ${fillCnt} with Online Fill`;
+    } else if(totalRecs > 0){
+      // Uploaded but no fills — show a tick so the date still reads "uploaded"
+      mark = `<div class="check check-tick">✓</div>`;
+      tooltip = `${totalRecs} record${totalRecs===1?'':'s'} uploaded · no Online Fills`;
+    } else {
+      tooltip = 'No uploads';
+    }
     html += `<div class="${cls.join(' ')}" title="${tooltip}" onclick="pickDate('${ds}')">${d}${mark}</div>`;
   }
   document.getElementById('cal-grid').innerHTML = html;
@@ -4804,6 +4895,13 @@ function renderAbnormalities(){
   // Apply type filter
   const filtered = (abnFilter === 'all') ? issues : issues.filter(i => i.type === abnFilter);
 
+  // Apply sort selection from #ab-sort
+  // Default in detectAbnormalities() is date-desc; here we re-sort if a different mode is picked.
+  const sortMode = (document.getElementById('ab-sort')?.value) || 'date-desc';
+  if(sortMode !== 'date-desc'){
+    sortAbnormalities(filtered, sortMode);
+  }
+
   if(!filtered.length){
     if(counts.all === 0){
       body.innerHTML = '<div class="ab-empty"><div class="ic">✓</div><h3>No issues found</h3><p>All vehicles look healthy in the selected range.</p></div>';
@@ -4819,9 +4917,17 @@ function renderAbnormalities(){
     sensor: '<span class="ab-badge ab-sensor">📡 Sensor</span>'
   };
 
+  // For vehicle-grouped sort modes, count issues per vehicle so we can show a small pill
+  const groupByVehicle = (sortMode === 'vehicle-az' || sortMode === 'vehicle-count');
+  const vehCount = {};
+  if(groupByVehicle){
+    filtered.forEach(i => { vehCount[i.vehicle] = (vehCount[i.vehicle]||0) + 1; });
+  }
+
   let html = '<div class="table-wrap"><table class="ab-tbl"><thead><tr>';
   html += '<th>Date</th><th>Branch</th><th>Vehicle</th><th>Site</th><th>Type</th><th>Details</th><th style="min-width:185px">Progress</th>';
   html += '</tr></thead><tbody>';
+  let prevVeh = null;
   filtered.forEach(i => {
     const pk = `${i.vehicle}|${i.date}|${i.type}`;
     const cur = state.progress[pk] || '';
@@ -4833,10 +4939,17 @@ function renderAbnormalities(){
     });
     dropdown += '</select>';
 
-    html += `<tr>`;
+    // When grouping by vehicle, draw a thin separator at the start of each group
+    const isNewVehGroup = groupByVehicle && i.vehicle !== prevVeh;
+    prevVeh = i.vehicle;
+    const vehCountPill = (groupByVehicle && isNewVehGroup && vehCount[i.vehicle] > 1)
+      ? ` <span class="ab-veh-count" title="${vehCount[i.vehicle]} issues for this vehicle in range">${vehCount[i.vehicle]}</span>`
+      : '';
+
+    html += `<tr${isNewVehGroup?' class="ab-veh-start"':''}>`;
     html += `<td>${fmtNiceDate(i.date)}</td>`;
     html += `<td>${escapeHtml(i.branch||'')}</td>`;
-    html += `<td><span class="veh-pill">${escapeHtml(i.vehicle)}</span></td>`;
+    html += `<td><span class="veh-pill">${escapeHtml(i.vehicle)}</span>${vehCountPill}</td>`;
     html += `<td>${escapeHtml(i.site||'')}</td>`;
     html += `<td>${typeBadge[i.type]||''}</td>`;
     html += `<td class="ab-detail">${escapeHtml(i.details)}</td>`;
@@ -4845,6 +4958,48 @@ function renderAbnormalities(){
   });
   html += '</tbody></table></div>';
   body.innerHTML = html;
+}
+
+// Sort an abnormalities array in place by the given mode.
+// Used by both renderAbnormalities() and exportAbnormalitiesXLSX() so the
+// on-screen order and the Excel order always match.
+function sortAbnormalities(arr, mode){
+  // Type ordering used by 'type' mode — power, fill, sensor matches the chip layout
+  const typeRank = { power: 0, fill: 1, sensor: 2 };
+  // Progress status priority: solved/no-issue last (resolved), open ones first
+  const progRank = {
+    '':                          0,   // unset = needs attention, top
+    'Escalated to Vendor':       1,
+    'Escalated to Dashrath Sir': 2,
+    'Escalated':                 3,
+    'Technical Glitch':          4,
+    'Repair Planned':            5,
+    'No Issue':                  6,
+    'Solved':                    7
+  };
+  // For vehicle-count mode we need a count map first
+  let counts = null;
+  if(mode === 'vehicle-count'){
+    counts = {};
+    arr.forEach(i => counts[i.vehicle] = (counts[i.vehicle]||0) + 1);
+  }
+  arr.sort((a, b) => {
+    if(mode === 'date-asc')  return a.date.localeCompare(b.date) || a.vehicle.localeCompare(b.vehicle);
+    if(mode === 'vehicle-az') return a.vehicle.localeCompare(b.vehicle) || b.date.localeCompare(a.date);
+    if(mode === 'vehicle-count') {
+      const d = (counts[b.vehicle]||0) - (counts[a.vehicle]||0);
+      return d || a.vehicle.localeCompare(b.vehicle) || b.date.localeCompare(a.date);
+    }
+    if(mode === 'branch')    return (a.branch||'').localeCompare(b.branch||'') || a.vehicle.localeCompare(b.vehicle) || b.date.localeCompare(a.date);
+    if(mode === 'type')      return (typeRank[a.type]??99) - (typeRank[b.type]??99) || b.date.localeCompare(a.date) || a.vehicle.localeCompare(b.vehicle);
+    if(mode === 'progress') {
+      const ka = `${a.vehicle}|${a.date}|${a.type}`, kb = `${b.vehicle}|${b.date}|${b.type}`;
+      const pa = state.progress[ka] || '', pb = state.progress[kb] || '';
+      return (progRank[pa]??99) - (progRank[pb]??99) || b.date.localeCompare(a.date) || a.vehicle.localeCompare(b.vehicle);
+    }
+    // default — date desc
+    return b.date.localeCompare(a.date) || a.vehicle.localeCompare(b.vehicle);
+  });
 }
 
 /* ============================================================
@@ -4899,6 +5054,10 @@ function exportAbnormalitiesXLSX(){
     );
   }
   if(abnFilter !== 'all') issues = issues.filter(i => i.type === abnFilter);
+
+  // Match the on-screen sort so the Excel order looks the same as the table
+  const sortMode = (document.getElementById('ab-sort')?.value) || 'date-desc';
+  if(sortMode !== 'date-desc') sortAbnormalities(issues, sortMode);
 
   if(!issues.length){ toast('Nothing to export','warn'); return; }
 
@@ -5404,7 +5563,4 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
-
-
-
 
