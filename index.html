@@ -1581,7 +1581,7 @@ function loadState(){
 /* App version — bump on any deploy. Shows in the top-right header as "v2.5"
    so you can compare across laptops. If two devices show different versions,
    the older one is running cached HTML — hard-refresh (Ctrl+Shift+R) it. */
-const APP_VERSION = 'v2.5 · 2026-07-13';
+const APP_VERSION = 'v2.6 · 2026-07-13';
 
 // Populate version badge as soon as DOM is ready + log to console for debugging
 document.addEventListener('DOMContentLoaded', () => {
@@ -1655,7 +1655,7 @@ const cloud = {
     };
     const [color, text, tip] = map[s] || map.local;
     // Make "Sync error" clickable so user sees the full diagnostic + retry option
-    const clickable = (s === 'error') ? ' onclick="Cloud.showErrorDetails()" style="cursor:pointer;text-decoration:underline dotted"' : '';
+    const clickable = (s === 'error') ? ' onclick="cloud.showErrorDetails()" style="cursor:pointer;text-decoration:underline dotted"' : '';
     el.innerHTML = `<span${clickable} style="color:${color};font-weight:600">${text}</span>`;
     el.title = tip;
   },
@@ -1664,7 +1664,30 @@ const cloud = {
   // Uses window.confirm so it works even if custom modal helpers aren't loaded.
   showErrorDetails(){
     const err = this.lastError || 'Unknown error';
-    const msg = `Cloud sync failed with this error:
+    // Detect network / DNS errors — "Failed to fetch" or "NetworkError" or "ERR_NAME_NOT_RESOLVED"
+    // means the request never reached Supabase, so it's a network problem, not a code / RLS issue.
+    const isNetwork = /failed to fetch|networkerror|err_name_not_resolved|err_internet_disconnected|err_connection|typeerror.*fetch/i.test(err);
+    let msg;
+    if(isNetwork){
+      msg = `⚠ Cannot reach the cloud server
+
+Error: ${err}
+
+This laptop cannot connect to Supabase. Data on the server is fine — the network is the problem.
+
+TRY THESE, IN ORDER:
+
+1. Check internet works: open google.com in a new tab
+2. Try a different network — mobile hotspot from your phone is a fast test
+3. Change DNS: Windows Settings → Network → change DNS to 8.8.8.8 and 8.8.4.4 (Google DNS)
+4. Disable VPN / proxy if any is active
+5. If on office wifi: some firewalls block *.supabase.co — check with IT
+
+Meanwhile you can still use the app in local-only mode — data will sync to cloud once the network is fixed.
+
+Click OK to retry now, Cancel to keep using local mode.`;
+    } else {
+      msg = `Cloud sync failed with this error:
 
 ${err}
 
@@ -1676,6 +1699,7 @@ Common causes:
 • Auth token expired
 
 Click OK to retry the sync now, or Cancel to keep working locally.`;
+    }
     if(confirm(msg)){
       this.setStatus('syncing');
       this.lastError = null;
@@ -5805,3 +5829,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
+
+
+
+
