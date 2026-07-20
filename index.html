@@ -1080,6 +1080,7 @@
       <span><b id="stat-veh">0</b>vehicles</span>
       <span><b id="stat-rec">0</b>records</span>
       <span id="sync-status" style="font-size:11px;cursor:help;padding-left:8px;border-left:1px solid rgba(255,255,255,.2);margin-left:4px"><span style="color:#94a3b8;font-weight:600">◌ Local only</span></span>
+      <span id="app-version" title="App version — if two laptops show different versions, hard-refresh (Ctrl+Shift+R) the older one" style="font-size:10px;color:#64748b;padding-left:8px;border-left:1px solid rgba(255,255,255,.2);margin-left:4px;letter-spacing:0.03em;font-variant-numeric:tabular-nums"></span>
     </div>
   </div>
 </header>
@@ -1576,6 +1577,20 @@ function loadState(){
    • Edits propagate via debounced batch push (1.5s after last change)
    • If Supabase is unreachable, the app keeps working locally
 ============================================================ */
+
+/* App version — bump on any deploy. Shows in the top-right header as "v2.5"
+   so you can compare across laptops. If two devices show different versions,
+   the older one is running cached HTML — hard-refresh (Ctrl+Shift+R) it. */
+const APP_VERSION = 'v2.5 · 2026-07-13';
+
+// Populate version badge as soon as DOM is ready + log to console for debugging
+document.addEventListener('DOMContentLoaded', () => {
+  const v = document.getElementById('app-version');
+  if(v) v.textContent = APP_VERSION;
+  console.log(`%c🚛 Fuel Economy Tracker ${APP_VERSION}`, 'color:#0a6e6e;font-weight:700;font-size:12px');
+  console.log('If this version differs from another laptop, hard-refresh the older one (Ctrl+Shift+R / Cmd+Shift+R).');
+});
+
 const SUPABASE_URL = 'https://nmupuithswsfqidrpxbc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tdXB1aXRoc3dzZnFpZHJweGJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMDY0MzAsImV4cCI6MjA5Mjc4MjQzMH0.lfTE0kqfa4Fg0EwPpZBrv9XLVlPGJgobfS-NltcFCBM';
 
@@ -1599,10 +1614,33 @@ const cloud = {
       this.setupRealtime();
       this.setStatus('synced');
     }catch(e){
-      console.error('Cloud init failed:', e);
-      this.lastError = e.message;
+      console.error('Cloud init failed:', this.describeError(e), e);
+      this.lastError = this.describeError(e);
       this.setStatus('error');
     }
+  },
+
+  // Pull out the most informative field from various error shapes:
+  //  • PostgrestError: {message, details, hint, code}   — but .message can be empty
+  //  • FunctionsHttpError / AuthError: nested .context or {status, error, message}
+  //  • Plain Error: .message
+  //  • Anything else: try JSON.stringify, falling back to String()
+  describeError(e){
+    if(!e) return 'Unknown error (empty)';
+    if(typeof e === 'string') return e;
+    // Supabase PostgrestError shape
+    const parts = [];
+    if(e.message)  parts.push(e.message);
+    if(e.details && e.details !== e.message) parts.push('details: ' + e.details);
+    if(e.hint)     parts.push('hint: ' + e.hint);
+    if(e.code)     parts.push('code: ' + e.code);
+    if(e.status && !e.message)   parts.push('http: ' + e.status);
+    if(parts.length) return parts.join(' · ');
+    // Fallback — non-enumerable message on Error prototype
+    if(e instanceof Error){
+      return e.message || e.toString() || 'Error (no message)';
+    }
+    try { return JSON.stringify(e); } catch { return String(e); }
   },
 
   setStatus(s){
@@ -1616,8 +1654,42 @@ const cloud = {
       offline: ['#94a3b8', '⚠ Offline',        'No internet — changes will sync when reconnected']
     };
     const [color, text, tip] = map[s] || map.local;
-    el.innerHTML = `<span style="color:${color};font-weight:600">${text}</span>`;
+    // Make "Sync error" clickable so user sees the full diagnostic + retry option
+    const clickable = (s === 'error') ? ' onclick="Cloud.showErrorDetails()" style="cursor:pointer;text-decoration:underline dotted"' : '';
+    el.innerHTML = `<span${clickable} style="color:${color};font-weight:600">${text}</span>`;
     el.title = tip;
+  },
+
+  // Show a modal-style dialog with the last sync error details.
+  // Uses window.confirm so it works even if custom modal helpers aren't loaded.
+  showErrorDetails(){
+    const err = this.lastError || 'Unknown error';
+    const msg = `Cloud sync failed with this error:
+
+${err}
+
+Common causes:
+• Network dropped or slow — check internet connection
+• Supabase row-level security (RLS) rejecting a write
+• A required column is missing from a table (migration not run)
+• Payload too large for a single push
+• Auth token expired
+
+Click OK to retry the sync now, or Cancel to keep working locally.`;
+    if(confirm(msg)){
+      this.setStatus('syncing');
+      this.lastError = null;
+      this.fetchAll()
+        .then(()=> {
+          this.setStatus('synced');
+          // Also retry any pending write
+          this.pushVehiclesAndCells();
+        })
+        .catch(e => {
+          this.lastError = this.describeError(e);
+          this.setStatus('error');
+        });
+    }
   },
 
   // Supabase silently caps any .select() at 1000 rows unless you paginate.
@@ -1763,8 +1835,8 @@ const cloud = {
       }
       this.setStatus('synced');
     }catch(e){
-      console.error('Push failed:', e);
-      this.lastError = e.message;
+      console.error('Push failed:', this.describeError(e), e);
+      this.lastError = this.describeError(e);
       this.setStatus('error');
     }finally{
       this.pushing = false;
@@ -1786,8 +1858,8 @@ const cloud = {
       }
       this.setStatus('synced');
     }catch(e){
-      console.error('Push records failed:', e);
-      this.lastError = e.message;
+      console.error('Push records failed:', this.describeError(e), e);
+      this.lastError = this.describeError(e);
       this.setStatus('error');
     }
   },
@@ -1817,8 +1889,8 @@ const cloud = {
       }
       this.setStatus('synced');
     }catch(e){
-      console.error('Push progress failed:', e);
-      this.lastError = e.message;
+      console.error('Push progress failed:', this.describeError(e), e);
+      this.lastError = this.describeError(e);
       this.setStatus('error');
     }
   },
@@ -5733,4 +5805,3 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
-
