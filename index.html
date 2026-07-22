@@ -1182,6 +1182,7 @@
               Restore JSON
               <input type="file" id="restore-input" accept=".json" style="display:none" />
             </label>
+            <button class="btn sm" onclick="pushAllToCloud()" title="Push current local data to cloud — use if restore didn't sync automatically, or if other devices don't see recent data">☁ Push all to cloud</button>
           </div>
         </div>
       </div>
@@ -1581,7 +1582,7 @@ function loadState(){
 /* App version — bump on any deploy. Shows in the top-right header as "v2.5"
    so you can compare across laptops. If two devices show different versions,
    the older one is running cached HTML — hard-refresh (Ctrl+Shift+R) it. */
-const APP_VERSION = 'v2.6 · 2026-07-13';
+const APP_VERSION = 'v2.7 · 2026-07-21';
 
 // Populate version badge as soon as DOM is ready + log to console for debugging
 document.addEventListener('DOMContentLoaded', () => {
@@ -1895,6 +1896,96 @@ Click OK to retry the sync now, or Cancel to keep working locally.`;
         file: u.file, uploaded_at: u.when, count: u.count, dates: u.dates || []
       });
     }catch(e){ console.error('Push upload entry failed:', e); }
+  },
+
+  // Push the ENTIRE local state up to cloud after a Restore JSON.
+  // This is the missing piece that made restore feel "local-only" — normal
+  // edits fire pushRecords() incrementally, but restore just replaced state
+  // and called saveState() with no cloud sync. Result: local had 7047 records
+  // but cloud stayed at whatever it had before.
+  //
+  // What this does: chunked upserts of records + cells + upload entries.
+  // On-conflict keys ensure this is safely re-runnable — if something's already
+  // in cloud it just gets overwritten with the (identical) value.
+  async pushFullState(onProgress){
+    if(!this.enabled){ toast('Cloud sync disabled — restore is local only','warn'); return; }
+    this.setStatus('syncing');
+    const report = (msg) => { if(onProgress) onProgress(msg); console.log('[pushFullState]', msg); };
+    try{
+      // 1. Records — main table, chunked at 500
+      const recs = state.records || [];
+      report(`Pushing ${recs.length} records…`);
+      const recRows = recs.map(r => ({
+        vehicle: r.vehicle, date: r.date,
+        km: r.km, hmr: r.hmr, fuel: r.fuel,
+        branch: r.branch, data: r.data || {}
+      }));
+      for(let i=0; i<recRows.length; i+=500){
+        const { error } = await this.client.from('records').upsert(recRows.slice(i, i+500), {onConflict: 'vehicle,date'});
+        if(error) throw error;
+        report(`Records ${Math.min(i+500, recRows.length)}/${recRows.length}`);
+      }
+
+      // 2. Cells — site fills + HMR + fill overrides, keyed by "vehicle|date"
+      const cellsMap = {};
+      Object.entries(state.siteFills || {}).forEach(([k,v]) => {
+        const [vehicle, date] = k.split('|');
+        (cellsMap[k] = cellsMap[k] || {vehicle, date}).site_fill = v;
+      });
+      Object.entries(state.siteHMRs || {}).forEach(([k,v]) => {
+        const [vehicle, date] = k.split('|');
+        (cellsMap[k] = cellsMap[k] || {vehicle, date}).site_hmr = v;
+      });
+      Object.entries(state.fillOverrides || {}).forEach(([k,v]) => {
+        const [vehicle, date] = k.split('|');
+        (cellsMap[k] = cellsMap[k] || {vehicle, date}).fill_override = v;
+      });
+      const cellRows = Object.values(cellsMap);
+      report(`Pushing ${cellRows.length} cells…`);
+      for(let i=0; i<cellRows.length; i+=500){
+        const { error } = await this.client.from('cells').upsert(cellRows.slice(i, i+500), {onConflict: 'vehicle,date'});
+        if(error) throw error;
+        report(`Cells ${Math.min(i+500, cellRows.length)}/${cellRows.length}`);
+      }
+
+      // 3. Vehicles table — sites, models, remarks all keyed by vehicle name
+      const vehSet = new Set();
+      recs.forEach(r => vehSet.add(r.vehicle));
+      Object.keys(state.sites || {}).forEach(v => vehSet.add(v));
+      Object.keys(state.models || {}).forEach(v => vehSet.add(v));
+      Object.keys(state.remarks || {}).forEach(v => vehSet.add(v));
+      const vehRows = [...vehSet].filter(v=>v).map(v => ({
+        vehicle: v,
+        site: state.sites?.[v] || null,
+        model: state.models?.[v] || null,
+        remark: state.remarks?.[v] || null
+      }));
+      report(`Pushing ${vehRows.length} vehicles…`);
+      for(let i=0; i<vehRows.length; i+=500){
+        const { error } = await this.client.from('vehicles').upsert(vehRows.slice(i, i+500), {onConflict: 'vehicle'});
+        if(error) throw error;
+      }
+
+      // 4. Upload entries — file history. Uses ID or (file+when) as conflict key.
+      const ups = (state.uploads || []).slice(0, 200);  // cap at 200 most recent
+      report(`Pushing ${ups.length} upload entries…`);
+      for(const u of ups){
+        try{
+          await this.client.from('uploads').insert({
+            file: u.file, uploaded_at: u.when, count: u.count, dates: u.dates || []
+          });
+        }catch{ /* likely duplicate — skip silently, insert is idempotent */ }
+      }
+
+      this.setStatus('synced');
+      report('Complete ✓');
+      return { ok: true };
+    }catch(e){
+      console.error('pushFullState failed:', this.describeError(e), e);
+      this.lastError = this.describeError(e);
+      this.setStatus('error');
+      return { ok: false, error: this.describeError(e) };
+    }
   },
 
   async pushProgress(vehicle, date, type, progress){
@@ -2293,10 +2384,24 @@ function setupUpload(){
       try{
         const obj = JSON.parse(ev.target.result);
         if(!obj.records) throw new Error('Invalid backup');
-        if(!confirm(`Restore ${obj.records.length} records? This replaces current data.`)) return;
+        const confirmMsg = `Restore ${obj.records.length} records? This will:\n\n• Replace local data with the JSON contents\n• Push everything to cloud so all devices see it\n\nCancel if unsure.`;
+        if(!confirm(confirmMsg)) return;
         state = Object.assign({records:[],sites:{},models:{},remarks:{},siteFills:{},siteHMRs:{},fillOverrides:{},workHourOverrides:{},progress:{},uploads:[],columnOrder:[]}, obj);
         saveState(); refreshAll();
-        toast('Restored ✓','good');
+        toast('Local restore done · pushing to cloud…','good');
+        // Push to cloud so other devices see the new data. Before this fix,
+        // restore was silently local-only — cloud stayed at whatever it had.
+        setTimeout(async ()=>{
+          const res = await cloud.pushFullState((msg)=>{
+            // Show a running toast so user sees what's happening for the ~30s-2min it takes
+            toast(msg, 'info', 2000);
+          });
+          if(res && res.ok){
+            toast(`Cloud sync complete ✓ · ${state.records.length} records uploaded`,'good', 5000);
+          } else if(res){
+            toast(`Cloud sync failed: ${res.error}. Data is safe locally.`,'bad', 8000);
+          }
+        }, 200);
       }catch(err){ toast('Invalid backup file','bad'); }
     };
     r.readAsText(f);
@@ -4308,6 +4413,27 @@ function exportBackup(){
   toast('Backup downloaded ✓','good');
 }
 
+// Manually push all local state to the cloud. Useful after a Restore JSON that
+// didn't push automatically, or when other devices don't see recent local
+// changes. Safe to run any number of times — everything is upserted with
+// on-conflict keys, so no duplicates.
+async function pushAllToCloud(){
+  if(!cloud.enabled){
+    toast('Cloud sync not enabled','bad');
+    return;
+  }
+  const recs = state.records?.length || 0;
+  const cells = Object.keys(state.siteFills||{}).length + Object.keys(state.siteHMRs||{}).length + Object.keys(state.fillOverrides||{}).length;
+  if(!confirm(`Push everything to cloud?\n\n• ${recs} records\n• ${cells} cell entries\n• All vehicle sites, models, remarks\n• Recent upload history\n\nThis is safe — cloud data gets updated to match local. Existing rows are overwritten with local values, missing rows are inserted. Takes 30 sec to 2 min depending on size.`)) return;
+  toast('Starting cloud push…','info');
+  const res = await cloud.pushFullState((msg)=> toast(msg,'info',2000));
+  if(res.ok){
+    toast(`Push complete ✓ · ${recs} records + ${cells} cells now on cloud`,'good',6000);
+  } else {
+    toast(`Push failed: ${res.error}`,'bad',8000);
+  }
+}
+
 function clearAllData(){
   if(!confirm('Clear ALL data? This deletes all uploaded records and site mappings. Cannot be undone.')) return;
   if(!confirm('Really sure? Last chance.')) return;
@@ -5829,7 +5955,3 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 </body>
 </html>
-
-
-
-
