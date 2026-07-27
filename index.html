@@ -969,6 +969,55 @@
   .ab-badge.ab-fill{background:#fffbeb;color:#92400e;border-color:#fcd34d}
   .ab-badge.ab-sensor{background:#eff6ff;color:#1e40af;border-color:#93c5fd}
 
+  /* ========== PAGE 8: MILEAGE TREND ========== */
+  .ma-rank-title{
+    font-size:10.5px;font-weight:700;color:var(--ink-2);
+    text-transform:uppercase;letter-spacing:.05em;padding:0 4px 8px;
+    border-bottom:1px solid var(--line);margin-bottom:8px;
+  }
+  .ma-rank-item{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:9px 10px;margin-bottom:4px;cursor:pointer;border-radius:6px;
+    background:#fff;border:1px solid var(--line);transition:all .12s;
+  }
+  .ma-rank-item:hover{background:var(--primary-3);border-color:var(--primary)}
+  .ma-rank-item.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .ma-rank-item.selected .ma-rank-count{background:rgba(255,255,255,.2);color:#fff}
+  .ma-rank-veh{font-weight:600;font-size:12px;font-family:'Space Mono',monospace}
+  .ma-rank-meta{font-size:10px;color:var(--muted);margin-top:2px}
+  .ma-rank-item.selected .ma-rank-meta{color:rgba(255,255,255,.85)}
+  .ma-rank-count{
+    background:#fef2f2;color:#991b1b;padding:2px 9px;border-radius:99px;
+    font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;
+  }
+  .ma-rank-count.zero{background:#f0fdf4;color:#065f46}
+  .ma-rank-count.medium{background:#fffbeb;color:#92400e}
+
+  /* Chart tooltips + interactivity */
+  .ma-chart svg circle:hover{cursor:pointer;stroke-width:3}
+  .ma-chart-legend{
+    display:flex;gap:14px;font-size:11px;color:var(--ink-2);
+    padding:6px 8px 2px;font-variant-numeric:tabular-nums;
+  }
+  .ma-legend-dot{
+    display:inline-block;width:8px;height:8px;border-radius:50%;
+    margin-right:5px;vertical-align:middle;
+  }
+
+  /* Summary stat grid for selected vehicle */
+  .ma-stats{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+    gap:8px;margin-bottom:12px;
+  }
+  .ma-stat{
+    background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:8px 10px;
+  }
+  .ma-stat-label{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .ma-stat-value{font-size:16px;font-weight:700;color:var(--ink);margin-top:2px;font-variant-numeric:tabular-nums}
+  .ma-stat-value.bad{color:#991b1b}
+  .ma-stat-value.good{color:#065f46}
+
   /* Progress dropdown (Page 5) — color-coded by status */
   .prog-sel{
     width:100%;min-width:170px;
@@ -1093,6 +1142,8 @@
     <button class="tab" data-tab="mileage"><span class="num">4</span>Mileage</button>
     <button class="tab" data-tab="abnormal"><span class="num">5</span>Abnormalities</button>
     <button class="tab" data-tab="merged"><span class="num">6</span>Merged Report</button>
+    <button class="tab" data-tab="filllog"><span class="num">7</span>Fill Log</button>
+    <button class="tab" data-tab="milabn"><span class="num">8</span>Mileage Trend</button>
     <button class="tab tab-admin" data-tab="admin"><span class="num">🔒</span>Admin</button>
   </div>
 </nav>
@@ -1436,6 +1487,113 @@
     </div>
   </section>
 
+  <!-- ============ PAGE 7: FILL LOG (per-day fill reconciliation report) ============ -->
+  <section class="page" id="page-filllog">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title"><span class="icon">🧾</span>Fill Log — Site vs Online Reconciliation</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn sm" onclick="exportFillLogXLSX()">Export Excel</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="field">
+          <label>From date</label>
+          <input type="date" id="fl-from" onchange="renderFillLog()" />
+        </div>
+        <div class="field">
+          <label>To date</label>
+          <input type="date" id="fl-to" onchange="renderFillLog()" />
+        </div>
+        <div class="field" style="flex:0 0 auto;min-width:auto">
+          <label style="visibility:hidden">.</label>
+          <div class="actions">
+            <button class="btn sm" onclick="setFillLogRange(7)">Last 7d</button>
+            <button class="btn sm" onclick="setFillLogRange(30)">Last 30d</button>
+            <button class="btn sm" onclick="setFillLogRangeAll()">All</button>
+          </div>
+        </div>
+        <div class="field" style="flex:0 0 auto;min-width:180px">
+          <label>Show</label>
+          <select id="fl-mode" onchange="renderFillLog()">
+            <option value="all">All rows with any fill</option>
+            <option value="site-only">Only site fills</option>
+            <option value="online-only">Only online fills</option>
+            <option value="mismatch" selected>Only mismatches (Diff ≥ 20L)</option>
+            <option value="both">Only rows with BOTH fills</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1 1 200px">
+          <label>Search vehicle / site / branch</label>
+          <input type="text" id="fl-search" placeholder="Search…" oninput="renderFillLog()" />
+        </div>
+      </div>
+
+      <div id="fillog-summary" style="padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel-2);font-size:12.5px;color:var(--ink-2)"></div>
+      <div id="fillog-body"></div>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 8: MILEAGE TREND & ABNORMALITIES ============ -->
+  <section class="page" id="page-milabn">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title"><span class="icon">📉</span>Mileage Trend & Abnormalities</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn sm" onclick="exportMilAbnXLSX()">Export Excel</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="field" style="flex:0 0 260px;min-width:220px">
+          <label>Vehicle</label>
+          <select id="ma-vehicle" onchange="renderMilAbn()"></select>
+        </div>
+        <div class="field">
+          <label>From date</label>
+          <input type="date" id="ma-from" onchange="renderMilAbn()" />
+        </div>
+        <div class="field">
+          <label>To date</label>
+          <input type="date" id="ma-to" onchange="renderMilAbn()" />
+        </div>
+        <div class="field" style="flex:0 0 auto;min-width:auto">
+          <label style="visibility:hidden">.</label>
+          <div class="actions">
+            <button class="btn sm" onclick="setMilAbnRange(30)">Last 30d</button>
+            <button class="btn sm" onclick="setMilAbnRange(90)">Last 90d</button>
+            <button class="btn sm" onclick="setMilAbnRangeAll()">All</button>
+          </div>
+        </div>
+        <div class="field" style="flex:0 0 auto;min-width:130px">
+          <label>Sensitivity</label>
+          <select id="ma-sensitivity" onchange="renderMilAbn()">
+            <option value="20">Low (±20%)</option>
+            <option value="30" selected>Medium (±30%)</option>
+            <option value="50">High (±50%)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:280px 1fr;gap:0;min-height:400px">
+        <!-- Left: Ranking / fleet overview -->
+        <div id="ma-ranking" style="border-right:1px solid var(--line);padding:12px;overflow-y:auto;max-height:70vh;background:var(--panel-2)"></div>
+
+        <!-- Right: Chart + anomaly detail -->
+        <div style="padding:14px">
+          <div id="ma-summary" style="margin-bottom:10px;font-size:12.5px;color:var(--ink-2)"></div>
+          <div id="ma-chart-wrap" style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 8px 8px;margin-bottom:14px"></div>
+          <div id="ma-anomlist"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ PAGE 5: ADMIN (PIN-gated Master List) ============ -->
   <section class="page" id="page-admin">
     <!-- Locked state: PIN entry -->
@@ -1582,7 +1740,7 @@ function loadState(){
 /* App version — bump on any deploy. Shows in the top-right header as "v2.5"
    so you can compare across laptops. If two devices show different versions,
    the older one is running cached HTML — hard-refresh (Ctrl+Shift+R) it. */
-const APP_VERSION = 'v2.7 · 2026-07-21';
+const APP_VERSION = 'v2.9 · 2026-07-24';
 
 // Populate version badge as soon as DOM is ready + log to console for debugging
 document.addEventListener('DOMContentLoaded', () => {
@@ -5917,6 +6075,588 @@ function exportMergedXLSX(){
   toast('Exported with colors ✓','good');
 }
 
+/* ============================================================
+   PAGE 7: FILL LOG — Site vs Online reconciliation report
+   Per-day aggregate. One row per vehicle × date where any fill activity
+   happened. Shows both Site Fill (from cells, manager-entered) and
+   Online Fill (from records.data.Fill, bulk-uploaded) side by side.
+============================================================ */
+
+function setFillLogRange(days){
+  const to = fmtDate(new Date());
+  const fromD = new Date(); fromD.setDate(fromD.getDate() - (days-1));
+  document.getElementById('fl-from').value = fmtDate(fromD);
+  document.getElementById('fl-to').value = to;
+  renderFillLog();
+}
+function setFillLogRangeAll(){
+  const dates = state.records.map(r=>r.date).filter(Boolean).sort();
+  if(!dates.length){ document.getElementById('fl-from').value=''; document.getElementById('fl-to').value=''; renderFillLog(); return; }
+  document.getElementById('fl-from').value = dates[0];
+  document.getElementById('fl-to').value = dates[dates.length-1];
+  renderFillLog();
+}
+
+// Build one flattened row per vehicle × date with any fill activity.
+// Returns array of {vehicle, date, branch, site, quantity, source, hmr, manager, online, diff}
+function buildFillLog(){
+  const from = document.getElementById('fl-from')?.value || '';
+  const to   = document.getElementById('fl-to')?.value   || '';
+  const mode = document.getElementById('fl-mode')?.value || 'mismatch';
+  const searchQ = (document.getElementById('fl-search')?.value || '').trim().toLowerCase();
+
+  // Index cells by vehicle|date so we can look up site fills quickly
+  const cellsByKey = new Map();
+  Object.entries(state.siteFills || {}).forEach(([k,v]) => {
+    (cellsByKey.get(k) || cellsByKey.set(k, {}).get(k)).site_fill = v;
+  });
+  Object.entries(state.siteHMRs || {}).forEach(([k,v]) => {
+    (cellsByKey.get(k) || cellsByKey.set(k, {}).get(k)).site_hmr = v;
+  });
+
+  // Collect all vehicle|date keys that could have fill activity — union of records with Fill>0 and cells with site_fill
+  const keysWithFill = new Set();
+  state.records.forEach(r => {
+    if(from && r.date < from) return;
+    if(to && r.date > to) return;
+    const key = `${r.vehicle}|${r.date}`;
+    const onlineFill = (key in state.fillOverrides) ? state.fillOverrides[key] : (r.data && r.data['Fill']);
+    if(onlineFill != null && !isNaN(+onlineFill) && +onlineFill > 0) keysWithFill.add(key);
+  });
+  cellsByKey.forEach((c, key) => {
+    const [, date] = key.split('|');
+    if(from && date < from) return;
+    if(to && date > to) return;
+    if(c.site_fill != null && +c.site_fill > 0) keysWithFill.add(key);
+  });
+
+  // Build a record lookup so we can enrich each row with branch etc
+  const recByKey = new Map();
+  state.records.forEach(r => recByKey.set(`${r.vehicle}|${r.date}`, r));
+
+  // Compose rows
+  const rows = [];
+  keysWithFill.forEach(key => {
+    const [vehicle, date] = key.split('|');
+    const r = recByKey.get(key);
+    const c = cellsByKey.get(key) || {};
+    const onlineFill = (key in state.fillOverrides) ? state.fillOverrides[key] : (r && r.data && r.data['Fill']);
+    const siteFill   = c.site_fill;
+    const siteHMR    = c.site_hmr;
+    const onlineVal  = (onlineFill != null && !isNaN(+onlineFill)) ? +onlineFill : null;
+    const siteVal    = (siteFill != null && !isNaN(+siteFill)) ? +siteFill : null;
+    const diff       = (onlineVal != null && siteVal != null) ? (onlineVal - siteVal) : null;
+
+    rows.push({
+      vehicle,
+      date,
+      branch: (r && r.branch) || '',
+      site: state.sites[vehicle] || '',
+      quantity: siteVal,      // "quantity" in the report = site fill entered by manager
+      source: siteVal != null ? 'pump' : '—',   // hardcoded — no source tracking yet
+      hmr: (siteHMR != null && !isNaN(+siteHMR)) ? +siteHMR : null,
+      manager: '—',           // manager_name not stored (see build plan Q3)
+      online: onlineVal,
+      diff
+    });
+  });
+
+  // Apply mode filter
+  let filtered = rows;
+  if(mode === 'site-only')    filtered = rows.filter(r => r.quantity != null);
+  if(mode === 'online-only')  filtered = rows.filter(r => r.online != null);
+  if(mode === 'both')         filtered = rows.filter(r => r.quantity != null && r.online != null);
+  if(mode === 'mismatch')     filtered = rows.filter(r => r.diff != null && Math.abs(r.diff) >= 20);
+
+  // Apply search
+  if(searchQ){
+    filtered = filtered.filter(r =>
+      r.vehicle.toLowerCase().includes(searchQ) ||
+      (r.branch || '').toLowerCase().includes(searchQ) ||
+      (r.site || '').toLowerCase().includes(searchQ)
+    );
+  }
+
+  // Sort: most recent date first, then by vehicle
+  filtered.sort((a,b) => b.date.localeCompare(a.date) || a.vehicle.localeCompare(b.vehicle));
+  return filtered;
+}
+
+function renderFillLog(){
+  const body = document.getElementById('fillog-body');
+  const summary = document.getElementById('fillog-summary');
+  if(!body) return;
+
+  const rows = buildFillLog();
+  const totalSite   = rows.reduce((s,r)=> s + (r.quantity || 0), 0);
+  const totalOnline = rows.reduce((s,r)=> s + (r.online || 0), 0);
+  const totalDiff   = totalOnline - totalSite;
+  const mismatchCount = rows.filter(r => r.diff != null && Math.abs(r.diff) >= 20).length;
+
+  summary.innerHTML = `
+    <b>${rows.length}</b> row${rows.length===1?'':'s'} &nbsp;·&nbsp;
+    Total Online: <b>${fmtNum(totalOnline,1)} L</b> &nbsp;·&nbsp;
+    Total Site: <b>${fmtNum(totalSite,1)} L</b> &nbsp;·&nbsp;
+    Net Diff: <b style="color:${Math.abs(totalDiff)<0.1?'#065f46':(totalDiff>0?'#92400e':'#991b1b')}">${totalDiff>0?'+':''}${fmtNum(totalDiff,1)} L</b> &nbsp;·&nbsp;
+    Mismatches ≥ 20L: <b>${mismatchCount}</b>
+  `;
+
+  if(!rows.length){
+    body.innerHTML = `<div class="ab-empty"><div class="ic">🔍</div><h3 style="color:var(--ink-2)">No fill events found</h3><p>Try a different date range or filter mode.</p></div>`;
+    return;
+  }
+
+  let html = '<div class="table-wrap"><table class="ab-tbl fl-tbl"><thead><tr>';
+  html += '<th>vehicle</th>';
+  html += '<th style="text-align:right">quantity</th>';
+  html += '<th>fill_time</th>';
+  html += '<th>source</th>';
+  html += '<th style="text-align:right">hmr</th>';
+  html += '<th>manager_name</th>';
+  html += '<th style="text-align:right">ONLINE FILL</th>';
+  html += '</tr></thead><tbody>';
+
+  rows.forEach(r => {
+    // Row background tinting for mismatches (subtle audit indicator without extra column)
+    let rowStyle = '';
+    if(r.diff != null && Math.abs(r.diff) >= 20){
+      rowStyle = r.diff > 0
+        ? ' style="background:#fffbeb"'   // amber tint — online > site (over-report)
+        : ' style="background:#fef2f2"';  // red tint — site > online (under-report)
+    }
+    // Online Fill cell coloring based on diff
+    let onlineColor = '';
+    if(r.diff != null && Math.abs(r.diff) >= 20){
+      onlineColor = r.diff > 0 ? 'color:#92400e' : 'color:#991b1b';
+    }
+
+    html += `<tr${rowStyle}>`;
+    html += `<td><span class="veh-pill">${escapeHtml(r.vehicle)}</span></td>`;
+    html += `<td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600">${r.quantity != null ? fmtNum(r.quantity,1) : '<span style="color:var(--muted)">—</span>'}</td>`;
+    html += `<td style="font-variant-numeric:tabular-nums">${r.date}</td>`;
+    html += `<td>${escapeHtml(r.source)}</td>`;
+    html += `<td style="text-align:right;font-variant-numeric:tabular-nums">${r.hmr != null ? fmtNum(r.hmr,1) : '<span style="color:var(--muted)">—</span>'}</td>`;
+    html += `<td style="color:var(--muted);font-style:italic">${escapeHtml(r.manager)}</td>`;
+    html += `<td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:700;${onlineColor}">${r.online != null ? fmtNum(r.online,1) : '<span style="color:var(--muted)">—</span>'}</td>`;
+    html += `</tr>`;
+  });
+  html += '</tbody></table></div>';
+  body.innerHTML = html;
+}
+
+function exportFillLogXLSX(){
+  if(typeof XLSX === 'undefined'){ toast('Excel library not loaded','warn'); return; }
+  const rows = buildFillLog();
+  if(!rows.length){ toast('Nothing to export','warn'); return; }
+  const from = document.getElementById('fl-from').value || 'all';
+  const to = document.getElementById('fl-to').value || 'all';
+
+  const aoa = [
+    ['vehicle','quantity','fill_time','source','hmr','manager_name','ONLINE FILL']
+  ];
+  rows.forEach(r => {
+    aoa.push([
+      r.vehicle,
+      r.quantity != null ? +r.quantity.toFixed(2) : '',
+      r.date,
+      r.source || '',
+      r.hmr != null ? +r.hmr.toFixed(1) : '',
+      r.manager || '',
+      r.online != null ? +r.online.toFixed(2) : ''
+    ]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:18},{wch:12},{wch:14},{wch:10},{wch:12},{wch:16},{wch:14}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Fill Log');
+  const fname = `SJP_FillLog_${from}_to_${to}.xlsx`.replace(/[^\w.-]/g,'_');
+  XLSX.writeFile(wb, fname);
+  toast(`Exported ${rows.length} rows ✓`,'good');
+}
+
+/* ============================================================
+   PAGE 8: MILEAGE TREND & ABNORMALITIES
+   Detects vehicles whose daily mileage (km/L for road, L/hr for equipment)
+   deviates significantly from their own average. Shows:
+   - Left panel: ranking of vehicles by anomaly count
+   - Right panel: SVG line chart + anomaly list for selected vehicle
+============================================================ */
+
+let maSelectedVehicle = null;   // remembers which vehicle is picked in the ranking
+
+function setMilAbnRange(days){
+  const to = fmtDate(new Date());
+  const fromD = new Date(); fromD.setDate(fromD.getDate() - (days-1));
+  document.getElementById('ma-from').value = fmtDate(fromD);
+  document.getElementById('ma-to').value = to;
+  renderMilAbn();
+}
+function setMilAbnRangeAll(){
+  const dates = state.records.map(r=>r.date).filter(Boolean).sort();
+  if(!dates.length){ document.getElementById('ma-from').value=''; document.getElementById('ma-to').value=''; renderMilAbn(); return; }
+  document.getElementById('ma-from').value = dates[0];
+  document.getElementById('ma-to').value = dates[dates.length-1];
+  renderMilAbn();
+}
+
+// Build per-day mileage series for a vehicle in the date range.
+// Returns [{date, mileage, fill, workHour, km, isAnomaly, deviation}]
+function buildMileageSeries(vehicle, from, to, sensitivityPct){
+  const isRoad = MILEAGE_DISTANCE_BASED.has(vehicle);
+  const recs = state.records
+    .filter(r => r.vehicle === vehicle)
+    .filter(r => !from || r.date >= from)
+    .filter(r => !to || r.date <= to)
+    .sort((a,b) => a.date.localeCompare(b.date));
+
+  const series = recs.map(r => {
+    const fill = num(r.data?.['Fill']);
+    const wh = num(r.data?.['Work Hour']);
+    const km = num(r.data?.['Distance']);
+    let mileage = null;
+    if(isRoad){
+      // km/L — needs both distance and fuel
+      if(km > 0 && fill > 0) mileage = km / fill;
+    } else {
+      // L/hr — needs both fuel and work hours
+      if(fill > 0 && wh > 0) mileage = fill / wh;
+    }
+    return { date: r.date, mileage, fill, workHour: wh, km };
+  });
+
+  // Compute stats over valid mileage points only
+  const validVals = series.map(s => s.mileage).filter(m => m != null && m > 0);
+  if(!validVals.length){
+    return { series, stats: null, anomalies: [], isRoad };
+  }
+  const mean = validVals.reduce((s,v) => s+v, 0) / validVals.length;
+  const sorted = [...validVals].sort((a,b)=>a-b);
+  const median = sorted[Math.floor(sorted.length/2)];
+  const variance = validVals.reduce((s,v) => s + Math.pow(v-mean,2), 0) / validVals.length;
+  const std = Math.sqrt(variance);
+
+  // Flag anomalies: >sensitivity% off from mean
+  const threshold = sensitivityPct / 100;
+  series.forEach(s => {
+    if(s.mileage != null && s.mileage > 0 && mean > 0){
+      const dev = (s.mileage - mean) / mean;
+      s.deviation = dev * 100;
+      s.isAnomaly = Math.abs(dev) >= threshold;
+    } else if(s.mileage == null){
+      s.isAnomaly = false;
+    }
+  });
+
+  const anomalies = series.filter(s => s.isAnomaly);
+  return {
+    series,
+    stats: { mean, median, std, min: sorted[0], max: sorted[sorted.length-1], count: validVals.length },
+    anomalies,
+    isRoad
+  };
+}
+
+function num(v){
+  const n = +v;
+  return (v == null || v === '' || isNaN(n)) ? 0 : n;
+}
+
+// Render SVG line chart. viewBox-based so it scales cleanly.
+function renderMileageChart(container, series, stats, isRoad){
+  container.className = 'ma-chart';
+  const validPoints = series.filter(s => s.mileage != null && s.mileage > 0);
+  if(!validPoints.length){
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">No mileage data for this vehicle in the selected range</div>';
+    return;
+  }
+
+  const W = 800, H = 300;
+  const PAD = { top: 20, right: 24, bottom: 44, left: 56 };
+  const chartW = W - PAD.left - PAD.right;
+  const chartH = H - PAD.top - PAD.bottom;
+
+  const values = validPoints.map(s => s.mileage);
+  let maxV = Math.max(...values);
+  let minV = Math.min(...values);
+  // Add 15% headroom so points aren't glued to top/bottom
+  const range = maxV - minV || maxV * 0.2 || 1;
+  maxV = maxV + range * 0.15;
+  minV = Math.max(0, minV - range * 0.15);
+
+  // Position all series points (even nulls take x slot for continuity)
+  const n = series.length;
+  const xStep = n > 1 ? chartW / (n - 1) : 0;
+  const points = series.map((s, i) => ({
+    x: PAD.left + i * xStep,
+    y: s.mileage != null && s.mileage > 0
+       ? PAD.top + (1 - (s.mileage - minV) / (maxV - minV)) * chartH
+       : null,
+    ...s
+  }));
+
+  // Line path — connect only valid points, break at gaps
+  let pathD = '';
+  let started = false;
+  points.forEach(p => {
+    if(p.y != null){
+      pathD += (started ? 'L' : 'M') + p.x.toFixed(1) + ',' + p.y.toFixed(1) + ' ';
+      started = true;
+    } else {
+      started = false;   // gap — restart on next valid
+    }
+  });
+
+  // Average dashed line
+  const avgY = PAD.top + (1 - (stats.mean - minV) / (maxV - minV)) * chartH;
+  const unit = isRoad ? 'km/L' : 'L/hr';
+
+  // Grid + Y labels — 5 gridlines
+  let gridHTML = '';
+  for(let g = 0; g <= 5; g++){
+    const y = PAD.top + (g / 5) * chartH;
+    const val = maxV - (g / 5) * (maxV - minV);
+    gridHTML += `<line x1="${PAD.left}" y1="${y}" x2="${W - PAD.right}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
+    gridHTML += `<text x="${PAD.left - 6}" y="${y + 3.5}" text-anchor="end" font-size="10" fill="#6b7280" font-family="'Space Mono',monospace">${val.toFixed(1)}</text>`;
+  }
+
+  // X-axis labels: show ~6 evenly spaced dates
+  let xLabelHTML = '';
+  const labelCount = Math.min(6, n);
+  const step = Math.max(1, Math.floor((n - 1) / (labelCount - 1)) || 1);
+  const labelIdxs = new Set([0, n - 1]);
+  for(let i = step; i < n - step/2; i += step) labelIdxs.add(i);
+  [...labelIdxs].sort((a,b)=>a-b).forEach(idx => {
+    const p = points[idx];
+    const dateShort = (p.date || '').slice(5); // MM-DD
+    xLabelHTML += `<text x="${p.x}" y="${H - PAD.bottom + 16}" text-anchor="middle" font-size="10" fill="#6b7280" font-family="'Space Mono',monospace">${dateShort}</text>`;
+  });
+
+  // Data dots — anomalies in red, normal in teal
+  let dotsHTML = '';
+  points.forEach(p => {
+    if(p.y == null) return;
+    const isAnom = p.isAnomaly;
+    const color = isAnom ? '#dc2626' : '#0a6e6e';
+    const r = isAnom ? 5 : 3.2;
+    const strokeW = isAnom ? 2 : 1.2;
+    dotsHTML += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}" fill="${color}" stroke="white" stroke-width="${strokeW}">`;
+    dotsHTML += `<title>${p.date}: ${p.mileage.toFixed(2)} ${unit}${isAnom ? '  (⚠ anomaly, ' + (p.deviation > 0 ? '+' : '') + p.deviation.toFixed(0) + '% off avg)' : ''}</title>`;
+    dotsHTML += `</circle>`;
+  });
+
+  // Y-axis label
+  const yAxisLabel = `<text x="18" y="${PAD.top + chartH/2}" transform="rotate(-90 18 ${PAD.top + chartH/2})" text-anchor="middle" font-size="10" fill="#374151" font-weight="600">${unit}</text>`;
+
+  container.innerHTML = `
+    <div class="ma-chart-legend">
+      <span><span class="ma-legend-dot" style="background:#0a6e6e"></span>Normal</span>
+      <span><span class="ma-legend-dot" style="background:#dc2626"></span>Anomaly</span>
+      <span><span class="ma-legend-dot" style="background:#94a3b8;height:2px;border-radius:0;width:14px"></span>Average (${stats.mean.toFixed(2)} ${unit})</span>
+    </div>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">
+      ${gridHTML}
+      <line x1="${PAD.left}" y1="${avgY.toFixed(1)}" x2="${W - PAD.right}" y2="${avgY.toFixed(1)}" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="5,4"/>
+      <path d="${pathD}" fill="none" stroke="#0a6e6e" stroke-width="1.8" opacity="0.7"/>
+      ${dotsHTML}
+      ${xLabelHTML}
+      ${yAxisLabel}
+    </svg>
+  `;
+}
+
+function renderMilAbn(){
+  const from = document.getElementById('ma-from')?.value || '';
+  const to = document.getElementById('ma-to')?.value || '';
+  const sensitivity = +document.getElementById('ma-sensitivity')?.value || 30;
+  const selectEl = document.getElementById('ma-vehicle');
+  const rankingEl = document.getElementById('ma-ranking');
+  const summaryEl = document.getElementById('ma-summary');
+  const chartWrap = document.getElementById('ma-chart-wrap');
+  const listEl = document.getElementById('ma-anomlist');
+  if(!rankingEl || !chartWrap) return;
+
+  // Get all vehicles with any records in range
+  const vehiclesInRange = new Set();
+  state.records.forEach(r => {
+    if(from && r.date < from) return;
+    if(to && r.date > to) return;
+    vehiclesInRange.add(r.vehicle);
+  });
+  const vehicles = [...vehiclesInRange].sort();
+
+  // Compute anomaly count for each vehicle → for ranking
+  const vehStats = vehicles.map(v => {
+    const { series, stats, anomalies, isRoad } = buildMileageSeries(v, from, to, sensitivity);
+    return {
+      vehicle: v,
+      anomalyCount: anomalies.length,
+      totalDays: series.filter(s => s.mileage != null && s.mileage > 0).length,
+      mean: stats?.mean || null,
+      isRoad,
+      series,
+      anomalies,
+      stats
+    };
+  });
+
+  // Populate vehicle dropdown (once, or when list changes)
+  const currentSelected = selectEl.value || maSelectedVehicle;
+  if(selectEl.options.length !== vehicles.length + 1){
+    selectEl.innerHTML = '<option value="">— Select a vehicle —</option>' +
+      vehicles.map(v => `<option value="${escapeAttr(v)}">${escapeHtml(v)}</option>`).join('');
+  }
+  // Prefer worst offender if nothing selected
+  let picked = currentSelected;
+  if(!picked || !vehiclesInRange.has(picked)){
+    const worst = [...vehStats].sort((a,b) => b.anomalyCount - a.anomalyCount)[0];
+    picked = worst?.vehicle || vehicles[0] || '';
+  }
+  selectEl.value = picked;
+  maSelectedVehicle = picked;
+
+  // === Left panel: ranking ===
+  const rankSorted = [...vehStats].sort((a,b) => b.anomalyCount - a.anomalyCount || a.vehicle.localeCompare(b.vehicle));
+  let rankHTML = `<div class="ma-rank-title">Fleet ranking (${vehicles.length} vehicles)</div>`;
+  if(!rankSorted.length){
+    rankHTML += '<div style="padding:20px 4px;color:var(--muted);font-size:12px">No data in range</div>';
+  } else {
+    rankSorted.forEach(v => {
+      const cls = v.vehicle === picked ? 'selected' : '';
+      const countCls = v.anomalyCount === 0 ? 'zero' : (v.anomalyCount < 3 ? 'medium' : '');
+      const unit = v.isRoad ? 'km/L' : 'L/hr';
+      const avg = v.mean ? v.mean.toFixed(2) + ' ' + unit : '—';
+      rankHTML += `
+        <div class="ma-rank-item ${cls}" onclick="selectMilAbnVehicle('${escapeAttr(v.vehicle)}')">
+          <div style="min-width:0;flex:1">
+            <div class="ma-rank-veh">${escapeHtml(v.vehicle)}</div>
+            <div class="ma-rank-meta">avg ${avg} · ${v.totalDays}d</div>
+          </div>
+          <div class="ma-rank-count ${countCls}">${v.anomalyCount}</div>
+        </div>
+      `;
+    });
+  }
+  rankingEl.innerHTML = rankHTML;
+
+  // === Right panel: chart + list for picked vehicle ===
+  if(!picked){
+    summaryEl.innerHTML = '';
+    chartWrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Pick a vehicle from the list on the left</div>';
+    listEl.innerHTML = '';
+    return;
+  }
+  const vs = vehStats.find(v => v.vehicle === picked);
+  if(!vs){
+    summaryEl.innerHTML = '';
+    chartWrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">No data</div>';
+    listEl.innerHTML = '';
+    return;
+  }
+
+  const unit = vs.isRoad ? 'km/L' : 'L/hr';
+  const kind = vs.isRoad ? '🚛 Road (km/L — higher = better)' : '🏗️ Equipment (L/hr — lower = better)';
+
+  // Summary stats
+  let summaryHTML = `<b style="color:var(--ink);font-size:14px">${escapeHtml(picked)}</b> · ${kind}<div class="ma-stats" style="margin-top:8px">`;
+  if(vs.stats){
+    summaryHTML += `<div class="ma-stat"><div class="ma-stat-label">Data days</div><div class="ma-stat-value">${vs.stats.count}</div></div>`;
+    summaryHTML += `<div class="ma-stat"><div class="ma-stat-label">Average</div><div class="ma-stat-value">${vs.stats.mean.toFixed(2)}</div></div>`;
+    summaryHTML += `<div class="ma-stat"><div class="ma-stat-label">Min</div><div class="ma-stat-value">${vs.stats.min.toFixed(2)}</div></div>`;
+    summaryHTML += `<div class="ma-stat"><div class="ma-stat-label">Max</div><div class="ma-stat-value">${vs.stats.max.toFixed(2)}</div></div>`;
+    summaryHTML += `<div class="ma-stat"><div class="ma-stat-label">Anomalies</div><div class="ma-stat-value ${vs.anomalyCount > 0 ? 'bad' : 'good'}">${vs.anomalyCount}</div></div>`;
+  }
+  summaryHTML += `</div>`;
+  summaryEl.innerHTML = summaryHTML;
+
+  // Chart
+  if(vs.stats){
+    renderMileageChart(chartWrap, vs.series, vs.stats, vs.isRoad);
+  } else {
+    chartWrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">No mileage data for this vehicle in range</div>';
+  }
+
+  // Anomaly list — sorted by |deviation| desc
+  const sortedAnom = [...vs.anomalies].sort((a,b) => Math.abs(b.deviation) - Math.abs(a.deviation));
+  if(!sortedAnom.length){
+    listEl.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;background:#f0fdf4;border-radius:8px;border:1px solid #86efac">✓ No anomalies in range — mileage is consistent</div>`;
+  } else {
+    let listHTML = `<div style="margin-bottom:8px;font-size:11px;color:var(--ink-2);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Anomaly details (${sortedAnom.length})</div>`;
+    listHTML += '<div class="table-wrap"><table class="ab-tbl"><thead><tr>';
+    listHTML += '<th>Date</th><th style="text-align:right">Mileage</th><th style="text-align:right">Deviation</th><th style="text-align:right">Fill (L)</th>';
+    listHTML += vs.isRoad ? '<th style="text-align:right">Distance (km)</th>' : '<th style="text-align:right">Work Hr</th>';
+    listHTML += '</tr></thead><tbody>';
+    sortedAnom.forEach(a => {
+      const devSign = a.deviation > 0 ? '+' : '';
+      const devColor = Math.abs(a.deviation) >= 50 ? '#991b1b' : '#92400e';
+      listHTML += `<tr>`;
+      listHTML += `<td>${fmtNiceDate(a.date)}</td>`;
+      listHTML += `<td style="text-align:right;font-weight:700">${a.mileage.toFixed(2)} ${unit}</td>`;
+      listHTML += `<td style="text-align:right;font-weight:600;color:${devColor}">${devSign}${a.deviation.toFixed(0)}%</td>`;
+      listHTML += `<td style="text-align:right">${a.fill.toFixed(1)}</td>`;
+      listHTML += vs.isRoad ? `<td style="text-align:right">${a.km.toFixed(1)}</td>` : `<td style="text-align:right">${a.workHour.toFixed(1)}</td>`;
+      listHTML += `</tr>`;
+    });
+    listHTML += '</tbody></table></div>';
+    listEl.innerHTML = listHTML;
+  }
+}
+
+function selectMilAbnVehicle(v){
+  maSelectedVehicle = v;
+  document.getElementById('ma-vehicle').value = v;
+  renderMilAbn();
+}
+
+function exportMilAbnXLSX(){
+  if(typeof XLSX === 'undefined'){ toast('Excel library not loaded','warn'); return; }
+  const from = document.getElementById('ma-from').value || '';
+  const to = document.getElementById('ma-to').value || '';
+  const sensitivity = +document.getElementById('ma-sensitivity').value || 30;
+
+  const vehiclesInRange = new Set();
+  state.records.forEach(r => {
+    if(from && r.date < from) return;
+    if(to && r.date > to) return;
+    vehiclesInRange.add(r.vehicle);
+  });
+  const vehicles = [...vehiclesInRange].sort();
+
+  const aoa = [
+    ['Vehicle','Type','Total Days','Avg Mileage','Unit','Anomaly Count','Date','Mileage','Deviation %','Fill (L)','Work Hr / Distance']
+  ];
+  vehicles.forEach(v => {
+    const { series, stats, anomalies, isRoad } = buildMileageSeries(v, from, to, sensitivity);
+    if(!anomalies.length){
+      aoa.push([v, isRoad?'Road':'Equipment', stats?.count || 0, stats?.mean?.toFixed(2) || '', isRoad?'km/L':'L/hr', 0, '','','','','']);
+    } else {
+      anomalies.forEach((a, idx) => {
+        aoa.push([
+          idx === 0 ? v : '',
+          idx === 0 ? (isRoad?'Road':'Equipment') : '',
+          idx === 0 ? (stats?.count || 0) : '',
+          idx === 0 ? (stats?.mean?.toFixed(2) || '') : '',
+          idx === 0 ? (isRoad?'km/L':'L/hr') : '',
+          idx === 0 ? anomalies.length : '',
+          a.date,
+          +a.mileage.toFixed(2),
+          +a.deviation.toFixed(1),
+          +a.fill.toFixed(2),
+          +(isRoad ? a.km : a.workHour).toFixed(2)
+        ]);
+      });
+    }
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:18},{wch:12},{wch:11},{wch:12},{wch:8},{wch:14},{wch:12},{wch:11},{wch:12},{wch:11},{wch:16}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Mileage Abnormalities');
+  const fname = `SJP_Mileage_Abnormalities_${from||'all'}_to_${to||'all'}.xlsx`.replace(/[^\w.-]/g,'_');
+  XLSX.writeFile(wb, fname);
+  toast(`Exported ✓`,'good');
+}
+
 function refreshAll(){
   renderCalendar();
   renderSiteCalendar();
@@ -5927,6 +6667,8 @@ function refreshAll(){
   if(document.getElementById('mil-from')) renderMileagePivot();
   if(document.getElementById('ab-from')) renderAbnormalities();
   if(document.getElementById('mer-vehicle')){ populateMergedFilters(); renderMerged(); }
+  if(document.getElementById('fl-from')) renderFillLog();
+  if(document.getElementById('ma-from')) renderMilAbn();
   renderMasterListStats();
 }
 
@@ -5949,6 +6691,14 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   }
   refreshAll();
   updateStats();
+  // Default fill log range = last 30 days so page 7 opens with useful content
+  if(document.getElementById('fl-from') && !document.getElementById('fl-from').value){
+    setFillLogRange(30);
+  }
+  // Default mileage abn range = last 30 days
+  if(document.getElementById('ma-from') && !document.getElementById('ma-from').value){
+    setMilAbnRange(30);
+  }
   // Init cloud sync after first paint — pulls latest from server, then re-renders
   cloud.init();
 });
