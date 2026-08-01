@@ -1550,10 +1550,6 @@
       </div>
 
       <div class="toolbar">
-        <div class="field" style="flex:0 0 260px;min-width:220px">
-          <label>Vehicle</label>
-          <select id="ma-vehicle" onchange="renderMilAbn()"></select>
-        </div>
         <div class="field">
           <label>From date</label>
           <input type="date" id="ma-from" onchange="renderMilAbn()" />
@@ -1578,17 +1574,73 @@
             <option value="50">High (±50%)</option>
           </select>
         </div>
+        <div class="field" style="flex:1 1 200px">
+          <label>Search vehicle / branch</label>
+          <input type="text" id="ma-search" placeholder="Filter chart lines…" oninput="renderMilAbn()" />
+        </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:280px 1fr;gap:0;min-height:400px">
-        <!-- Left: Ranking / fleet overview -->
-        <div id="ma-ranking" style="border-right:1px solid var(--line);padding:12px;overflow-y:auto;max-height:70vh;background:var(--panel-2)"></div>
+      <!-- Sub-tabs: Fleet Overview | Per-Vehicle Detail -->
+      <div class="report-tabs" style="border-bottom:1px solid var(--line)">
+        <button class="rtab active" data-mstab="fleet" onclick="switchMaSubTab('fleet')">🚛 Fleet Overview (All Vehicles)</button>
+        <button class="rtab" data-mstab="detail" onclick="switchMaSubTab('detail')">📉 Per-Vehicle Detail & Abnormalities</button>
+      </div>
 
-        <!-- Right: Chart + anomaly detail -->
-        <div style="padding:14px">
-          <div id="ma-summary" style="margin-bottom:10px;font-size:12.5px;color:var(--ink-2)"></div>
-          <div id="ma-chart-wrap" style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 8px 8px;margin-bottom:14px"></div>
-          <div id="ma-anomlist"></div>
+      <!-- ============ SUB-TAB 1: FLEET OVERVIEW ============ -->
+      <div id="ma-sub-fleet" class="ma-sub" style="padding:14px">
+        <div style="display:flex;gap:14px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+          <label style="display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink-2);cursor:pointer">
+            <input type="radio" name="ma-fleet-type" value="all" onchange="renderMilAbn()"> All types
+          </label>
+          <label style="display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink-2);cursor:pointer">
+            <input type="radio" name="ma-fleet-type" value="road" onchange="renderMilAbn()"> 🚛 Road only (km/L)
+          </label>
+          <label style="display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink-2);cursor:pointer">
+            <input type="radio" name="ma-fleet-type" value="equipment" checked onchange="renderMilAbn()"> 🏗️ Equipment only (L/hr)
+          </label>
+          <label style="display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink-2);cursor:pointer;margin-left:auto">
+            <input type="checkbox" id="ma-fleet-highlight-anom" checked onchange="renderMilAbn()"> Highlight vehicles with anomalies
+          </label>
+        </div>
+        <div id="ma-fleet-summary" style="margin-bottom:10px;font-size:12.5px;color:var(--ink-2)"></div>
+        <div id="ma-fleet-chart" style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 8px 8px;margin-bottom:14px"></div>
+        <div id="ma-fleet-legend"></div>
+
+        <!-- Fuel-fill fallback chart — shown when there are vehicles without HMR data -->
+        <div id="ma-fleet-fuel-wrap" style="margin-top:22px;display:none">
+          <div style="padding:10px 14px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px 8px 0 0;font-size:12.5px;color:var(--ink)">
+            <b>⛽ Fuel Fill Trend</b> — vehicles jinke HMR/Distance data nahi hai
+            <span id="ma-fleet-fuel-summary" style="color:var(--ink-2);margin-left:8px"></span>
+          </div>
+          <div id="ma-fleet-fuel-chart" style="background:#fff;border:1px solid var(--line);border-top:none;border-radius:0 0 8px 8px;padding:12px 8px 8px;margin-bottom:14px"></div>
+          <div id="ma-fleet-fuel-legend"></div>
+        </div>
+      </div>
+
+      <!-- ============ SUB-TAB 2: PER-VEHICLE DETAIL ============ -->
+      <div id="ma-sub-detail" class="ma-sub" style="display:none">
+        <div style="padding:0 16px 12px">
+          <div class="field" style="max-width:360px;position:relative">
+            <label>Vehicle (type any part of the name)</label>
+            <input id="ma-vehicle" type="text" placeholder="e.g. type 200 to find EXR200-…" autocomplete="off"
+                   oninput="filterVehicleCombo()"
+                   onfocus="filterVehicleCombo()"
+                   onblur="setTimeout(hideVehicleCombo, 200)"
+                   onkeydown="handleVehicleComboKey(event)"
+                   style="font-family:'Space Mono',monospace;font-size:13px" />
+            <div id="ma-vehicle-dropdown" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--line);border-radius:6px;max-height:340px;overflow-y:auto;display:none;z-index:100;box-shadow:0 6px 18px rgba(0,0,0,0.10);margin-top:2px"></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:280px 1fr;gap:0;min-height:400px">
+          <!-- Left: Ranking / fleet overview -->
+          <div id="ma-ranking" style="border-right:1px solid var(--line);padding:12px;overflow-y:auto;max-height:70vh;background:var(--panel-2)"></div>
+
+          <!-- Right: Chart + anomaly detail -->
+          <div style="padding:14px">
+            <div id="ma-summary" style="margin-bottom:10px;font-size:12.5px;color:var(--ink-2)"></div>
+            <div id="ma-chart-wrap" style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 8px 8px;margin-bottom:14px"></div>
+            <div id="ma-anomlist"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1740,7 +1792,7 @@ function loadState(){
 /* App version — bump on any deploy. Shows in the top-right header as "v2.5"
    so you can compare across laptops. If two devices show different versions,
    the older one is running cached HTML — hard-refresh (Ctrl+Shift+R) it. */
-const APP_VERSION = 'v2.9 · 2026-07-24';
+const APP_VERSION = 'v2.11 · 2026-07-24';
 
 // Populate version badge as soon as DOM is ready + log to console for debugging
 document.addEventListener('DOMContentLoaded', () => {
@@ -6466,6 +6518,9 @@ function renderMileageChart(container, series, stats, isRoad){
 }
 
 function renderMilAbn(){
+  // Fleet-wide multi-line chart (sub-tab 1) — always render so it stays fresh
+  renderFleetMileageChart();
+
   const from = document.getElementById('ma-from')?.value || '';
   const to = document.getElementById('ma-to')?.value || '';
   const sensitivity = +document.getElementById('ma-sensitivity')?.value || 30;
@@ -6500,20 +6555,19 @@ function renderMilAbn(){
     };
   });
 
-  // Populate vehicle dropdown (once, or when list changes)
-  const currentSelected = selectEl.value || maSelectedVehicle;
-  if(selectEl.options.length !== vehicles.length + 1){
-    selectEl.innerHTML = '<option value="">— Select a vehicle —</option>' +
-      vehicles.map(v => `<option value="${escapeAttr(v)}">${escapeHtml(v)}</option>`).join('');
-  }
+  // Update combobox list — searchable via substring matching
+  vehicleComboList = vehicles;
   // Prefer worst offender if nothing selected
-  let picked = currentSelected;
+  let picked = maSelectedVehicle;
   if(!picked || !vehiclesInRange.has(picked)){
     const worst = [...vehStats].sort((a,b) => b.anomalyCount - a.anomalyCount)[0];
     picked = worst?.vehicle || vehicles[0] || '';
   }
-  selectEl.value = picked;
   maSelectedVehicle = picked;
+  // Set input value ONLY if user isn't currently typing in it (to preserve their in-progress search)
+  if(selectEl && selectEl.value !== picked && document.activeElement !== selectEl){
+    selectEl.value = picked;
+  }
 
   // === Left panel: ranking ===
   const rankSorted = [...vehStats].sort((a,b) => b.anomalyCount - a.anomalyCount || a.vehicle.localeCompare(b.vehicle));
@@ -6604,8 +6658,433 @@ function renderMilAbn(){
 
 function selectMilAbnVehicle(v){
   maSelectedVehicle = v;
-  document.getElementById('ma-vehicle').value = v;
+  const inp = document.getElementById('ma-vehicle');
+  if(inp) inp.value = v;
+  const dd = document.getElementById('ma-vehicle-dropdown');
+  if(dd) dd.style.display = 'none';
   renderMilAbn();
+}
+
+// ============ SEARCHABLE VEHICLE COMBOBOX ============
+// Native <select> only supports first-letter type-ahead. We use a text input
+// + custom dropdown so users can find "EXR200-32376" by typing "200" or "323".
+let vehicleComboList = [];   // populated by renderMilAbn — full list of vehicles in current range
+let vehicleComboActiveIdx = -1;   // keyboard highlight index
+
+function filterVehicleCombo(){
+  const input = document.getElementById('ma-vehicle');
+  const dropdown = document.getElementById('ma-vehicle-dropdown');
+  if(!input || !dropdown) return;
+  const q = input.value.toLowerCase().trim();
+  // Case-insensitive substring match — jitne bhi letters typing kare, sab match hone chahiye
+  const matches = q ? vehicleComboList.filter(v => v.toLowerCase().includes(q)) : vehicleComboList;
+  vehicleComboActiveIdx = -1;
+  if(!matches.length){
+    dropdown.innerHTML = '<div style="padding:10px 12px;color:var(--muted);font-size:12px">No matches for "'+escapeHtml(q)+'"</div>';
+  } else {
+    // Show up to 100 matches; sort so exact-prefix matches come first (better UX for common cases)
+    const sorted = matches.sort((a,b) => {
+      const aStarts = a.toLowerCase().startsWith(q) ? 0 : 1;
+      const bStarts = b.toLowerCase().startsWith(q) ? 0 : 1;
+      return aStarts - bStarts || a.localeCompare(b);
+    }).slice(0, 100);
+    dropdown.innerHTML = sorted.map((v, i) => {
+      // Highlight the matching part inside the vehicle name
+      let display = escapeHtml(v);
+      if(q){
+        const idx = v.toLowerCase().indexOf(q);
+        if(idx >= 0){
+          const before = escapeHtml(v.slice(0, idx));
+          const hit = escapeHtml(v.slice(idx, idx + q.length));
+          const after = escapeHtml(v.slice(idx + q.length));
+          display = before + '<mark style="background:#fef08a;padding:0 1px;border-radius:2px">' + hit + '</mark>' + after;
+        }
+      }
+      return `<div class="veh-combo-item" data-vehicle="${escapeAttr(v)}" data-idx="${i}"
+                onmousedown="pickVehicleCombo('${escapeAttr(v)}')"
+                style="padding:7px 12px;cursor:pointer;font-family:'Space Mono',monospace;font-size:12px;border-bottom:1px solid var(--line)"
+                onmouseover="highlightVehicleComboItem(${i})">${display}</div>`;
+    }).join('');
+  }
+  dropdown.style.display = 'block';
+}
+
+function pickVehicleCombo(v){
+  document.getElementById('ma-vehicle').value = v;
+  document.getElementById('ma-vehicle-dropdown').style.display = 'none';
+  maSelectedVehicle = v;
+  renderMilAbn();
+}
+
+function hideVehicleCombo(){
+  const dd = document.getElementById('ma-vehicle-dropdown');
+  if(dd) dd.style.display = 'none';
+}
+
+function highlightVehicleComboItem(idx){
+  const items = document.querySelectorAll('.veh-combo-item');
+  items.forEach((el, i) => {
+    el.style.background = (i === idx) ? 'var(--primary-3)' : '';
+  });
+  vehicleComboActiveIdx = idx;
+}
+
+// Keyboard: ArrowDown / ArrowUp to navigate, Enter to pick, Escape to close
+function handleVehicleComboKey(e){
+  const dropdown = document.getElementById('ma-vehicle-dropdown');
+  const items = document.querySelectorAll('.veh-combo-item');
+  if(e.key === 'ArrowDown'){
+    e.preventDefault();
+    if(!items.length){ filterVehicleCombo(); return; }
+    vehicleComboActiveIdx = Math.min(vehicleComboActiveIdx + 1, items.length - 1);
+    highlightVehicleComboItem(vehicleComboActiveIdx);
+    items[vehicleComboActiveIdx]?.scrollIntoView({block:'nearest'});
+  } else if(e.key === 'ArrowUp'){
+    e.preventDefault();
+    vehicleComboActiveIdx = Math.max(vehicleComboActiveIdx - 1, 0);
+    highlightVehicleComboItem(vehicleComboActiveIdx);
+    items[vehicleComboActiveIdx]?.scrollIntoView({block:'nearest'});
+  } else if(e.key === 'Enter'){
+    e.preventDefault();
+    if(vehicleComboActiveIdx >= 0 && items[vehicleComboActiveIdx]){
+      pickVehicleCombo(items[vehicleComboActiveIdx].dataset.vehicle);
+    } else if(items.length === 1){
+      pickVehicleCombo(items[0].dataset.vehicle);
+    }
+  } else if(e.key === 'Escape'){
+    hideVehicleCombo();
+  }
+}
+
+// ============ FUEL FILL SERIES (fallback when no HMR) ============
+// Returns daily fill values for a vehicle (raw fill from records, no mileage calc)
+function buildFuelFillSeries(vehicle, from, to){
+  return state.records
+    .filter(r => r.vehicle === vehicle)
+    .filter(r => !from || r.date >= from)
+    .filter(r => !to || r.date <= to)
+    .map(r => ({ date: r.date, fill: num(r.data?.['Fill']) }))
+    .filter(r => r.fill > 0)   // only days with actual fills
+    .sort((a,b) => a.date.localeCompare(b.date));
+}
+
+// Sub-tab switcher for Page 8
+function switchMaSubTab(name){
+  document.querySelectorAll('[data-mstab]').forEach(b => b.classList.toggle('active', b.dataset.mstab === name));
+  document.getElementById('ma-sub-fleet').style.display = (name === 'fleet') ? '' : 'none';
+  document.getElementById('ma-sub-detail').style.display = (name === 'detail') ? '' : 'none';
+  renderMilAbn();
+}
+
+// Fleet-wide multi-line chart — plots every visible vehicle's mileage series on one SVG.
+// Highlights anomalous lines in red, normal in muted teal. Legend below with click-to-drill.
+function renderFleetMileageChart(){
+  const from = document.getElementById('ma-from')?.value || '';
+  const to = document.getElementById('ma-to')?.value || '';
+  const sensitivity = +document.getElementById('ma-sensitivity')?.value || 30;
+  const typeFilter = document.querySelector('input[name="ma-fleet-type"]:checked')?.value || 'equipment';
+  const searchQ = (document.getElementById('ma-search')?.value || '').trim().toLowerCase();
+  const highlightAnom = document.getElementById('ma-fleet-highlight-anom')?.checked ?? true;
+
+  const container = document.getElementById('ma-fleet-chart');
+  const summaryEl = document.getElementById('ma-fleet-summary');
+  const legendEl = document.getElementById('ma-fleet-legend');
+  if(!container) return;
+
+  const vehiclesInRange = new Set();
+  state.records.forEach(r => {
+    if(from && r.date < from) return;
+    if(to && r.date > to) return;
+    vehiclesInRange.add(r.vehicle);
+  });
+
+  const allSeries = [];
+  vehiclesInRange.forEach(v => {
+    const isRoad = MILEAGE_DISTANCE_BASED.has(v);
+    if(typeFilter === 'road' && !isRoad) return;
+    if(typeFilter === 'equipment' && isRoad) return;
+
+    const { series, stats, anomalies } = buildMileageSeries(v, from, to, sensitivity);
+    if(!stats) return;
+
+    if(searchQ){
+      const branch = (state.records.find(r => r.vehicle === v)?.branch || '').toLowerCase();
+      if(!v.toLowerCase().includes(searchQ) && !branch.includes(searchQ)) return;
+    }
+
+    allSeries.push({
+      vehicle: v,
+      isRoad,
+      series: series.filter(s => s.mileage != null && s.mileage > 0),
+      stats,
+      anomalyCount: anomalies.length
+    });
+  });
+
+  if(!allSeries.length){
+    container.innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted);font-size:13px">No vehicles match current filter. Try different type filter or clearing search.</div>';
+    summaryEl.innerHTML = '';
+    legendEl.innerHTML = '';
+    return;
+  }
+
+  const roadCount = allSeries.filter(s => s.isRoad).length;
+  const equipCount = allSeries.length - roadCount;
+  const unit = roadCount > equipCount ? 'km/L' : 'L/hr';
+  const mixed = roadCount > 0 && equipCount > 0;
+
+  let maxV = 0, minV = Infinity;
+  const dateSet = new Set();
+  allSeries.forEach(s => {
+    s.series.forEach(pt => {
+      dateSet.add(pt.date);
+      if(pt.mileage > maxV) maxV = pt.mileage;
+      if(pt.mileage < minV) minV = pt.mileage;
+    });
+  });
+  const range = maxV - minV || 1;
+  maxV += range * 0.1;
+  minV = Math.max(0, minV - range * 0.1);
+
+  const sortedDates = [...dateSet].sort();
+  const dateToIdx = new Map(sortedDates.map((d,i) => [d, i]));
+  const nDates = sortedDates.length;
+
+  const W = 900, H = 380;
+  const PAD = { top: 20, right: 24, bottom: 44, left: 56 };
+  const chartW = W - PAD.left - PAD.right;
+  const chartH = H - PAD.top - PAD.bottom;
+  const xStep = nDates > 1 ? chartW / (nDates - 1) : 0;
+
+  const xForDate = d => PAD.left + (dateToIdx.get(d) ?? 0) * xStep;
+  const yForVal = v => PAD.top + (1 - (v - minV) / (maxV - minV)) * chartH;
+
+  let gridHTML = '';
+  for(let g = 0; g <= 5; g++){
+    const y = PAD.top + (g / 5) * chartH;
+    const val = maxV - (g / 5) * (maxV - minV);
+    gridHTML += `<line x1="${PAD.left}" y1="${y}" x2="${W - PAD.right}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
+    gridHTML += `<text x="${PAD.left - 6}" y="${y + 3.5}" text-anchor="end" font-size="10" fill="#6b7280" font-family="'Space Mono',monospace">${val.toFixed(1)}</text>`;
+  }
+
+  let xLabelHTML = '';
+  const targetLabels = Math.min(7, nDates);
+  const labelStep = Math.max(1, Math.floor((nDates - 1) / (targetLabels - 1)) || 1);
+  const labelIdxs = new Set([0, nDates - 1]);
+  for(let i = labelStep; i < nDates - labelStep/2; i += labelStep) labelIdxs.add(i);
+  [...labelIdxs].sort((a,b)=>a-b).forEach(idx => {
+    const x = PAD.left + idx * xStep;
+    const dateShort = sortedDates[idx].slice(5);
+    xLabelHTML += `<text x="${x}" y="${H - PAD.bottom + 16}" text-anchor="middle" font-size="10" fill="#6b7280" font-family="'Space Mono',monospace">${dateShort}</text>`;
+  });
+
+  // Categorical palette — recycled for large fleets. Reserving red for anomalies.
+  const palette = ['#2563eb','#0891b2','#059669','#65a30d','#d97706','#c026d3','#7c3aed','#0284c7','#4f46e5','#0d9488','#ca8a04','#a21caf'];
+
+  // Sort so anomalous lines render LAST (on top)
+  const sortedForRender = [...allSeries].sort((a,b) => a.anomalyCount - b.anomalyCount);
+
+  let linesHTML = '';
+  sortedForRender.forEach((v, idx) => {
+    const isAnom = v.anomalyCount > 0;
+    const color = (highlightAnom && isAnom) ? '#dc2626' : palette[idx % palette.length];
+    const opacity = (highlightAnom && !isAnom) ? '0.4' : '0.85';
+    const strokeW = isAnom ? 2.2 : 1.3;
+
+    const sortedPts = [...v.series].sort((a,b) => a.date.localeCompare(b.date));
+    let d = '';
+    sortedPts.forEach((pt, i) => {
+      const x = xForDate(pt.date).toFixed(1);
+      const y = yForVal(pt.mileage).toFixed(1);
+      d += (i === 0 ? 'M' : 'L') + x + ',' + y + ' ';
+    });
+    linesHTML += `<path d="${d}" fill="none" stroke="${color}" stroke-width="${strokeW}" opacity="${opacity}" data-vehicle="${escapeAttr(v.vehicle)}">`;
+    linesHTML += `<title>${v.vehicle} · avg ${v.stats.mean.toFixed(2)} ${v.isRoad?'km/L':'L/hr'}${isAnom?' · '+v.anomalyCount+' anomalies':''}</title>`;
+    linesHTML += `</path>`;
+  });
+
+  const yLabel = `<text x="18" y="${PAD.top + chartH/2}" transform="rotate(-90 18 ${PAD.top + chartH/2})" text-anchor="middle" font-size="10" fill="#374151" font-weight="600">Mileage (${unit}${mixed?' · mixed':''})</text>`;
+
+  container.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">
+      ${gridHTML}
+      ${linesHTML}
+      ${xLabelHTML}
+      ${yLabel}
+    </svg>
+  `;
+
+  const withAnom = allSeries.filter(s => s.anomalyCount > 0).length;
+  const totalAnom = allSeries.reduce((a,s) => a + s.anomalyCount, 0);
+  summaryEl.innerHTML = `
+    <b>${allSeries.length}</b> vehicles &nbsp;·&nbsp;
+    <b>${sortedDates.length}</b> days &nbsp;·&nbsp;
+    <b style="color:${withAnom>0?'#991b1b':'#065f46'}">${withAnom}</b> with anomalies &nbsp;·&nbsp;
+    Total anomalies: <b style="color:${totalAnom>0?'#991b1b':'#065f46'}">${totalAnom}</b>
+    ${mixed?'&nbsp;·&nbsp;<span style="color:#92400e;font-size:11px">⚠ Mixed types — scales differ across vehicles</span>':''}
+  `;
+
+  const legendSorted = [...allSeries].sort((a,b) => b.anomalyCount - a.anomalyCount || a.vehicle.localeCompare(b.vehicle));
+  let legendHTML = `
+    <div style="margin-top:6px;padding:10px 12px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px">
+      <div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;font-weight:700">Legend · click a vehicle for detailed view</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:4px 10px">
+  `;
+  legendSorted.forEach(v => {
+    const origIdx = sortedForRender.indexOf(v);
+    const isAnom = v.anomalyCount > 0;
+    const color = (highlightAnom && isAnom) ? '#dc2626' : palette[origIdx % palette.length];
+    legendHTML += `
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;padding:3px 4px;cursor:pointer;border-radius:4px" onclick="switchMaSubTab('detail');setTimeout(()=>selectMilAbnVehicle('${escapeAttr(v.vehicle)}'),50)" onmouseover="this.style.background='var(--primary-3)'" onmouseout="this.style.background=''">
+        <span style="display:inline-block;width:14px;height:2.5px;background:${color};flex-shrink:0"></span>
+        <span style="font-family:'Space Mono',monospace;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(v.vehicle)}</span>
+        ${isAnom ? `<span style="background:#fef2f2;color:#991b1b;padding:0 5px;border-radius:99px;font-size:9.5px;font-weight:700">${v.anomalyCount}</span>` : ''}
+      </div>
+    `;
+  });
+  legendHTML += '</div></div>';
+  legendEl.innerHTML = legendHTML;
+
+  // ===== Now render the fuel-fill fallback chart (for vehicles without HMR data) =====
+  renderFleetFuelChart(vehiclesInRange, allSeries, from, to, searchQ);
+}
+
+// Fuel fill fallback: for vehicles that appeared in range but had NO mileage-computable days
+// (no HMR / no Distance data), show their daily fill values. Different Y-scale so it lives
+// in its own chart below the main mileage chart.
+function renderFleetFuelChart(vehiclesInRange, mileageSeries, from, to, searchQ){
+  const wrap = document.getElementById('ma-fleet-fuel-wrap');
+  const container = document.getElementById('ma-fleet-fuel-chart');
+  const summaryEl = document.getElementById('ma-fleet-fuel-summary');
+  const legendEl = document.getElementById('ma-fleet-fuel-legend');
+  if(!wrap || !container) return;
+
+  // Vehicles WITH mileage data (already shown in main chart)
+  const shownVehicles = new Set(mileageSeries.map(s => s.vehicle));
+
+  // Build fuel series for vehicles NOT in main chart but have fuel data
+  const fuelSeriesList = [];
+  vehiclesInRange.forEach(v => {
+    if(shownVehicles.has(v)) return;
+    if(searchQ){
+      const branch = (state.records.find(r => r.vehicle === v)?.branch || '').toLowerCase();
+      if(!v.toLowerCase().includes(searchQ) && !branch.includes(searchQ)) return;
+    }
+    const series = buildFuelFillSeries(v, from, to);
+    if(series.length > 0){
+      fuelSeriesList.push({ vehicle: v, series });
+    }
+  });
+
+  // Hide entire section if no vehicles need this chart
+  if(!fuelSeriesList.length){
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = '';
+
+  // Build combined date + Y-axis extents
+  let maxV = 0, minV = Infinity;
+  const dateSet = new Set();
+  fuelSeriesList.forEach(s => {
+    s.series.forEach(pt => {
+      dateSet.add(pt.date);
+      if(pt.fill > maxV) maxV = pt.fill;
+      if(pt.fill < minV) minV = pt.fill;
+    });
+  });
+  const range = maxV - minV || 1;
+  maxV += range * 0.1;
+  minV = Math.max(0, minV - range * 0.1);
+
+  const sortedDates = [...dateSet].sort();
+  const dateToIdx = new Map(sortedDates.map((d,i) => [d, i]));
+  const nDates = sortedDates.length;
+
+  const W = 900, H = 300;
+  const PAD = { top: 18, right: 24, bottom: 40, left: 56 };
+  const chartW = W - PAD.left - PAD.right;
+  const chartH = H - PAD.top - PAD.bottom;
+  const xStep = nDates > 1 ? chartW / (nDates - 1) : 0;
+
+  const xForDate = d => PAD.left + (dateToIdx.get(d) ?? 0) * xStep;
+  const yForVal = v => PAD.top + (1 - (v - minV) / (maxV - minV)) * chartH;
+
+  let gridHTML = '';
+  for(let g = 0; g <= 5; g++){
+    const y = PAD.top + (g / 5) * chartH;
+    const val = maxV - (g / 5) * (maxV - minV);
+    gridHTML += `<line x1="${PAD.left}" y1="${y}" x2="${W - PAD.right}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
+    gridHTML += `<text x="${PAD.left - 6}" y="${y + 3.5}" text-anchor="end" font-size="10" fill="#6b7280" font-family="'Space Mono',monospace">${val.toFixed(0)}</text>`;
+  }
+
+  let xLabelHTML = '';
+  const targetLabels = Math.min(7, nDates);
+  const labelStep = Math.max(1, Math.floor((nDates - 1) / (targetLabels - 1)) || 1);
+  const labelIdxs = new Set([0, nDates - 1]);
+  for(let i = labelStep; i < nDates - labelStep/2; i += labelStep) labelIdxs.add(i);
+  [...labelIdxs].sort((a,b)=>a-b).forEach(idx => {
+    const x = PAD.left + idx * xStep;
+    const dateShort = sortedDates[idx].slice(5);
+    xLabelHTML += `<text x="${x}" y="${H - PAD.bottom + 16}" text-anchor="middle" font-size="10" fill="#6b7280" font-family="'Space Mono',monospace">${dateShort}</text>`;
+  });
+
+  const palette = ['#7c3aed','#0891b2','#059669','#d97706','#dc2626','#c026d3','#2563eb','#65a30d','#4f46e5','#0d9488','#ca8a04','#a21caf'];
+
+  let linesHTML = '';
+  fuelSeriesList.forEach((v, idx) => {
+    const color = palette[idx % palette.length];
+    let d = '';
+    v.series.forEach((pt, i) => {
+      const x = xForDate(pt.date).toFixed(1);
+      const y = yForVal(pt.fill).toFixed(1);
+      d += (i === 0 ? 'M' : 'L') + x + ',' + y + ' ';
+    });
+    // Also draw small dots so single-day series are visible
+    let dots = '';
+    v.series.forEach(pt => {
+      const x = xForDate(pt.date).toFixed(1);
+      const y = yForVal(pt.fill).toFixed(1);
+      dots += `<circle cx="${x}" cy="${y}" r="2.5" fill="${color}" opacity="0.9"/>`;
+    });
+    const totalFill = v.series.reduce((a,p) => a + p.fill, 0);
+    linesHTML += `<path d="${d}" fill="none" stroke="${color}" stroke-width="1.6" opacity="0.85" data-vehicle="${escapeAttr(v.vehicle)}">`;
+    linesHTML += `<title>${v.vehicle} · ${v.series.length} fills · total ${totalFill.toFixed(0)}L</title>`;
+    linesHTML += `</path>${dots}`;
+  });
+
+  const yLabel = `<text x="18" y="${PAD.top + chartH/2}" transform="rotate(-90 18 ${PAD.top + chartH/2})" text-anchor="middle" font-size="10" fill="#374151" font-weight="600">Daily Fill (L)</text>`;
+
+  container.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">
+      ${gridHTML}
+      ${linesHTML}
+      ${xLabelHTML}
+      ${yLabel}
+    </svg>
+  `;
+
+  summaryEl.textContent = `· ${fuelSeriesList.length} vehicles · ${nDates} days`;
+
+  // Legend — same click-to-drill behavior
+  let legendHTML = `
+    <div style="margin-top:6px;padding:8px 12px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px">
+      <div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;font-weight:700">Fuel-only vehicles (click for detail)</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:4px 10px">
+  `;
+  fuelSeriesList.forEach((v, idx) => {
+    const color = palette[idx % palette.length];
+    const totalFill = v.series.reduce((a,p) => a + p.fill, 0);
+    legendHTML += `
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;padding:3px 4px;cursor:pointer;border-radius:4px" onclick="switchMaSubTab('detail');setTimeout(()=>selectMilAbnVehicle('${escapeAttr(v.vehicle)}'),50)" onmouseover="this.style.background='var(--primary-3)'" onmouseout="this.style.background=''">
+        <span style="display:inline-block;width:14px;height:2.5px;background:${color};flex-shrink:0"></span>
+        <span style="font-family:'Space Mono',monospace;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(v.vehicle)}</span>
+        <span style="color:var(--muted);font-size:9.5px">${totalFill.toFixed(0)}L</span>
+      </div>
+    `;
+  });
+  legendHTML += '</div></div>';
+  legendEl.innerHTML = legendHTML;
 }
 
 function exportMilAbnXLSX(){
