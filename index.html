@@ -380,6 +380,30 @@
   }
   .pivot.pivot3 td.sticky-rem textarea:hover{border-color:var(--line);background:#fff}
   .pivot.pivot3 td.sticky-rem textarea:focus{outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 2px rgba(10,110,110,.12)}
+
+  /* Per-period remarks — stacked labeled textareas */
+  .pivot.pivot3 td.sticky-rem .rem-period{margin-bottom:6px}
+  .pivot.pivot3 td.sticky-rem .rem-period:last-child{margin-bottom:0}
+  .pivot.pivot3 td.sticky-rem .rem-period-label{
+    font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.03em;
+    text-transform:uppercase;margin-bottom:2px;display:flex;align-items:center;gap:4px;
+  }
+  .pivot.pivot3 td.sticky-rem .rem-period-label.needed{color:#b45309}
+  .pivot.pivot3 td.sticky-rem textarea.rem-missing{
+    border-color:#fca5a5 !important;background:#fef2f2 !important;
+    box-shadow:0 0 0 2px rgba(220,38,38,.08);
+  }
+  .pivot.pivot3 td.sticky-rem textarea.rem-missing::placeholder{color:#dc2626;font-weight:600}
+  .pivot.pivot3 td.sticky-rem .rem-legacy{
+    font-size:10.5px;color:var(--muted);font-style:italic;
+    padding:3px 6px;background:#f9fafb;border-radius:4px;margin-bottom:4px;
+    border-left:2px solid var(--line);
+  }
+  /* Top summary bar */
+  #vp-remark-summary{
+    padding:9px 14px;border:1px solid #fcd34d;border-radius:6px;
+    background:#fffbeb;color:#78350f;font-size:12.5px;margin-bottom:10px;
+  }
   /* Branch group separator: thin top border on first row of each branch group */
   .pivot.pivot3 tbody tr.branch-start td{border-top:2px solid var(--primary)}
   .pivot.pivot3 tbody tr.branch-start:first-child td{border-top:none}
@@ -969,7 +993,65 @@
   .ab-badge.ab-fill{background:#fffbeb;color:#92400e;border-color:#fcd34d}
   .ab-badge.ab-sensor{background:#eff6ff;color:#1e40af;border-color:#93c5fd}
 
-  /* ========== PAGE 8: MILEAGE TREND ========== */
+  /* ========== PAGE 8: RICH STAT CARDS (TASR-style detail) ========== */
+  .ma-stat-grid{
+    display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;
+  }
+  @media (max-width: 900px){ .ma-stat-grid{grid-template-columns:repeat(2, 1fr)} }
+  @media (max-width: 500px){ .ma-stat-grid{grid-template-columns:1fr} }
+
+  .ma-card{
+    padding:14px 16px;border-radius:10px;border:1px solid transparent;
+    display:flex;flex-direction:column;gap:4px;
+  }
+  .ma-card.ma-card-info{background:#ecfeff;border-color:#a5f3fc}
+  .ma-card.ma-card-good{background:#f0fdf4;border-color:#86efac}
+  .ma-card.ma-card-bad {background:#fef2f2;border-color:#fca5a5}
+  .ma-card.ma-card-neutral{background:#f9fafb;border-color:#e5e7eb}
+
+  .ma-card-label{
+    font-size:10.5px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--ink-2);
+    display:flex;align-items:center;gap:6px;
+  }
+  .ma-card.ma-card-info .ma-card-label{color:#0891b2}
+  .ma-card.ma-card-good .ma-card-label{color:#065f46}
+  .ma-card.ma-card-bad  .ma-card-label{color:#991b1b}
+
+  .ma-card-value{
+    font-size:28px;font-weight:800;color:var(--ink);
+    font-variant-numeric:tabular-nums;line-height:1.1;
+  }
+  .ma-card.ma-card-good .ma-card-value{color:#059669}
+  .ma-card.ma-card-bad  .ma-card-value{color:#b91c1c}
+
+  .ma-card-unit{font-size:12px;color:var(--muted);font-weight:600}
+  .ma-card-sub{font-size:11px;color:var(--muted);margin-top:auto}
+
+  /* Rich vehicle header card */
+  .ma-veh-card{
+    background:#fafbfc;border:1px solid var(--line);border-radius:10px;
+    padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:14px;
+  }
+  .ma-veh-card-left{display:flex;align-items:center;gap:12px;min-width:0;flex:1}
+  .ma-veh-icon{
+    width:38px;height:38px;border-radius:10px;
+    background:linear-gradient(135deg,#f1f5f9 0%,#e2e8f0 100%);
+    display:grid;place-items:center;font-size:18px;flex-shrink:0;
+  }
+  .ma-veh-title{font-size:14px;font-weight:800;color:var(--ink);font-family:'Space Mono',monospace}
+  .ma-veh-sub{font-size:11.5px;color:var(--ink-2);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .ma-type-pill{
+    display:inline-block;background:#fef3c7;color:#92400e;
+    padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.03em;
+  }
+  .ma-veh-count{font-size:11px;color:var(--muted);white-space:nowrap}
+
+  /* Responsive: stack ranking + detail on narrow screens */
+  @media (max-width: 900px){
+    #ma-detail-grid{grid-template-columns:1fr !important}
+    #ma-ranking{border-right:none !important;border-bottom:1px solid var(--line);max-height:250px !important}
+  }
   .ma-rank-title{
     font-size:10.5px;font-weight:700;color:var(--ink-2);
     text-transform:uppercase;letter-spacing:.05em;padding:0 4px 8px;
@@ -1273,6 +1355,7 @@
           <input type="text" id="veh-search" placeholder="Search…" oninput="renderVehicles()" />
         </div>
       </div>
+      <div id="vp-remark-summary" style="display:none"></div>
       <div id="vehicles-body"></div>
     </div>
   </section>
@@ -1631,14 +1714,30 @@
             <div id="ma-vehicle-dropdown" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--line);border-radius:6px;max-height:340px;overflow-y:auto;display:none;z-index:100;box-shadow:0 6px 18px rgba(0,0,0,0.10);margin-top:2px"></div>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:280px 1fr;gap:0;min-height:400px">
+        <div style="display:grid;grid-template-columns:280px minmax(0, 1fr);gap:0;min-height:400px" id="ma-detail-grid">
           <!-- Left: Ranking / fleet overview -->
-          <div id="ma-ranking" style="border-right:1px solid var(--line);padding:12px;overflow-y:auto;max-height:70vh;background:var(--panel-2)"></div>
+          <div id="ma-ranking" style="border-right:1px solid var(--line);padding:12px;overflow-y:auto;max-height:75vh;background:var(--panel-2)"></div>
 
           <!-- Right: Chart + anomaly detail -->
-          <div style="padding:14px">
-            <div id="ma-summary" style="margin-bottom:10px;font-size:12.5px;color:var(--ink-2)"></div>
-            <div id="ma-chart-wrap" style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 8px 8px;margin-bottom:14px"></div>
+          <div style="padding:14px;min-width:0">
+            <!-- Rich vehicle header -->
+            <div id="ma-veh-header" style="margin-bottom:12px"></div>
+
+            <!-- 6 stat cards in a 3-col grid (2 rows) -->
+            <div id="ma-stat-cards" class="ma-stat-grid" style="margin-bottom:14px"></div>
+
+            <!-- Mileage Trend chart with title bar -->
+            <div style="background:#fff;border:1px solid var(--line);border-radius:8px;margin-bottom:14px;overflow:hidden">
+              <div style="padding:10px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:#fafbfc">
+                <div style="font-size:13px;font-weight:700;color:var(--ink)">📈 Mileage Trend (Full-to-Full)</div>
+                <div id="ma-chart-caption" style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace"></div>
+              </div>
+              <div id="ma-chart-wrap" style="padding:12px 8px 8px"></div>
+            </div>
+
+            <!-- Legacy summary (kept but empty — stats now in cards above) -->
+            <div id="ma-summary" style="display:none"></div>
+
             <div id="ma-anomlist"></div>
           </div>
         </div>
@@ -1753,7 +1852,8 @@ let state = {
   records: [],          // {date, vehicle, km, hmr, fuel, kmpl, branch, data:{colName:value}}
   sites: {},            // {vehicle: siteName}      — editable
   models: {},           // {vehicle: model}         — editable, overrides upload's Object Model
-  remarks: {},          // {vehicle: text}          — free-text per-vehicle notes (Page 2)
+  remarks: {},          // {vehicle: text}          — free-text per-vehicle notes (Page 2, legacy — single per vehicle)
+  periodRemarks: {},    // {`${v}|YYYY-MM-HN`: text} — half-month notes (H1 = days 1-15, H2 = days 16-end)
   siteFills: {},        // {`${v}|${d}`: number}    — manual SITE FILL entries
   siteHMRs: {},         // {`${v}|${d}`: number}    — manual Site HMR entered with Site Fill
   fillOverrides: {},    // {`${v}|${d}`: number}    — overrides upload's Fill (Online Fill correction)
@@ -1770,6 +1870,7 @@ function loadState(){
     if(s.sites) state.sites = s.sites;
     if(s.models) state.models = s.models;
     if(s.remarks) state.remarks = s.remarks;
+    if(s.periodRemarks) state.periodRemarks = s.periodRemarks;
     if(s.siteFills) state.siteFills = s.siteFills;
     if(s.siteHMRs) state.siteHMRs = s.siteHMRs;
     if(s.fillOverrides) state.fillOverrides = s.fillOverrides;
@@ -1792,7 +1893,7 @@ function loadState(){
 /* App version — bump on any deploy. Shows in the top-right header as "v2.5"
    so you can compare across laptops. If two devices show different versions,
    the older one is running cached HTML — hard-refresh (Ctrl+Shift+R) it. */
-const APP_VERSION = 'v2.11 · 2026-07-24';
+const APP_VERSION = 'v2.17 · 2026-08-31';
 
 // Populate version badge as soon as DOM is ready + log to console for debugging
 document.addEventListener('DOMContentLoaded', () => {
@@ -1983,11 +2084,17 @@ Click OK to retry the sync now, or Cancel to keep working locally.`;
     })).sort((a,b)=> a.date.localeCompare(b.date) || a.vehicle.localeCompare(b.vehicle));
 
     // Vehicles
-    state.sites = {}; state.models = {}; state.remarks = {};
+    state.sites = {}; state.models = {}; state.remarks = {}; state.periodRemarks = {};
     (veh.data || []).forEach(v => {
       if(v.site_name) state.sites[v.vehicle] = v.site_name;
       if(v.model) state.models[v.vehicle] = v.model;
       if(v.remark) state.remarks[v.vehicle] = v.remark;
+      // period_remarks column may not exist yet on older schemas — safely ignore then
+      if(v.period_remarks && typeof v.period_remarks === 'object'){
+        Object.entries(v.period_remarks).forEach(([period, text]) => {
+          if(text) state.periodRemarks[`${v.vehicle}|${period}`] = text;
+        });
+      }
     });
 
     // Cell overrides
@@ -2034,16 +2141,40 @@ Click OK to retry the sync now, or Cancel to keep working locally.`;
     try{
       // Vehicles upsert
       const allV = new Set([...Object.keys(state.sites), ...Object.keys(state.models), ...Object.keys(state.remarks)]);
+      // Also include any vehicle that has period remarks (may not appear elsewhere)
+      Object.keys(state.periodRemarks || {}).forEach(k => allV.add(k.split('|')[0]));
       state.records.forEach(r => allV.add(r.vehicle));
-      const vehRows = [...allV].map(v => ({
-        vehicle: v,
-        site_name: state.sites[v] || null,
-        model: state.models[v] || null,
-        remark: state.remarks[v] || null
-      }));
+      const vehRows = [...allV].map(v => {
+        // Collect this vehicle's period remarks into an object: {"2026-08-H1": "text", ...}
+        const pr = {};
+        const prefix = v + '|';
+        Object.keys(state.periodRemarks || {}).forEach(k => {
+          if(k.startsWith(prefix)){
+            pr[k.slice(prefix.length)] = state.periodRemarks[k];
+          }
+        });
+        return {
+          vehicle: v,
+          site_name: state.sites[v] || null,
+          model: state.models[v] || null,
+          remark: state.remarks[v] || null,
+          period_remarks: Object.keys(pr).length ? pr : null
+        };
+      });
       if(vehRows.length){
         const { error } = await this.client.from('vehicles').upsert(vehRows, {onConflict: 'vehicle'});
-        if(error) throw error;
+        if(error){
+          // Fallback: if the period_remarks column doesn't exist yet, retry without it.
+          // User will see a one-time note in the sync log.
+          if(String(error.message || '').toLowerCase().includes('period_remarks')){
+            console.warn('period_remarks column not found — falling back. Run: ALTER TABLE vehicles ADD COLUMN period_remarks jsonb;');
+            const fallbackRows = vehRows.map(r => { const { period_remarks, ...rest } = r; return rest; });
+            const retry = await this.client.from('vehicles').upsert(fallbackRows, {onConflict: 'vehicle'});
+            if(retry.error) throw retry.error;
+          } else {
+            throw error;
+          }
+        }
       }
       // Cells upsert (one row per vehicle×date with any override)
       const keys = new Set([
@@ -2158,18 +2289,27 @@ Click OK to retry the sync now, or Cancel to keep working locally.`;
         report(`Cells ${Math.min(i+500, cellRows.length)}/${cellRows.length}`);
       }
 
-      // 3. Vehicles table — sites, models, remarks all keyed by vehicle name
+      // 3. Vehicles table — sites, models, remarks, period_remarks all keyed by vehicle name
       const vehSet = new Set();
       recs.forEach(r => vehSet.add(r.vehicle));
       Object.keys(state.sites || {}).forEach(v => vehSet.add(v));
       Object.keys(state.models || {}).forEach(v => vehSet.add(v));
       Object.keys(state.remarks || {}).forEach(v => vehSet.add(v));
-      const vehRows = [...vehSet].filter(v=>v).map(v => ({
-        vehicle: v,
-        site: state.sites?.[v] || null,
-        model: state.models?.[v] || null,
-        remark: state.remarks?.[v] || null
-      }));
+      Object.keys(state.periodRemarks || {}).forEach(k => vehSet.add(k.split('|')[0]));
+      const vehRows = [...vehSet].filter(v=>v).map(v => {
+        const pr = {};
+        const prefix = v + '|';
+        Object.keys(state.periodRemarks || {}).forEach(k => {
+          if(k.startsWith(prefix)) pr[k.slice(prefix.length)] = state.periodRemarks[k];
+        });
+        return {
+          vehicle: v,
+          site: state.sites?.[v] || null,
+          model: state.models?.[v] || null,
+          remark: state.remarks?.[v] || null,
+          period_remarks: Object.keys(pr).length ? pr : null
+        };
+      });
       report(`Pushing ${vehRows.length} vehicles…`);
       for(let i=0; i<vehRows.length; i+=500){
         const { error } = await this.client.from('vehicles').upsert(vehRows.slice(i, i+500), {onConflict: 'vehicle'});
@@ -2596,7 +2736,7 @@ function setupUpload(){
         if(!obj.records) throw new Error('Invalid backup');
         const confirmMsg = `Restore ${obj.records.length} records? This will:\n\n• Replace local data with the JSON contents\n• Push everything to cloud so all devices see it\n\nCancel if unsure.`;
         if(!confirm(confirmMsg)) return;
-        state = Object.assign({records:[],sites:{},models:{},remarks:{},siteFills:{},siteHMRs:{},fillOverrides:{},workHourOverrides:{},progress:{},uploads:[],columnOrder:[]}, obj);
+        state = Object.assign({records:[],sites:{},models:{},remarks:{},periodRemarks:{},siteFills:{},siteHMRs:{},fillOverrides:{},workHourOverrides:{},progress:{},uploads:[],columnOrder:[]}, obj);
         saveState(); refreshAll();
         toast('Local restore done · pushing to cloud…','good');
         // Push to cloud so other devices see the new data. Before this fix,
@@ -3043,6 +3183,10 @@ function renderVehicles(){
   const toD   = document.getElementById('veh-to').value;
   const search = (document.getElementById('veh-search').value||'').toLowerCase().trim();
 
+  // Half-month periods (H1: days 1-15, H2: days 16-end) covered by the visible date range.
+  // Each vehicle row will show one remark textarea per period.
+  const periodsForRemarks = periodsInRange(fromD, toD);
+
   const recs = state.records.filter(r=>
     (!fromD || r.date >= fromD) && (!toD || r.date <= toD)
   );
@@ -3152,7 +3296,35 @@ function renderVehicles(){
     html += `<td class="sticky-site"><input type="text" class="site-name-inp" data-vehicle="${escapeAttr(v)}" value="${escapeAttr(state.sites[v]||'')}" onchange="updateSiteNameInline(this)" placeholder="—" /></td>`;
     html += `<td class="sticky-diff ${diffCls}" title="${escapeAttr(diffTitle)}">${diffStr}</td>`;
     html += `<td class="sticky-dpf ${dpfCls}" title="${escapeAttr(dpfTitle)}">${dpfStr}</td>`;
-    html += `<td class="sticky-rem"><textarea class="rem-inp" data-vehicle="${escapeAttr(v)}" oninput="autoResizeRemark(this)" onchange="updateRemark(this)" placeholder="Add note…" rows="1">${escapeHtml(state.remarks[v]||'')}</textarea></td>`;
+    // Remark cell: one textarea per half-month period covered by the visible date range.
+    // Legacy single-vehicle remark (state.remarks[v]) is shown as a small italic note above
+    // if it exists and no period-specific remark has been added yet for the vehicle.
+    let remCell = '<td class="sticky-rem">';
+    const legacyRem = (state.remarks[v] || '').trim();
+    const hasAnyPeriodRem = periodsForRemarks.some(p => (state.periodRemarks[`${v}|${p.key}`] || '').trim());
+    if(legacyRem && !hasAnyPeriodRem){
+      remCell += `<div class="rem-legacy" title="Legacy note — assign it to a period below">${escapeHtml(legacyRem)}</div>`;
+    }
+    if(!periodsForRemarks.length){
+      // No visible date range yet — fall back to legacy single-remark textarea
+      remCell += `<textarea class="rem-inp" data-vehicle="${escapeAttr(v)}" oninput="autoResizeRemark(this)" onchange="updateRemark(this)" placeholder="Add note…" rows="1">${escapeHtml(state.remarks[v]||'')}</textarea>`;
+    } else {
+      periodsForRemarks.forEach(p => {
+        const key = `${v}|${p.key}`;
+        const val = state.periodRemarks[key] || '';
+        const hasData = vehicleHasDataInPeriod(v, p.key);
+        const isMissing = hasData && !val.trim();
+        const labelCls = isMissing ? 'rem-period-label needed' : 'rem-period-label';
+        const textareaCls = isMissing ? 'rem-inp rem-missing' : 'rem-inp';
+        const placeholder = isMissing ? 'REQUIRED — add remark…' : 'Add note…';
+        remCell += `<div class="rem-period">
+          <div class="${labelCls}">${isMissing ? '⚠ ' : ''}${escapeHtml(p.short)}</div>
+          <textarea class="${textareaCls}" data-vehicle="${escapeAttr(v)}" data-period="${p.key}" oninput="autoResizeRemark(this)" onchange="updatePeriodRemark(this)" placeholder="${placeholder}" rows="1">${escapeHtml(val)}</textarea>
+        </div>`;
+      });
+    }
+    remCell += '</td>';
+    html += remCell;
     dates.forEach(d=>{
       const r = vehMap[v][d];
       const k = `${v}|${d}`;
@@ -3171,6 +3343,7 @@ function renderVehicles(){
   // After the table is in the DOM, size each remark textarea to fit its content.
   // We measure scrollHeight, which is only accurate post-insertion.
   body.querySelectorAll('textarea.rem-inp').forEach(autoResizeRemark);
+  updateRemarkSummary();
 }
 
 // Grows a textarea vertically to fit its content. Called on each keystroke
@@ -3188,6 +3361,131 @@ function updateRemark(input){
   if(t) state.remarks[v] = t;
   else delete state.remarks[v];
   saveState();
+}
+
+// ============ PERIOD REMARKS (half-month notes for Page 2) ============
+// Business rule: remarks are typically written twice per month —
+//   once for days 1-15 (H1) and once for days 16-end (H2).
+// Storage key format: `${vehicle}|${YYYY-MM}-H1` or -H2
+
+// Given a date string YYYY-MM-DD, return the period label "2026-08-H1"
+function periodOfDate(date){
+  const [y, m, d] = date.split('-');
+  const half = parseInt(d, 10) <= 15 ? 'H1' : 'H2';
+  return `${y}-${m}-${half}`;
+}
+
+// Given a from-to date range, return the ordered list of periods it covers.
+// Also returns a human label for each period like "1-15 Aug 2026" / "16-31 Aug 2026".
+function periodsInRange(from, to){
+  if(!from || !to) return [];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const out = [];
+  const seen = new Set();
+  // Walk day-by-day; safe because ranges here are usually days-to-months, not years
+  const fromDate = new Date(from + 'T00:00:00');
+  const toDate   = new Date(to   + 'T00:00:00');
+  if(isNaN(fromDate) || isNaN(toDate) || fromDate > toDate) return [];
+  // Cap the walk at 400 days to avoid runaway loops if user picks weird dates
+  const maxDays = 400;
+  let cur = new Date(fromDate);
+  let steps = 0;
+  while(cur <= toDate && steps++ < maxDays){
+    const y = cur.getFullYear();
+    const m = String(cur.getMonth() + 1).padStart(2, '0');
+    const d = cur.getDate();
+    const half = d <= 15 ? 'H1' : 'H2';
+    const key = `${y}-${m}-${half}`;
+    if(!seen.has(key)){
+      seen.add(key);
+      // Compute end day for label — H1 always ends on 15, H2 on last day of month
+      const endDay = half === 'H1' ? 15 : new Date(y, cur.getMonth() + 1, 0).getDate();
+      const startDay = half === 'H1' ? 1 : 16;
+      out.push({
+        key,
+        label: `${startDay}-${endDay} ${months[cur.getMonth()]} ${y}`,
+        short: `${half === 'H1' ? '1-15' : '16-' + endDay} ${months[cur.getMonth()]}`
+      });
+    }
+    cur.setDate(cur.getDate() + 1);
+  }
+  return out;
+}
+
+// Does this vehicle have ANY data (record, site fill, or site HMR) in the given period?
+// Used to decide whether a missing remark should be flagged as "required".
+function vehicleHasDataInPeriod(vehicle, periodKey){
+  // periodKey like "2026-08-H1"
+  const [y, m, half] = [periodKey.slice(0,4), periodKey.slice(5,7), periodKey.slice(8)];
+  const startDay = half === 'H1' ? 1 : 16;
+  const endDay = half === 'H1' ? 15 : new Date(+y, +m, 0).getDate();
+  const fromD = `${y}-${m}-${String(startDay).padStart(2,'0')}`;
+  const toD   = `${y}-${m}-${String(endDay).padStart(2,'0')}`;
+  // Records
+  const hasRec = state.records.some(r => r.vehicle === vehicle && r.date >= fromD && r.date <= toD);
+  if(hasRec) return true;
+  // Site fills or HMRs
+  const prefix = vehicle + '|';
+  const hasCell = Object.keys(state.siteFills || {}).some(k => k.startsWith(prefix) && k.slice(prefix.length) >= fromD && k.slice(prefix.length) <= toD)
+               || Object.keys(state.siteHMRs || {}).some(k => k.startsWith(prefix) && k.slice(prefix.length) >= fromD && k.slice(prefix.length) <= toD);
+  return hasCell;
+}
+
+// Save handler for period-specific remark textarea
+function updatePeriodRemark(input){
+  const v = input.dataset.vehicle;
+  const p = input.dataset.period;
+  const key = `${v}|${p}`;
+  const t = (input.value || '').trim();
+  if(t) state.periodRemarks[key] = t;
+  else  delete state.periodRemarks[key];
+  // Refresh the "missing" red border state
+  input.classList.toggle('rem-missing', !t && vehicleHasDataInPeriod(v, p));
+  // Update the summary strip at top of page
+  updateRemarkSummary();
+  saveState();
+}
+
+// Update the summary bar at top of Page 2 that shows how many vehicles still need remarks
+function updateRemarkSummary(){
+  const bar = document.getElementById('vp-remark-summary');
+  if(!bar) return;
+  const from = document.getElementById('veh-from')?.value;
+  const to   = document.getElementById('veh-to')?.value;
+  if(!from || !to){ bar.style.display = 'none'; return; }
+  const periods = periodsInRange(from, to);
+  if(!periods.length){ bar.style.display = 'none'; return; }
+  // Count vehicles with data-but-no-remark, per period
+  const allV = new Set([
+    ...state.records.map(r => r.vehicle),
+    ...Object.keys(state.siteFills || {}).map(k => k.split('|')[0]),
+    ...Object.keys(state.siteHMRs  || {}).map(k => k.split('|')[0]),
+  ]);
+  const perPeriod = periods.map(p => {
+    let missing = 0;
+    allV.forEach(v => {
+      if(vehicleHasDataInPeriod(v, p.key) && !(state.periodRemarks[`${v}|${p.key}`] || '').trim()){
+        missing++;
+      }
+    });
+    return { ...p, missing };
+  });
+  const total = perPeriod.reduce((a,p) => a + p.missing, 0);
+  if(total === 0){
+    bar.innerHTML = `<span style="color:#065f46">✓ All remarks entered for the visible date range</span>`;
+    bar.style.background = '#f0fdf4';
+    bar.style.borderColor = '#86efac';
+    bar.style.display = 'block';
+    return;
+  }
+  const badgeItems = perPeriod
+    .filter(p => p.missing > 0)
+    .map(p => `<b>${p.missing}</b> for ${p.label}`)
+    .join(' &nbsp;·&nbsp; ');
+  bar.innerHTML = `⚠ <b>${total}</b> vehicle remark${total===1?'':'s'} missing: ${badgeItems}`;
+  bar.style.background = '#fffbeb';
+  bar.style.borderColor = '#fcd34d';
+  bar.style.display = 'block';
 }
 
 function updateSite(vehicle, site){
@@ -6354,27 +6652,75 @@ function setMilAbnRangeAll(){
 
 // Build per-day mileage series for a vehicle in the date range.
 // Returns [{date, mileage, fill, workHour, km, isAnomaly, deviation}]
+// Full-to-Full mileage formula (CORRECT):
+//   consumption = site_fill (manager-entered from mobile PWA)
+//   workhour    = HMR at current fill date − HMR at previous fill date
+//   mileage     = consumption / workhour   (in L/hr for equipment)
+//
+// This is different from daily bulk-uploaded records — those give per-day fuel/hours
+// which doesn't reflect the actual fill-to-fill consumption cycle.
 function buildMileageSeries(vehicle, from, to, sensitivityPct){
   const isRoad = MILEAGE_DISTANCE_BASED.has(vehicle);
-  const recs = state.records
-    .filter(r => r.vehicle === vehicle)
-    .filter(r => !from || r.date >= from)
-    .filter(r => !to || r.date <= to)
-    .sort((a,b) => a.date.localeCompare(b.date));
 
-  const series = recs.map(r => {
-    const fill = num(r.data?.['Fill']);
-    const wh = num(r.data?.['Work Hour']);
-    const km = num(r.data?.['Distance']);
+  // Collect all SITE FILL events for this vehicle (dates where site_fill > 0)
+  // We only care about actual fill events — not HMR-only entries.
+  const fillEvents = [];
+  const prefix = vehicle + '|';
+  Object.entries(state.siteFills || {}).forEach(([key, fillVal]) => {
+    if(!key.startsWith(prefix)) return;
+    const date = key.slice(prefix.length);
+    if(from && date < from) return;
+    if(to && date > to) return;
+    const fill = +fillVal;
+    if(!(fill > 0)) return;   // ignore zero/invalid fills
+    const hmrRaw = state.siteHMRs?.[key];
+    const hmr = (hmrRaw != null && !isNaN(+hmrRaw)) ? +hmrRaw : null;
+    fillEvents.push({ date, fill, hmr });
+  });
+  fillEvents.sort((a, b) => a.date.localeCompare(b.date));
+
+  // Compute mileage between consecutive fills.
+  // Every fill in the series becomes one series point; mileage is null for the 1st fill
+  // (no prior to compute delta) and for any fill missing HMR data.
+  const series = fillEvents.map((event, i) => {
     let mileage = null;
-    if(isRoad){
-      // km/L — needs both distance and fuel
-      if(km > 0 && fill > 0) mileage = km / fill;
+    let workHour = 0;
+    let missingReason = null;
+    let prevDate = null;
+    let prevHmr = null;
+
+    if(i === 0){
+      missingReason = 'First fill (no prior)';
     } else {
-      // L/hr — needs both fuel and work hours
-      if(fill > 0 && wh > 0) mileage = fill / wh;
+      const prev = fillEvents[i - 1];
+      prevDate = prev.date;
+      prevHmr = prev.hmr;
+      if(event.hmr == null){
+        missingReason = 'HMR missing';
+      } else if(prev.hmr == null){
+        missingReason = 'Prev-fill HMR missing';
+      } else {
+        workHour = event.hmr - prev.hmr;
+        if(workHour <= 0){
+          missingReason = 'HMR not advanced';
+        } else {
+          // Full-to-Full: consumption ÷ hours run since last fill = L/hr
+          mileage = event.fill / workHour;
+        }
+      }
     }
-    return { date: r.date, mileage, fill, workHour: wh, km };
+
+    return {
+      date: event.date,
+      mileage,
+      fill: event.fill,        // consumption (this fill)
+      workHour,                // HMR delta (0 when not computable)
+      hmr: event.hmr,          // current HMR reading
+      prevDate,                // previous fill date (for tooltip)
+      prevHmr,                 // previous fill HMR (for tooltip)
+      km: 0,                   // not used with this formula
+      missingReason,
+    };
   });
 
   // Compute stats over valid mileage points only
@@ -6388,14 +6734,14 @@ function buildMileageSeries(vehicle, from, to, sensitivityPct){
   const variance = validVals.reduce((s,v) => s + Math.pow(v-mean,2), 0) / validVals.length;
   const std = Math.sqrt(variance);
 
-  // Flag anomalies: >sensitivity% off from mean
+  // Flag anomalies: >sensitivity% off from median (median is robust)
   const threshold = sensitivityPct / 100;
   series.forEach(s => {
-    if(s.mileage != null && s.mileage > 0 && mean > 0){
-      const dev = (s.mileage - mean) / mean;
+    if(s.mileage != null && s.mileage > 0 && median > 0){
+      const dev = (s.mileage - median) / median;
       s.deviation = dev * 100;
       s.isAnomaly = Math.abs(dev) >= threshold;
-    } else if(s.mileage == null){
+    } else {
       s.isAnomaly = false;
     }
   });
@@ -6414,107 +6760,342 @@ function num(v){
   return (v == null || v === '' || isNaN(n)) ? 0 : n;
 }
 
-// Render SVG line chart. viewBox-based so it scales cleanly.
+// Render rich SVG line chart — TASR BharatNext style
+// Features: value labels above each dot, sub-labels below with (hours/km · fuel),
+// fleet-avg dashed line, ±10% threshold band, beyond-threshold red dots,
+// interactive hover tooltip with detailed breakdown.
 function renderMileageChart(container, series, stats, isRoad){
   container.className = 'ma-chart';
   const validPoints = series.filter(s => s.mileage != null && s.mileage > 0);
   if(!validPoints.length){
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">No mileage data for this vehicle in the selected range</div>';
+    const hint = series.length === 0
+      ? 'No site fill entries for this vehicle in the selected range. Add fills via the mobile PWA.'
+      : `${series.length} fill event${series.length===1?'':'s'} present but no computable mileage yet (need at least 2 fills with HMR readings).`;
+    container.innerHTML = `<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">${hint}</div>`;
     return;
   }
 
-  const W = 800, H = 300;
-  const PAD = { top: 20, right: 24, bottom: 44, left: 56 };
+  // Position ALL series items (including null-mileage records) — so gap days remain visible
+  // on the timeline. Null-mileage records are shown as gray gap markers labeled "HMR missing"
+  // or "Fill missing", so the reason for the disconnect is visible to the user.
+  const n = series.length;
+
+  // Chart dimensions — extra padding for value labels above/below dots
+  const minWidthPerPoint = 60;
+  const W = Math.max(820, n * minWidthPerPoint);
+  const H = 380;
+  const PAD = { top: 42, right: 90, bottom: 78, left: 60 };
   const chartW = W - PAD.left - PAD.right;
   const chartH = H - PAD.top - PAD.bottom;
 
+  const unit = isRoad ? 'km/L' : 'L/hr';
+
+  // ROBUST Y-axis extents using percentile-based bounds
+  // Reason: some vehicles have data-quality outliers (e.g. one day where HMR delta = 0.1h
+  // and fuel = 90L gives mileage = 900 L/hr). Raw max/min stretches the scale so all
+  // real data is squished at the bottom. Percentiles ignore extreme outliers gracefully.
   const values = validPoints.map(s => s.mileage);
-  let maxV = Math.max(...values);
-  let minV = Math.min(...values);
-  // Add 15% headroom so points aren't glued to top/bottom
-  const range = maxV - minV || maxV * 0.2 || 1;
-  maxV = maxV + range * 0.15;
+  const sortedV = [...values].sort((a,b) => a - b);
+  // Percentile with proper (n-1)*p indexing so 95th percentile ≠ max
+  const percentile = (p) => {
+    if(!sortedV.length) return 0;
+    const idx = Math.max(0, Math.min(sortedV.length - 1, Math.floor((sortedV.length - 1) * p)));
+    return sortedV[idx];
+  };
+  // Use tighter p10/p90 to trim data-quality outliers on both ends
+  const p10 = percentile(0.10);
+  const p90 = percentile(0.90);
+
+  // Use MEDIAN not mean for center reference — median is resistant to outlier distortion
+  const centerVal = stats.median;
+  const upperThresh = centerVal * 1.1;
+  const lowerThresh = centerVal * 0.9;
+
+  // Y-axis bounds: percentile range, but ensure ±10% band is visible.
+  // Also hard-cap the range around the median so extreme outliers can't stretch the scale.
+  let maxV = Math.max(p90, upperThresh, centerVal * 0.5);
+  let minV = Math.min(p10, lowerThresh, centerVal * 1.5);
+  // If a single outlier survives (e.g. only 3 data points), clamp to [median×0.3, median×3.0]
+  maxV = Math.min(maxV, centerVal * 3.0);
+  minV = Math.max(minV, centerVal * 0.3);
+  const range = maxV - minV || centerVal * 0.4 || 1;
+  maxV += range * 0.20;
   minV = Math.max(0, minV - range * 0.15);
 
-  // Position all series points (even nulls take x slot for continuity)
-  const n = series.length;
   const xStep = n > 1 ? chartW / (n - 1) : 0;
-  const points = series.map((s, i) => ({
-    x: PAD.left + i * xStep,
-    y: s.mileage != null && s.mileage > 0
-       ? PAD.top + (1 - (s.mileage - minV) / (maxV - minV)) * chartH
-       : null,
-    ...s
-  }));
+  const yForVal = v => PAD.top + (1 - (v - minV) / (maxV - minV)) * chartH;
 
-  // Line path — connect only valid points, break at gaps
+  // Position all series items — valid mileage points get real y, null-mileage days get
+  // a "gap marker" position (near bottom) with a reason for why mileage is null.
+  const points = series.map((s, i) => {
+    const x = PAD.left + i * xStep;
+
+    // Gap = null mileage — reason already computed by buildMileageSeries
+    if(s.mileage == null || !(s.mileage > 0)){
+      return {
+        x,
+        y: PAD.top + chartH - 8,
+        isGap: true,
+        missingReason: s.missingReason || 'No mileage',
+        ...s,
+        clipped: null,
+        isBeyondThreshold: false
+      };
+    }
+
+    // Valid point — clip if outside Y-axis range
+    let clipped = null;
+    let y;
+    if(s.mileage > maxV){
+      y = PAD.top + 4;
+      clipped = 'top';
+    } else if(s.mileage < minV){
+      y = PAD.top + chartH - 4;
+      clipped = 'bottom';
+    } else {
+      y = yForVal(s.mileage);
+    }
+    return {
+      x, y, clipped,
+      isGap: false,
+      missingReason: null,
+      ...s,
+      isBeyondThreshold: s.mileage > upperThresh || s.mileage < lowerThresh
+    };
+  });
+
+  // Line path — connect ONLY consecutive valid points; break on gaps
   let pathD = '';
   let started = false;
   points.forEach(p => {
-    if(p.y != null){
+    if(!p.isGap){
       pathD += (started ? 'L' : 'M') + p.x.toFixed(1) + ',' + p.y.toFixed(1) + ' ';
       started = true;
     } else {
-      started = false;   // gap — restart on next valid
+      started = false;   // gap — line breaks; will restart on next valid point
     }
   });
 
-  // Average dashed line
-  const avgY = PAD.top + (1 - (stats.mean - minV) / (maxV - minV)) * chartH;
-  const unit = isRoad ? 'km/L' : 'L/hr';
-
-  // Grid + Y labels — 5 gridlines
+  // Grid + Y labels
   let gridHTML = '';
   for(let g = 0; g <= 5; g++){
     const y = PAD.top + (g / 5) * chartH;
     const val = maxV - (g / 5) * (maxV - minV);
     gridHTML += `<line x1="${PAD.left}" y1="${y}" x2="${W - PAD.right}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
-    gridHTML += `<text x="${PAD.left - 6}" y="${y + 3.5}" text-anchor="end" font-size="10" fill="#6b7280" font-family="'Space Mono',monospace">${val.toFixed(1)}</text>`;
+    gridHTML += `<text x="${PAD.left - 8}" y="${y + 3.5}" text-anchor="end" font-size="10" fill="#6b7280" font-family="'Space Mono',monospace">${val.toFixed(1)}</text>`;
   }
 
-  // X-axis labels: show ~6 evenly spaced dates
-  let xLabelHTML = '';
-  const labelCount = Math.min(6, n);
-  const step = Math.max(1, Math.floor((n - 1) / (labelCount - 1)) || 1);
-  const labelIdxs = new Set([0, n - 1]);
-  for(let i = step; i < n - step/2; i += step) labelIdxs.add(i);
-  [...labelIdxs].sort((a,b)=>a-b).forEach(idx => {
-    const p = points[idx];
-    const dateShort = (p.date || '').slice(5); // MM-DD
-    xLabelHTML += `<text x="${p.x}" y="${H - PAD.bottom + 16}" text-anchor="middle" font-size="10" fill="#6b7280" font-family="'Space Mono',monospace">${dateShort}</text>`;
+  // ±10% threshold band (soft amber tint) — highlights the "acceptable" zone
+  const upperY = yForVal(upperThresh);
+  const lowerY = yForVal(lowerThresh);
+  const bandHTML = `<rect x="${PAD.left}" y="${upperY.toFixed(1)}" width="${chartW}" height="${(lowerY - upperY).toFixed(1)}" fill="#fef3c7" opacity="0.25"/>`;
+
+  // Threshold lines (dashed amber)
+  const threshHTML = `
+    <line x1="${PAD.left}" y1="${upperY.toFixed(1)}" x2="${W - PAD.right}" y2="${upperY.toFixed(1)}" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3" opacity="0.65"/>
+    <line x1="${PAD.left}" y1="${lowerY.toFixed(1)}" x2="${W - PAD.right}" y2="${lowerY.toFixed(1)}" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3" opacity="0.65"/>
+    <text x="${W - PAD.right + 6}" y="${upperY.toFixed(1) - 2}" font-size="10" fill="#b45309" font-weight="700" font-family="'Space Mono',monospace">±10%</text>
+  `;
+
+  // Fleet-avg line — using MEDIAN (robust to outliers, unlike raw mean)
+  const avgY = yForVal(centerVal);
+  const avgHTML = `
+    <line x1="${PAD.left}" y1="${avgY.toFixed(1)}" x2="${W - PAD.right}" y2="${avgY.toFixed(1)}" stroke="#f59e0b" stroke-width="1.6" stroke-dasharray="8,4"/>
+    <text x="${W - PAD.right + 6}" y="${avgY.toFixed(1) + 4}" font-size="11" fill="#b45309" font-weight="700" font-family="'Space Mono',monospace">med ${centerVal.toFixed(2)}</text>
+  `;
+
+  // Data dots + value labels + sub-labels
+  let dotsHTML = '';
+  let labelsHTML = '';
+  points.forEach((p) => {
+    // Gap marker — null-mileage record (missing HMR or Fill)
+    if(p.isGap){
+      // Small gray "?" marker near the bottom
+      dotsHTML += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.4" stroke-dasharray="2,2"
+                    data-date="${p.date}" data-missing="${p.missingReason}"
+                    data-fill="${(p.fill||0).toFixed(1)}" data-hmr="${(p.workHour||0).toFixed(1)}"
+                    data-km="${(p.km||0).toFixed(1)}" data-isroad="${isRoad}"
+                    onmouseenter="showMileageGapTooltip(this, event)"
+                    onmouseleave="hideMileageTooltip()"
+                    style="cursor:help"/>`;
+      // Vertical dashed line dropping from top of chart to marker (subtle indicator)
+      dotsHTML += `<line x1="${p.x.toFixed(1)}" y1="${PAD.top}" x2="${p.x.toFixed(1)}" y2="${(p.y - 6).toFixed(1)}" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="2,3" opacity="0.7"/>`;
+      // Reason label rotated so it fits above the marker
+      const reasonShort = p.missingReason.replace(' missing','');
+      labelsHTML += `<text x="${p.x.toFixed(1)}" y="${(p.y - 10).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="600" fill="#9ca3af" font-family="'Space Mono',monospace" style="pointer-events:none">${reasonShort}</text>`;
+      labelsHTML += `<text x="${p.x.toFixed(1)}" y="${(p.y - 20).toFixed(1)}" text-anchor="middle" font-size="8" fill="#9ca3af" font-family="'Space Mono',monospace" style="pointer-events:none">missing</text>`;
+      return;
+    }
+
+    const isBeyond = p.isBeyondThreshold;
+    const isClipped = p.clipped;
+    const color = isBeyond ? '#dc2626' : '#2563eb';
+
+    // Value label above dot (e.g. "10.5") — bigger and clearer
+    // If clipped to top, add ↑ indicator to show it's actually higher than shown
+    const labelText = isClipped === 'top'
+      ? '↑' + p.mileage.toFixed(0)
+      : (isClipped === 'bottom' ? '↓' + p.mileage.toFixed(1) : p.mileage.toFixed(1));
+    labelsHTML += `<text x="${p.x.toFixed(1)}" y="${(p.y - 12).toFixed(1)}" text-anchor="middle" font-size="12" font-weight="700" fill="${color}" font-family="'Space Grotesk','Inter',sans-serif" style="pointer-events:none">${labelText}</text>`;
+
+    // Sub-label below dot (e.g. "(12h · 140L)")
+    const sub = isRoad
+      ? `(${p.km.toFixed(0)}km·${p.fill.toFixed(0)}L)`
+      : `(${p.workHour.toFixed(0)}h·${p.fill.toFixed(0)}L)`;
+    labelsHTML += `<text x="${p.x.toFixed(1)}" y="${(p.y + 18).toFixed(1)}" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="'Space Mono',monospace" style="pointer-events:none">${sub}</text>`;
+
+    // Data dot — bigger for clipped outliers so they're clearly noticeable
+    const dotR = isClipped ? 6 : 5;
+    const dotStroke = isClipped ? '#991b1b' : 'white';
+    dotsHTML += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${dotR}" fill="${color}" stroke="${dotStroke}" stroke-width="2"
+                  data-date="${p.date}" data-mileage="${p.mileage.toFixed(2)}"
+                  data-fill="${p.fill.toFixed(1)}" data-hmr="${p.workHour.toFixed(1)}"
+                  data-currhmr="${p.hmr != null ? p.hmr.toFixed(1) : ''}"
+                  data-prevhmr="${p.prevHmr != null ? p.prevHmr.toFixed(1) : ''}"
+                  data-prevdate="${p.prevDate || ''}"
+                  data-km="${(p.km||0).toFixed(1)}" data-isroad="${isRoad}"
+                  data-clipped="${p.clipped || ''}"
+                  onmouseenter="showMileageTooltip(this, event)"
+                  onmouseleave="hideMileageTooltip()"
+                  style="cursor:pointer"/>`;
   });
 
-  // Data dots — anomalies in red, normal in teal
-  let dotsHTML = '';
-  points.forEach(p => {
-    if(p.y == null) return;
-    const isAnom = p.isAnomaly;
-    const color = isAnom ? '#dc2626' : '#0a6e6e';
-    const r = isAnom ? 5 : 3.2;
-    const strokeW = isAnom ? 2 : 1.2;
-    dotsHTML += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}" fill="${color}" stroke="white" stroke-width="${strokeW}">`;
-    dotsHTML += `<title>${p.date}: ${p.mileage.toFixed(2)} ${unit}${isAnom ? '  (⚠ anomaly, ' + (p.deviation > 0 ? '+' : '') + p.deviation.toFixed(0) + '% off avg)' : ''}</title>`;
-    dotsHTML += `</circle>`;
+  // X-axis labels — nice date format
+  let xLabelHTML = '';
+  const targetLabels = Math.min(8, n);
+  const step = Math.max(1, Math.floor((n - 1) / (targetLabels - 1)) || 1);
+  const labelIdxs = new Set([0, n - 1]);
+  for(let i = step; i < n - step/2; i += step) labelIdxs.add(i);
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  [...labelIdxs].sort((a,b)=>a-b).forEach(idx => {
+    const p = points[idx];
+    const parts = p.date.split('-');
+    const dateShort = parseInt(parts[2], 10) + ' ' + monthNames[parseInt(parts[1], 10) - 1];
+    xLabelHTML += `<text x="${p.x}" y="${H - PAD.bottom + 32}" text-anchor="middle" font-size="10" fill="#374151" font-weight="600" font-family="'Space Mono',monospace">${dateShort}</text>`;
   });
 
   // Y-axis label
   const yAxisLabel = `<text x="18" y="${PAD.top + chartH/2}" transform="rotate(-90 18 ${PAD.top + chartH/2})" text-anchor="middle" font-size="10" fill="#374151" font-weight="600">${unit}</text>`;
 
   container.innerHTML = `
-    <div class="ma-chart-legend">
-      <span><span class="ma-legend-dot" style="background:#0a6e6e"></span>Normal</span>
-      <span><span class="ma-legend-dot" style="background:#dc2626"></span>Anomaly</span>
-      <span><span class="ma-legend-dot" style="background:#94a3b8;height:2px;border-radius:0;width:14px"></span>Average (${stats.mean.toFixed(2)} ${unit})</span>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <svg viewBox="0 0 ${W} ${H}" width="${W}" style="min-width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">
+        ${gridHTML}
+        ${bandHTML}
+        ${threshHTML}
+        ${avgHTML}
+        <path d="${pathD}" fill="none" stroke="#2563eb" stroke-width="2.4" opacity="0.9"/>
+        ${dotsHTML}
+        ${labelsHTML}
+        ${xLabelHTML}
+        ${yAxisLabel}
+      </svg>
     </div>
-    <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">
-      ${gridHTML}
-      <line x1="${PAD.left}" y1="${avgY.toFixed(1)}" x2="${W - PAD.right}" y2="${avgY.toFixed(1)}" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="5,4"/>
-      <path d="${pathD}" fill="none" stroke="#0a6e6e" stroke-width="1.8" opacity="0.7"/>
-      ${dotsHTML}
-      ${xLabelHTML}
-      ${yAxisLabel}
-    </svg>
+    <div id="ma-chart-tooltip" style="position:fixed;display:none;background:#111827;color:white;padding:10px 12px;border-radius:8px;font-size:12px;box-shadow:0 6px 18px rgba(0,0,0,0.28);z-index:1000;pointer-events:none;line-height:1.6;min-width:150px"></div>
+    <div style="display:flex;gap:18px;font-size:11px;color:var(--ink-2);padding:12px 8px 4px;flex-wrap:wrap;justify-content:center;font-family:'Space Grotesk','Inter',sans-serif">
+      <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2563eb"></span>Normal</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#dc2626"></span>Beyond ±10% band</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#e5e7eb;border:1.5px dashed #9ca3af"></span>Data missing (HMR/Fill)</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:16px;height:2.4px;background:#f59e0b"></span>Median (robust avg)</span>
+      <span style="color:var(--muted)">💡 Hover a point for date + diesel + hrs</span>
+    </div>
   `;
+}
+
+// Rich HTML tooltip for chart data points
+function showMileageTooltip(el, event){
+  const tooltip = document.getElementById('ma-chart-tooltip');
+  if(!tooltip) return;
+  const date = el.dataset.date;
+  const mileage = el.dataset.mileage;
+  const fill = el.dataset.fill;
+  const hmr = el.dataset.hmr;
+  const km = el.dataset.km;
+  const prevDate = el.dataset.prevdate || '';
+  const currHmr = el.dataset.currhmr || '';
+  const prevHmr = el.dataset.prevhmr || '';
+  const isRoad = el.dataset.isroad === 'true';
+  const clipped = el.dataset.clipped || '';
+  const unit = isRoad ? 'km/L' : 'L/hr';
+
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const fmtD = d => {
+    const p = d.split('-');
+    return parseInt(p[2],10) + ' ' + monthNames[parseInt(p[1],10)-1] + ' ' + p[0].slice(2);
+  };
+  const dateDisplay = fmtD(date);
+  const prevDisplay = prevDate ? fmtD(prevDate) : '—';
+
+  let outlierNote = '';
+  if(clipped){
+    outlierNote = `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #374151;color:#fca5a5;font-size:11px;font-weight:600">⚠ Extreme value — likely data quality issue</div>`;
+  }
+
+  // For fill-to-fill: show consumption + HMR delta + previous fill context
+  const hmrContext = (currHmr && prevHmr)
+    ? `<div style="font-family:'Space Mono',monospace;color:#94a3b8;font-size:10.5px;margin-top:3px">HMR: ${prevHmr}h → ${currHmr}h (Δ ${hmr}h)</div>`
+    : '';
+
+  tooltip.innerHTML = `
+    <div style="font-weight:700;margin-bottom:3px;font-size:12.5px">${dateDisplay}</div>
+    <div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#93c5fd;margin-bottom:4px">${mileage} ${unit}</div>
+    <div style="font-family:'Space Mono',monospace;color:#e5e7eb">Consumption: ${fill} L</div>
+    <div style="font-family:'Space Mono',monospace;color:#e5e7eb">Duration: ${hmr} h</div>
+    ${hmrContext}
+    <div style="font-family:'Space Mono',monospace;color:#94a3b8;font-size:10.5px;margin-top:5px">Since fill on: ${prevDisplay}</div>
+    ${outlierNote}
+  `;
+  tooltip.style.display = 'block';
+  const rect = el.getBoundingClientRect();
+  const ttW = 170;
+  const ttH = 90;
+  let left = rect.left + rect.width / 2 - ttW / 2;
+  let top = rect.bottom + 10;
+  // Keep inside viewport
+  if(left < 6) left = 6;
+  if(left + ttW > window.innerWidth - 6) left = window.innerWidth - ttW - 6;
+  if(top + ttH > window.innerHeight - 6) top = rect.top - ttH - 10;
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
+}
+function hideMileageTooltip(){
+  const tooltip = document.getElementById('ma-chart-tooltip');
+  if(tooltip) tooltip.style.display = 'none';
+}
+
+// Tooltip for gap markers — explains WHY mileage couldn't be computed for this day
+function showMileageGapTooltip(el, event){
+  const tooltip = document.getElementById('ma-chart-tooltip');
+  if(!tooltip) return;
+  const date = el.dataset.date;
+  const missing = el.dataset.missing;
+  const fill = el.dataset.fill;
+  const hmr = el.dataset.hmr;
+  const km = el.dataset.km;
+  const isRoad = el.dataset.isroad === 'true';
+
+  const parts = date.split('-');
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dateDisplay = parseInt(parts[2],10) + ' ' + monthNames[parseInt(parts[1],10)-1] + ' ' + parts[0].slice(2);
+
+  tooltip.innerHTML = `
+    <div style="font-weight:700;margin-bottom:3px;font-size:12.5px">${dateDisplay}</div>
+    <div style="color:#fbbf24;font-weight:700;margin-bottom:6px;font-size:12px">⚠ ${missing}</div>
+    <div style="font-family:'Space Mono',monospace;color:#e5e7eb">Fill: ${fill} L${(+fill<=0)?' <span style="color:#fca5a5">(0)</span>':''}</div>
+    <div style="font-family:'Space Mono',monospace;color:#e5e7eb">${isRoad ? 'Distance' : 'Hours'}: ${isRoad ? km + ' km' : hmr + ' h'}${((+hmr<=0 && !isRoad) || (+km<=0 && isRoad))?' <span style="color:#fca5a5">(0)</span>':''}</div>
+    <div style="margin-top:6px;padding-top:6px;border-top:1px solid #374151;color:#d1d5db;font-size:10.5px">Mileage not computable — check the record's Excel row</div>
+  `;
+  tooltip.style.display = 'block';
+  const rect = el.getBoundingClientRect();
+  const ttW = 200;
+  const ttH = 130;
+  let left = rect.left + rect.width / 2 - ttW / 2;
+  let top = rect.bottom + 10;
+  if(left < 6) left = 6;
+  if(left + ttW > window.innerWidth - 6) left = window.innerWidth - ttW - 6;
+  if(top + ttH > window.innerHeight - 6) top = rect.top - ttH - 10;
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
 }
 
 function renderMilAbn(){
@@ -6611,17 +7192,118 @@ function renderMilAbn(){
   const unit = vs.isRoad ? 'km/L' : 'L/hr';
   const kind = vs.isRoad ? '🚛 Road (km/L — higher = better)' : '🏗️ Equipment (L/hr — lower = better)';
 
-  // Summary stats
-  let summaryHTML = `<b style="color:var(--ink);font-size:14px">${escapeHtml(picked)}</b> · ${kind}<div class="ma-stats" style="margin-top:8px">`;
-  if(vs.stats){
-    summaryHTML += `<div class="ma-stat"><div class="ma-stat-label">Data days</div><div class="ma-stat-value">${vs.stats.count}</div></div>`;
-    summaryHTML += `<div class="ma-stat"><div class="ma-stat-label">Average</div><div class="ma-stat-value">${vs.stats.mean.toFixed(2)}</div></div>`;
-    summaryHTML += `<div class="ma-stat"><div class="ma-stat-label">Min</div><div class="ma-stat-value">${vs.stats.min.toFixed(2)}</div></div>`;
-    summaryHTML += `<div class="ma-stat"><div class="ma-stat-label">Max</div><div class="ma-stat-value">${vs.stats.max.toFixed(2)}</div></div>`;
-    summaryHTML += `<div class="ma-stat"><div class="ma-stat-label">Anomalies</div><div class="ma-stat-value ${vs.anomalyCount > 0 ? 'bad' : 'good'}">${vs.anomalyCount}</div></div>`;
+  // === Rich TASR-style header + stat cards ===
+  // Compute rich stats
+  const validPts = vs.series.filter(s => s.mileage != null && s.mileage > 0);
+  const totalEntries = validPts.length;
+  const totalHours = vs.series.reduce((a,s) => a + (s.workHour || 0), 0);
+  const totalKm = vs.series.reduce((a,s) => a + (s.km || 0), 0);
+  const totalFill = vs.series.reduce((a,s) => a + (s.fill || 0), 0);
+
+  // BEST / WORST — use ROBUST bounds (5th/95th percentile) to avoid picking data-quality outliers
+  //   Equipment (L/hr): LOWER value = BETTER (less consumption)
+  //   Road (km/L):      HIGHER value = BETTER (more distance per litre)
+  const sortedPts = [...validPts].sort((a,b) => a.mileage - b.mileage);
+  const pctIdx = (pct) => Math.max(0, Math.min(sortedPts.length - 1, Math.floor(sortedPts.length * pct)));
+  let bestPt = null, worstPt = null;
+  if(sortedPts.length){
+    if(vs.isRoad){
+      // Highest at ~95th percentile (skip top outlier), lowest at ~5th percentile (skip bottom outlier)
+      bestPt = sortedPts[pctIdx(0.95)];
+      worstPt = sortedPts[pctIdx(0.05)];
+    } else {
+      bestPt = sortedPts[pctIdx(0.05)];
+      worstPt = sortedPts[pctIdx(0.95)];
+    }
   }
-  summaryHTML += `</div>`;
-  summaryEl.innerHTML = summaryHTML;
+  const latestPt = [...validPts].sort((a,b) => b.date.localeCompare(a.date))[0] || null;
+  // Compare latest to MEDIAN not mean (median is robust to outliers)
+  const centerRef = vs.stats.median;
+  const latestDev = latestPt ? ((latestPt.mileage - centerRef) / centerRef) * 100 : 0;
+
+  // Get vehicle metadata
+  const vehRec = state.records.find(r => r.vehicle === picked);
+  const vehBranch = vehRec?.branch || '';
+  const vehModel = vehRec?.data?.['Object Model'] || (vs.isRoad ? 'Vehicle' : 'Machine');
+  const vehSite = state.sites?.[picked] || '';
+
+  // Header card
+  const headerEl = document.getElementById('ma-veh-header');
+  if(headerEl){
+    headerEl.innerHTML = `
+      <div class="ma-veh-card">
+        <div class="ma-veh-card-left">
+          <div class="ma-veh-icon">${vs.isRoad ? '🚛' : '⚙️'}</div>
+          <div style="min-width:0">
+            <div class="ma-veh-title">${escapeHtml(picked)}</div>
+            <div class="ma-veh-sub">
+              ${vehModel ? '<span>' + escapeHtml(vehModel) + '</span>·' : ''}
+              <span class="ma-type-pill">${vs.isRoad ? 'Road' : 'Machine'}</span>
+              ${vehBranch ? '·<span>📍 ' + escapeHtml(vehBranch) + '</span>' : ''}
+              ${vehSite ? '·<span style="color:var(--muted)">' + escapeHtml(vehSite) + '</span>' : ''}
+            </div>
+          </div>
+        </div>
+        <div class="ma-veh-count">${kind}</div>
+      </div>
+    `;
+  }
+
+  // Format helpers for card sub-labels
+  const fmtDateShort = d => {
+    if(!d) return '';
+    const parts = d.split('-');
+    const mnths = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return parseInt(parts[2],10) + ' ' + mnths[parseInt(parts[1],10)-1] + ' ' + parts[0].slice(2);
+  };
+
+  // 6 stat cards
+  const cardsEl = document.getElementById('ma-stat-cards');
+  if(cardsEl){
+    const consumedUnit = vs.isRoad ? 'km lifetime distance' : 'L consumed lifetime';
+    const hoursUnit = vs.isRoad ? 'km driven' : 'operating hrs';
+    const hoursMain = vs.isRoad ? totalKm : totalHours;
+    cardsEl.innerHTML = `
+      <div class="ma-card ma-card-info">
+        <div class="ma-card-label">Fill Events</div>
+        <div class="ma-card-value">${vs.series.length}</div>
+        <div class="ma-card-sub">${totalFill.toFixed(0)} ${consumedUnit}</div>
+      </div>
+      <div class="ma-card ma-card-info">
+        <div class="ma-card-label">${vs.isRoad ? 'Distance' : 'HMR Delta Sum'}</div>
+        <div class="ma-card-value">${hoursMain.toFixed(0)}</div>
+        <div class="ma-card-sub">${hoursUnit}</div>
+      </div>
+      <div class="ma-card ma-card-info">
+        <div class="ma-card-label">Median ${unit}</div>
+        <div class="ma-card-value">${vs.stats.median.toFixed(2)}</div>
+        <div class="ma-card-sub">${totalEntries} F2F pair${totalEntries===1?'':'s'} · avg ${vs.stats.mean.toFixed(1)}</div>
+      </div>
+      <div class="ma-card ma-card-good">
+        <div class="ma-card-label">⬇ Best</div>
+        <div class="ma-card-value">${bestPt ? bestPt.mileage.toFixed(2) : '—'} <span class="ma-card-unit">${unit}</span></div>
+        <div class="ma-card-sub">${bestPt ? fmtDateShort(bestPt.date) : ''}</div>
+      </div>
+      <div class="ma-card ma-card-bad">
+        <div class="ma-card-label">⚠ Worst</div>
+        <div class="ma-card-value">${worstPt ? worstPt.mileage.toFixed(2) : '—'} <span class="ma-card-unit">${unit}</span></div>
+        <div class="ma-card-sub">${worstPt ? fmtDateShort(worstPt.date) : ''}</div>
+      </div>
+      <div class="ma-card ma-card-neutral">
+        <div class="ma-card-label">● Latest</div>
+        <div class="ma-card-value">${latestPt ? latestPt.mileage.toFixed(2) : '—'} <span class="ma-card-unit">${unit}</span></div>
+        <div class="ma-card-sub">${latestPt ? (latestDev>0?'+':'') + latestDev.toFixed(1) + '% vs avg · ' + fmtDateShort(latestPt.date) : ''}</div>
+      </div>
+    `;
+  }
+
+  // Chart caption
+  const captionEl = document.getElementById('ma-chart-caption');
+  if(captionEl){
+    const missingCount = vs.series.length - totalEntries;
+    const missingSuffix = missingCount > 0 ? ` · ${missingCount} missing` : '';
+    captionEl.textContent = `${totalEntries} valid F2F pair${totalEntries===1?'':'s'}${missingSuffix} · unit ${unit}${vs.series.length>10?' · scroll to see all':''}`;
+  }
 
   // Chart
   if(vs.stats){
