@@ -381,24 +381,29 @@
   .pivot.pivot3 td.sticky-rem textarea:hover{border-color:var(--line);background:#fff}
   .pivot.pivot3 td.sticky-rem textarea:focus{outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 2px rgba(10,110,110,.12)}
 
-  /* Per-period remarks — stacked labeled textareas */
-  .pivot.pivot3 td.sticky-rem .rem-period{margin-bottom:6px}
+  /* Per-period remarks — stacked labeled textareas (compact styling) */
+  .pivot.pivot3 td.sticky-rem .rem-period{margin-bottom:3px}
   .pivot.pivot3 td.sticky-rem .rem-period:last-child{margin-bottom:0}
   .pivot.pivot3 td.sticky-rem .rem-period-label{
-    font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.03em;
-    text-transform:uppercase;margin-bottom:2px;display:flex;align-items:center;gap:4px;
+    font-size:8.5px;font-weight:700;color:var(--muted);letter-spacing:.03em;
+    text-transform:uppercase;margin-bottom:1px;display:flex;align-items:center;gap:3px;line-height:1.1;
   }
   .pivot.pivot3 td.sticky-rem .rem-period-label.needed{color:#b45309}
+  .pivot.pivot3 td.sticky-rem textarea{
+    padding:3px 6px;min-height:20px;font-size:11px;line-height:1.35;
+  }
   .pivot.pivot3 td.sticky-rem textarea.rem-missing{
     border-color:#fca5a5 !important;background:#fef2f2 !important;
     box-shadow:0 0 0 2px rgba(220,38,38,.08);
   }
   .pivot.pivot3 td.sticky-rem textarea.rem-missing::placeholder{color:#dc2626;font-weight:600}
   .pivot.pivot3 td.sticky-rem .rem-legacy{
-    font-size:10.5px;color:var(--muted);font-style:italic;
-    padding:3px 6px;background:#f9fafb;border-radius:4px;margin-bottom:4px;
-    border-left:2px solid var(--line);
+    font-size:10px;color:var(--muted);font-style:italic;
+    padding:2px 5px;background:#f9fafb;border-radius:3px;margin-bottom:3px;
+    border-left:2px solid var(--line);line-height:1.3;
   }
+  /* Reduce sticky-rem cell top/bottom padding so overall row is compact */
+  .pivot.pivot3 td.sticky-rem{padding:4px 6px !important;vertical-align:top}
   /* Top summary bar */
   #vp-remark-summary{
     padding:9px 14px;border:1px solid #fcd34d;border-radius:6px;
@@ -1350,6 +1355,13 @@
             <button class="btn sm" onclick="setVehRangeAll()">All</button>
           </div>
         </div>
+        <div class="field" style="flex:0 0 auto;min-width:180px">
+          <label>Remark frequency</label>
+          <select id="veh-rem-gran" onchange="setRemarkGranularity(this.value)">
+            <option value="half">Half-month (2/month)</option>
+            <option value="5day">Every 5 days (6/month)</option>
+          </select>
+        </div>
         <div class="field" style="flex:1 1 200px">
           <label>Search vehicle / site / branch</label>
           <input type="text" id="veh-search" placeholder="Search…" oninput="renderVehicles()" />
@@ -1854,6 +1866,7 @@ let state = {
   models: {},           // {vehicle: model}         — editable, overrides upload's Object Model
   remarks: {},          // {vehicle: text}          — free-text per-vehicle notes (Page 2, legacy — single per vehicle)
   periodRemarks: {},    // {`${v}|YYYY-MM-HN`: text} — half-month notes (H1 = days 1-15, H2 = days 16-end)
+  remarkGranularity: 'half',  // 'half' (H1/H2) or '5day' (C1-C6: 1-5, 6-10, 11-15, 16-20, 21-25, 26-end)
   siteFills: {},        // {`${v}|${d}`: number}    — manual SITE FILL entries
   siteHMRs: {},         // {`${v}|${d}`: number}    — manual Site HMR entered with Site Fill
   fillOverrides: {},    // {`${v}|${d}`: number}    — overrides upload's Fill (Online Fill correction)
@@ -1871,6 +1884,7 @@ function loadState(){
     if(s.models) state.models = s.models;
     if(s.remarks) state.remarks = s.remarks;
     if(s.periodRemarks) state.periodRemarks = s.periodRemarks;
+    if(s.remarkGranularity === 'half' || s.remarkGranularity === '5day') state.remarkGranularity = s.remarkGranularity;
     if(s.siteFills) state.siteFills = s.siteFills;
     if(s.siteHMRs) state.siteHMRs = s.siteHMRs;
     if(s.fillOverrides) state.fillOverrides = s.fillOverrides;
@@ -1893,7 +1907,7 @@ function loadState(){
 /* App version — bump on any deploy. Shows in the top-right header as "v2.5"
    so you can compare across laptops. If two devices show different versions,
    the older one is running cached HTML — hard-refresh (Ctrl+Shift+R) it. */
-const APP_VERSION = 'v2.17 · 2026-08-31';
+const APP_VERSION = 'v2.20 · 2026-09-01';
 
 // Populate version badge as soon as DOM is ready + log to console for debugging
 document.addEventListener('DOMContentLoaded', () => {
@@ -2304,7 +2318,7 @@ Click OK to retry the sync now, or Cancel to keep working locally.`;
         });
         return {
           vehicle: v,
-          site: state.sites?.[v] || null,
+          site_name: state.sites?.[v] || null,
           model: state.models?.[v] || null,
           remark: state.remarks?.[v] || null,
           period_remarks: Object.keys(pr).length ? pr : null
@@ -2312,8 +2326,19 @@ Click OK to retry the sync now, or Cancel to keep working locally.`;
       });
       report(`Pushing ${vehRows.length} vehicles…`);
       for(let i=0; i<vehRows.length; i+=500){
-        const { error } = await this.client.from('vehicles').upsert(vehRows.slice(i, i+500), {onConflict: 'vehicle'});
-        if(error) throw error;
+        const batch = vehRows.slice(i, i+500);
+        const { error } = await this.client.from('vehicles').upsert(batch, {onConflict: 'vehicle'});
+        if(error){
+          // If the period_remarks column doesn't exist yet, retry without it (schema not migrated)
+          if(String(error.message || '').toLowerCase().includes('period_remarks')){
+            const fallback = batch.map(r => { const { period_remarks, ...rest } = r; return rest; });
+            const retry = await this.client.from('vehicles').upsert(fallback, {onConflict: 'vehicle'});
+            if(retry.error) throw retry.error;
+            console.warn('period_remarks column missing — pushed without it. Run: ALTER TABLE vehicles ADD COLUMN period_remarks jsonb;');
+          } else {
+            throw error;
+          }
+        }
       }
 
       // 4. Upload entries — file history. Uses ID or (file+when) as conflict key.
@@ -3185,7 +3210,10 @@ function renderVehicles(){
 
   // Half-month periods (H1: days 1-15, H2: days 16-end) covered by the visible date range.
   // Each vehicle row will show one remark textarea per period.
-  const periodsForRemarks = periodsInRange(fromD, toD);
+  const granularity = state.remarkGranularity || 'half';
+  const granSel = document.getElementById('veh-rem-gran');
+  if(granSel && granSel.value !== granularity) granSel.value = granularity;
+  const periodsForRemarks = periodsInRange(fromD, toD, granularity);
 
   const recs = state.records.filter(r=>
     (!fromD || r.date >= fromD) && (!toD || r.date <= toD)
@@ -3317,9 +3345,9 @@ function renderVehicles(){
         const labelCls = isMissing ? 'rem-period-label needed' : 'rem-period-label';
         const textareaCls = isMissing ? 'rem-inp rem-missing' : 'rem-inp';
         const placeholder = isMissing ? 'REQUIRED — add remark…' : 'Add note…';
-        remCell += `<div class="rem-period">
-          <div class="${labelCls}">${isMissing ? '⚠ ' : ''}${escapeHtml(p.short)}</div>
-          <textarea class="${textareaCls}" data-vehicle="${escapeAttr(v)}" data-period="${p.key}" oninput="autoResizeRemark(this)" onchange="updatePeriodRemark(this)" placeholder="${placeholder}" rows="1">${escapeHtml(val)}</textarea>
+        remCell += `<div class="rem-period" data-vehicle="${escapeAttr(v)}" data-period="${p.key}" data-has-data="${hasData?'1':'0'}">
+          <div class="${labelCls}"><span class="rem-warn-icon">${isMissing ? '⚠ ' : ''}</span>${escapeHtml(p.short)}</div>
+          <textarea class="${textareaCls}" data-vehicle="${escapeAttr(v)}" data-period="${p.key}" oninput="onRemarkTyping(this)" onchange="updatePeriodRemark(this)" placeholder="${placeholder}" rows="1">${escapeHtml(val)}</textarea>
         </div>`;
       });
     }
@@ -3364,29 +3392,62 @@ function updateRemark(input){
 }
 
 // ============ PERIOD REMARKS (half-month notes for Page 2) ============
-// Business rule: remarks are typically written twice per month —
-//   once for days 1-15 (H1) and once for days 16-end (H2).
-// Storage key format: `${vehicle}|${YYYY-MM}-H1` or -H2
+// Two granularity modes controlled by state.remarkGranularity:
+//   'half'  → H1 (days 1-15), H2 (days 16-end)                  → 2 remarks/month
+//   '5day'  → C1 (1-5), C2 (6-10), C3 (11-15), C4 (16-20),      → 6 remarks/month
+//             C5 (21-25), C6 (26-end)
+// Storage key format: `${vehicle}|${YYYY-MM}-XN` where X is H or C.
 
-// Given a date string YYYY-MM-DD, return the period label "2026-08-H1"
-function periodOfDate(date){
-  const [y, m, d] = date.split('-');
-  const half = parseInt(d, 10) <= 15 ? 'H1' : 'H2';
-  return `${y}-${m}-${half}`;
+// Helper: given a granularity and month, return the array of chunks with day ranges
+function chunksForMonth(year, monthIndex, granularity){
+  const lastDay = new Date(year, monthIndex + 1, 0).getDate();
+  if(granularity === '5day'){
+    return [
+      { code: 'C1', startDay: 1,  endDay: Math.min(5,  lastDay) },
+      { code: 'C2', startDay: 6,  endDay: Math.min(10, lastDay) },
+      { code: 'C3', startDay: 11, endDay: Math.min(15, lastDay) },
+      { code: 'C4', startDay: 16, endDay: Math.min(20, lastDay) },
+      { code: 'C5', startDay: 21, endDay: Math.min(25, lastDay) },
+      { code: 'C6', startDay: 26, endDay: lastDay },
+    ].filter(c => c.startDay <= lastDay);
+  }
+  return [
+    { code: 'H1', startDay: 1,  endDay: Math.min(15, lastDay) },
+    { code: 'H2', startDay: 16, endDay: lastDay },
+  ].filter(c => c.startDay <= lastDay);
 }
 
-// Given a from-to date range, return the ordered list of periods it covers.
-// Also returns a human label for each period like "1-15 Aug 2026" / "16-31 Aug 2026".
-function periodsInRange(from, to){
+// Which chunk does a given day fall into?
+function chunkForDay(day, granularity){
+  if(granularity === '5day'){
+    if(day <= 5)  return 'C1';
+    if(day <= 10) return 'C2';
+    if(day <= 15) return 'C3';
+    if(day <= 20) return 'C4';
+    if(day <= 25) return 'C5';
+    return 'C6';
+  }
+  return day <= 15 ? 'H1' : 'H2';
+}
+
+// Given a date string YYYY-MM-DD, return the period key
+function periodOfDate(date, granularity){
+  granularity = granularity || state.remarkGranularity || 'half';
+  const [y, m, d] = date.split('-');
+  const code = chunkForDay(parseInt(d, 10), granularity);
+  return `${y}-${m}-${code}`;
+}
+
+// Given a from-to date range, return the ordered list of period objects it covers
+function periodsInRange(from, to, granularity){
+  granularity = granularity || state.remarkGranularity || 'half';
   if(!from || !to) return [];
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const out = [];
   const seen = new Set();
-  // Walk day-by-day; safe because ranges here are usually days-to-months, not years
   const fromDate = new Date(from + 'T00:00:00');
   const toDate   = new Date(to   + 'T00:00:00');
   if(isNaN(fromDate) || isNaN(toDate) || fromDate > toDate) return [];
-  // Cap the walk at 400 days to avoid runaway loops if user picks weird dates
   const maxDays = 400;
   let cur = new Date(fromDate);
   let steps = 0;
@@ -3394,17 +3455,19 @@ function periodsInRange(from, to){
     const y = cur.getFullYear();
     const m = String(cur.getMonth() + 1).padStart(2, '0');
     const d = cur.getDate();
-    const half = d <= 15 ? 'H1' : 'H2';
-    const key = `${y}-${m}-${half}`;
+    const code = chunkForDay(d, granularity);
+    const key = `${y}-${m}-${code}`;
     if(!seen.has(key)){
       seen.add(key);
-      // Compute end day for label — H1 always ends on 15, H2 on last day of month
-      const endDay = half === 'H1' ? 15 : new Date(y, cur.getMonth() + 1, 0).getDate();
-      const startDay = half === 'H1' ? 1 : 16;
+      // Look up the range for this chunk in this month
+      const chunks = chunksForMonth(y, cur.getMonth(), granularity);
+      const chunk = chunks.find(c => c.code === code);
+      const startDay = chunk?.startDay || d;
+      const endDay = chunk?.endDay || d;
       out.push({
         key,
         label: `${startDay}-${endDay} ${months[cur.getMonth()]} ${y}`,
-        short: `${half === 'H1' ? '1-15' : '16-' + endDay} ${months[cur.getMonth()]}`
+        short: `${startDay}-${endDay} ${months[cur.getMonth()]}`
       });
     }
     cur.setDate(cur.getDate() + 1);
@@ -3415,12 +3478,17 @@ function periodsInRange(from, to){
 // Does this vehicle have ANY data (record, site fill, or site HMR) in the given period?
 // Used to decide whether a missing remark should be flagged as "required".
 function vehicleHasDataInPeriod(vehicle, periodKey){
-  // periodKey like "2026-08-H1"
-  const [y, m, half] = [periodKey.slice(0,4), periodKey.slice(5,7), periodKey.slice(8)];
-  const startDay = half === 'H1' ? 1 : 16;
-  const endDay = half === 'H1' ? 15 : new Date(+y, +m, 0).getDate();
-  const fromD = `${y}-${m}-${String(startDay).padStart(2,'0')}`;
-  const toD   = `${y}-${m}-${String(endDay).padStart(2,'0')}`;
+  // periodKey format: YYYY-MM-XN where XN is H1/H2 (half-month) or C1-C6 (5-day)
+  const y = periodKey.slice(0,4);
+  const m = periodKey.slice(5,7);
+  const code = periodKey.slice(8);
+  const monthIndex = parseInt(m, 10) - 1;
+  // Look up range for both possible granularities so this function works for legacy keys too
+  const chunks = [...chunksForMonth(+y, monthIndex, 'half'), ...chunksForMonth(+y, monthIndex, '5day')];
+  const chunk = chunks.find(c => c.code === code);
+  if(!chunk) return false;
+  const fromD = `${y}-${m}-${String(chunk.startDay).padStart(2,'0')}`;
+  const toD   = `${y}-${m}-${String(chunk.endDay).padStart(2,'0')}`;
   // Records
   const hasRec = state.records.some(r => r.vehicle === vehicle && r.date >= fromD && r.date <= toD);
   if(hasRec) return true;
@@ -3431,6 +3499,14 @@ function vehicleHasDataInPeriod(vehicle, periodKey){
   return hasCell;
 }
 
+// UI handler for granularity toggle
+function setRemarkGranularity(mode){
+  if(mode !== 'half' && mode !== '5day') return;
+  state.remarkGranularity = mode;
+  saveState();
+  renderVehicles();
+}
+
 // Save handler for period-specific remark textarea
 function updatePeriodRemark(input){
   const v = input.dataset.vehicle;
@@ -3439,11 +3515,30 @@ function updatePeriodRemark(input){
   const t = (input.value || '').trim();
   if(t) state.periodRemarks[key] = t;
   else  delete state.periodRemarks[key];
-  // Refresh the "missing" red border state
-  input.classList.toggle('rem-missing', !t && vehicleHasDataInPeriod(v, p));
+  // Re-apply the live visual sync — border, label color, warning icon
+  onRemarkTyping(input);
   // Update the summary strip at top of page
   updateRemarkSummary();
   saveState();
+}
+
+// Called on every keystroke — updates the warning visuals live (no save yet — that's onchange's job)
+// This way "⚠ 1-15 AUG" vanishes AS SOON AS the user starts typing.
+function onRemarkTyping(input){
+  autoResizeRemark(input);
+  const hasText = (input.value || '').trim().length > 0;
+  const wrap = input.closest('.rem-period');
+  const label = wrap?.querySelector('.rem-period-label');
+  const icon  = wrap?.querySelector('.rem-warn-icon');
+  const hasData = wrap?.dataset.hasData === '1';
+  const shouldWarn = hasData && !hasText;
+  // Toggle red border on textarea
+  input.classList.toggle('rem-missing', shouldWarn);
+  // Toggle amber label color + warning icon
+  if(label) label.classList.toggle('needed', shouldWarn);
+  if(icon)  icon.textContent = shouldWarn ? '⚠ ' : '';
+  // Placeholder text also switches
+  input.placeholder = shouldWarn ? 'REQUIRED — add remark…' : 'Add note…';
 }
 
 // Update the summary bar at top of Page 2 that shows how many vehicles still need remarks
@@ -3453,7 +3548,7 @@ function updateRemarkSummary(){
   const from = document.getElementById('veh-from')?.value;
   const to   = document.getElementById('veh-to')?.value;
   if(!from || !to){ bar.style.display = 'none'; return; }
-  const periods = periodsInRange(from, to);
+  const periods = periodsInRange(from, to, state.remarkGranularity || 'half');
   if(!periods.length){ bar.style.display = 'none'; return; }
   // Count vehicles with data-but-no-remark, per period
   const allV = new Set([
