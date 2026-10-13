@@ -424,6 +424,17 @@
     color:#fff;font-size:11px;letter-spacing:.04em;padding:8px 4px;
     border-left:2px solid rgba(255,255,255,.2);
   }
+  /* A day with manual Site entries but no uploaded Excel. The column still shows
+     so the entry is visible and correctable — it is just flagged as unverified. */
+  .pivot.pivot3 th.date-grp.no-upload{background:linear-gradient(180deg,#9a3412 0%,#c2410c 100%)}
+  .pivot.pivot3 th.date-grp .nu-tag{
+    display:block;font-size:8px;font-weight:700;letter-spacing:.06em;
+    opacity:.92;text-transform:uppercase;margin-top:1px;
+  }
+  .th-sub{
+    display:block;font-weight:400;font-size:8.5px;opacity:.8;
+    letter-spacing:.05em;text-transform:uppercase;
+  }
   .pivot.pivot3 th.metric{
     font-size:10px;font-weight:700;letter-spacing:.02em;padding:6px 3px;
     text-transform:uppercase;background:#0d4e4e;color:rgba(255,255,255,.92);
@@ -1052,6 +1063,30 @@
   }
   .ma-veh-count{font-size:11px;color:var(--muted);white-space:nowrap}
 
+  /* ========== PAGE 9: ANALYSED PAGE 2 — stacked raw + corrected cells ========== */
+  .pivot.an-pivot td.an-cell{padding:4px 5px !important;vertical-align:top;min-width:88px}
+  .an-raw{
+    font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;
+    padding:1px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .an-raw::before{content:"raw ";font-size:8.5px;text-transform:uppercase;letter-spacing:.03em;opacity:.7}
+  .an-corr-inp{
+    width:100%;padding:3px 5px;font-size:11.5px;border:1px solid var(--line);border-radius:4px;
+    font-family:'Space Mono',monospace;background:#fff;box-sizing:border-box;
+  }
+  .an-corr-inp:hover{border-color:var(--primary)}
+  .an-corr-inp:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px rgba(10,110,110,.14)}
+  .an-corr-inp.an-modified{
+    border-color:#2563eb;background:#eff6ff;font-weight:700;color:#1e3a8a;
+  }
+  .an-cell.m-fill .an-raw{color:#065f46}
+  .an-cell.m-sfill .an-raw{color:#92400e}
+  .an-cell.m-hmr .an-raw{color:#1e3a8a}
+  .an-diff-badge{
+    display:inline-block;font-size:8.5px;font-weight:700;color:#2563eb;
+    background:#eff6ff;border-radius:3px;padding:0 3px;margin-left:3px;vertical-align:middle;
+  }
+
   /* Responsive: stack ranking + detail on narrow screens */
   @media (max-width: 900px){
     #ma-detail-grid{grid-template-columns:1fr !important}
@@ -1198,9 +1233,341 @@
     font-variant-numeric:tabular-nums;
   }
 
+  /* ========== LOADING SPINNER ========== */
+  .loading-pane{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:70px 20px;gap:14px;
+  }
+  .loading-spin{
+    width:34px;height:34px;border-radius:50%;
+    border:3px solid var(--line);border-top-color:var(--primary);
+    animation:loadSpin .7s linear infinite;
+  }
+  @keyframes loadSpin{to{transform:rotate(360deg)}}
+  .loading-text{
+    font-size:12.5px;color:var(--ink-2);font-weight:600;letter-spacing:.03em;
+  }
+  .loading-sub{font-size:11px;color:var(--muted);margin-top:-8px}
+  /* Dim the toolbar while a render is in flight so it reads as busy */
+  .toolbar.is-busy{opacity:.55;pointer-events:none;transition:opacity .1s}
+
+  /* ========== PAGE 10: MONTHLY OUTPUT ========== */
+  .mo-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+  .mo-tbl thead th{
+    background:var(--bg-2);color:#fff;padding:9px 10px;font-size:10px;
+    letter-spacing:.04em;text-transform:uppercase;font-weight:700;text-align:left;
+    position:sticky;top:0;z-index:4;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);
+  }
+  .mo-tbl thead th.num{text-align:right}
+  .mo-tbl thead th .sub{display:block;font-size:8px;opacity:.65;font-weight:600;letter-spacing:.03em;margin-top:1px}
+  .mo-tbl th.h-hmr{background:#78350f}
+  .mo-tbl th.h-online{background:#065f46}
+  .mo-tbl th.h-site{background:#7c2d12}
+  .mo-tbl th.h-diff{background:#1e1b4b}
+  .mo-tbl tbody td{padding:7px 10px;border-bottom:1px solid var(--line);background:#fff;color:var(--ink)}
+  .mo-tbl tbody td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .mo-tbl tbody tr:hover td{background:var(--primary-3)}
+  .mo-grp td{
+    background:#fffbeb !important;font-weight:700;font-size:11px;color:#92400e;
+    letter-spacing:.04em;padding:8px 10px;border-top:2px solid #f59e0b;
+  }
+  .mo-pill{
+    display:inline-block;padding:2px 8px;border-radius:5px;font-size:11.5px;font-weight:700;
+    font-family:'Space Mono',monospace;background:var(--primary-3);color:var(--primary);
+    border:1px solid rgba(10,110,110,.25);
+  }
+  .mo-cell-hmr{background:#fffbeb !important;color:#92400e;font-weight:700}
+  .mo-cell-online{background:#f0fdf4 !important;color:#047857;font-weight:600}
+  .mo-cell-site{background:#fff7ed !important;color:#9a3412;font-weight:600}
+  /* Page 10 — a total that includes an analysis-team correction (Page 9).
+     Red rail + dot, so the column's own colour coding still reads. */
+  .mo-corr{position:relative;box-shadow:inset 3px 0 0 #dc2626}
+  .mo-corr::after{content:'●';position:absolute;top:0;right:2px;font-size:7px;color:#dc2626}
+  .mo-corr-key{color:#dc2626;font-size:8px;vertical-align:middle}
+  .mo-legend{font-size:11px;color:var(--ink-2);margin-top:5px;line-height:1.5;font-weight:400}
+  .mo-legend b{color:var(--ink)}
+  .mo-dpos{background:#f0fdf4 !important;color:#065f46;font-weight:700}
+  .mo-dneg{background:#fef2f2 !important;color:#991b1b;font-weight:700}
+  .mo-dzero{background:#f8fafc !important;color:#475569;font-weight:700}
+  .mo-rem{font-size:11px;color:var(--ink-2);max-width:280px;line-height:1.45}
+  /* Per-period Analysis Remark headers (1-15 Sep · 16-30 Sep …) */
+  .mo-tbl th.mo-rem-h{min-width:150px;line-height:1.3}
+  .mo-tbl th.mo-rem-h .sub{
+    display:block;font-size:8.5px;font-weight:400;opacity:.65;
+    letter-spacing:.04em;text-transform:uppercase;margin-top:1px;
+  }
+  .mo-verified{
+    display:inline-block;padding:2px 9px;border-radius:99px;font-size:10px;font-weight:700;
+    background:#dcfce7;color:#166534;border:1px solid #86efac;letter-spacing:.04em;
+  }
+  .mo-unverified{
+    display:inline-block;padding:2px 9px;border-radius:99px;font-size:10px;font-weight:700;
+    background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;letter-spacing:.04em;
+  }
+
+  /* ========== MISSING-HMR AUDIT ========== */
+  /* A Site Fill was entered but its paired Site HMR was left blank. */
+  .pivot.pivot3 input.site-hmr-inp.hmr-missing{
+    background:#fee2e2 !important;border:1.5px solid #dc2626 !important;
+    box-shadow:0 0 0 2px rgba(220,38,38,.15);
+  }
+  .pivot.pivot3 input.site-hmr-inp.hmr-missing::placeholder{
+    color:#b91c1c !important;font-weight:700;font-size:10px;letter-spacing:.02em;
+  }
+  .pivot.pivot3 td.cell-shmr.hmr-missing-cell{background:#fef2f2 !important}
+  #btn-miss-hmr.on{
+    background:#dc2626 !important;color:#fff !important;border-color:#b91c1c !important;font-weight:700;
+  }
+  #vp-hmr-summary{
+    padding:9px 14px;border:1px solid #fca5a5;border-radius:6px;
+    background:#fef2f2;color:#991b1b;font-size:12.5px;margin-bottom:10px;
+  }
+
+  /* ========== SIGN-IN OVERLAY — command-deck HUD ========== */
+  #login-overlay{
+    position:fixed;inset:0;z-index:9999;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(14,52,84,.55), transparent 60%),
+      #04080f;
+    display:flex;align-items:center;justify-content:center;padding:24px;
+    font-family:'Space Mono',ui-monospace,monospace;overflow:auto;
+  }
+  /* faint engineering grid + scanlines */
+  #login-overlay::before{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(56,189,248,.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,189,248,.055) 1px, transparent 1px);
+    background-size:44px 44px;
+  }
+  #login-overlay::after{
+    content:'';position:absolute;inset:0;pointer-events:none;opacity:.45;
+    background:repeating-linear-gradient(180deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+  }
+
+  .lg-wrap{position:relative;z-index:2;width:100%;max-width:880px}
+
+  /* notched panel used throughout */
+  .lg-panel{
+    position:relative;background:rgba(7,19,33,.82);
+    border:1px solid rgba(56,189,248,.30);
+    clip-path:polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+  }
+
+  /* ---- header strip ---- */
+  .lg-head{padding:16px 22px 18px;margin-bottom:14px}
+  .lg-kicker{
+    font-size:10px;letter-spacing:.26em;color:#38bdf8;opacity:.75;margin-bottom:5px;
+  }
+  .lg-title{
+    font-size:30px;font-weight:700;letter-spacing:.10em;color:#bae6fd;line-height:1;
+    text-shadow:0 0 18px rgba(56,189,248,.55);
+  }
+  .lg-head-row{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap}
+  .lg-clock{font-size:21px;color:#e0f2fe;letter-spacing:.08em;line-height:1.15}
+  .lg-date{font-size:9.5px;letter-spacing:.2em;color:#64748b;margin-top:3px}
+  .lg-online{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.16em;color:#94a3b8}
+  .lg-dot{
+    width:7px;height:7px;border-radius:50%;background:#22d3ee;
+    box-shadow:0 0 9px #22d3ee;animation:lgPulse 1.9s infinite;
+  }
+  @keyframes lgPulse{0%,100%{opacity:1}50%{opacity:.28}}
+
+  /* ---- two-column body ---- */
+  .lg-body{display:grid;grid-template-columns:1.05fr .95fr;gap:14px}
+  @media (max-width:760px){ .lg-body{grid-template-columns:1fr} }
+
+  .lg-sec-label{
+    font-size:9.5px;letter-spacing:.22em;color:#38bdf8;opacity:.8;
+    padding:13px 18px 9px;border-bottom:1px solid rgba(56,189,248,.16);
+  }
+
+  /* ---- system log ---- */
+  .lg-log{padding:13px 18px 16px;font-size:11px;line-height:1.95;color:#7dd3fc;min-height:150px}
+  .lg-log .ok{color:#86efac}
+  .lg-log .pend{color:#64748b}
+  .lg-caret{
+    display:inline-block;width:7px;height:12px;background:#38bdf8;
+    vertical-align:middle;animation:lgBlink 1s steps(2,start) infinite;
+  }
+  @keyframes lgBlink{0%,100%{opacity:1}50%{opacity:0}}
+
+  /* ---- operator (user) cards ---- */
+  .lg-users{padding:14px 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+  .login-user{
+    position:relative;padding:13px 7px 11px;cursor:pointer;text-align:center;
+    background:rgba(10,26,44,.75);border:1px solid rgba(56,189,248,.24);
+    color:#94a3b8;transition:all .14s;
+    clip-path:polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+  .login-user:hover{border-color:rgba(56,189,248,.65);color:#e0f2fe;background:rgba(14,40,66,.9)}
+  .login-user.sel{
+    border-color:#38bdf8;color:#f0f9ff;background:rgba(14,52,84,.95);
+    box-shadow:0 0 0 1px rgba(56,189,248,.45), 0 0 22px rgba(56,189,248,.28) inset;
+  }
+  .lu-id{font-size:8.5px;letter-spacing:.16em;color:#475569;margin-bottom:6px}
+  .login-user.sel .lu-id{color:#38bdf8}
+  .lu-hex{
+    width:30px;height:30px;margin:0 auto 7px;display:grid;place-items:center;
+    font-size:11px;font-weight:700;letter-spacing:.04em;color:#38bdf8;
+    background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.4);
+    clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+  }
+  .login-user.sel .lu-hex{background:rgba(56,189,248,.3);color:#f0f9ff}
+  .lu-name{font-size:11.5px;letter-spacing:.09em;font-weight:700}
+  .lu-role{display:block;font-size:8px;letter-spacing:.14em;margin-top:4px;opacity:.7}
+
+  /* ---- PIN ---- */
+  .lg-pin-wrap{padding:4px 16px 16px}
+  .login-pin-dots{display:flex;gap:13px;justify-content:center;margin:14px 0 11px}
+  .login-pin-dots .d{
+    width:15px;height:15px;border:1px solid rgba(56,189,248,.45);background:rgba(56,189,248,.07);
+    transform:rotate(45deg);transition:all .14s;
+  }
+  .login-pin-dots .d.filled{
+    background:#38bdf8;border-color:#7dd3fc;box-shadow:0 0 13px rgba(56,189,248,.85);
+  }
+  .login-pin-dots .d.err{
+    border-color:#f87171;background:rgba(248,113,113,.3);box-shadow:0 0 13px rgba(248,113,113,.6);
+    animation:loginShake .35s;
+  }
+  @keyframes loginShake{0%,100%{transform:rotate(45deg) translateX(0)}25%{transform:rotate(45deg) translateX(-5px)}75%{transform:rotate(45deg) translateX(5px)}}
+
+  .login-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+  .login-pad button{
+    padding:12px 0;font-size:16px;font-weight:700;letter-spacing:.05em;
+    border:1px solid rgba(56,189,248,.26);background:rgba(10,26,44,.8);
+    cursor:pointer;color:#bae6fd;font-family:inherit;transition:all .12s;
+    clip-path:polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
+  .login-pad button:hover{background:rgba(14,52,84,.95);border-color:rgba(56,189,248,.7);color:#f0f9ff}
+  .login-pad button:active{transform:scale(.95);background:rgba(56,189,248,.28)}
+
+  .login-err{
+    color:#fca5a5;font-size:10.5px;letter-spacing:.14em;min-height:16px;
+    margin-bottom:8px;text-align:center;
+  }
+  .login-hint{
+    font-size:9.5px;letter-spacing:.11em;color:#475569;line-height:1.8;
+    text-align:center;padding:12px 18px 0;border-top:1px solid rgba(56,189,248,.14);margin-top:12px;
+  }
+
+  /* ---- status strip ---- */
+  .lg-status{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:14px}
+  .lg-stat{padding:12px 16px;border-right:1px solid rgba(56,189,248,.14)}
+  .lg-stat:last-child{border-right:none}
+  .lg-stat .k{font-size:8.5px;letter-spacing:.2em;color:#475569;margin-bottom:5px}
+  .lg-stat .v{font-size:13px;letter-spacing:.07em;color:#bae6fd}
+  .lg-bar{height:2px;background:rgba(56,189,248,.16);margin-top:7px}
+  .lg-bar i{display:block;height:100%;background:#38bdf8;box-shadow:0 0 7px rgba(56,189,248,.8)}
+
+
+  /* Signed-in chip in the header */
+  .user-chip{
+    font-size:11px;padding-left:8px;border-left:1px solid rgba(255,255,255,.2);
+    margin-left:4px;display:inline-flex;align-items:center;gap:6px;
+  }
+  .user-chip b{color:#e2e8f0}
+  .user-chip .uc-admin{
+    background:#7c3aed;color:#fff;padding:1px 6px;border-radius:99px;
+    font-size:9px;font-weight:700;letter-spacing:.04em;
+  }
+  .user-chip button{
+    background:transparent;border:1px solid rgba(255,255,255,.25);color:#cbd5e1;
+    font-size:10px;padding:2px 7px;border-radius:5px;cursor:pointer;font-family:inherit;
+  }
+  .user-chip button:hover{background:rgba(255,255,255,.1);color:#fff}
+
+  /* ========== ADMIN-OVERRIDE HIGHLIGHT ==========
+     Admin changed a value that someone else originally entered.
+     Blue background + white text, applied to the input itself. */
+  .admin-override{
+    background:#2563eb !important;color:#fff !important;
+    border-color:#1d4ed8 !important;font-weight:700 !important;
+  }
+  .admin-override::placeholder{color:rgba(255,255,255,.6) !important}
+  textarea.admin-override{background:#2563eb !important;color:#fff !important}
+  td.admin-override-cell{background:#2563eb !important;color:#fff !important;font-weight:700}
 </style>
 </head>
 <body>
+
+<!-- ============ SIGN-IN OVERLAY ============ -->
+<div id="login-overlay">
+  <div class="lg-wrap">
+
+    <!-- header strip -->
+    <div class="lg-panel lg-head">
+      <div class="lg-head-row">
+        <div>
+          <div class="lg-kicker">SJP // SECURE ACCESS</div>
+          <div class="lg-title">COMMAND DECK</div>
+        </div>
+        <div style="text-align:right">
+          <div class="lg-online"><span class="lg-dot"></span>SYSTEM ONLINE</div>
+          <div class="lg-clock" id="lg-clock">--:--:--</div>
+          <div class="lg-date" id="lg-date"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lg-body">
+      <!-- left: system log -->
+      <div class="lg-panel">
+        <div class="lg-sec-label">SYSTEM LOG</div>
+        <div class="lg-log" id="lg-log"></div>
+      </div>
+
+      <!-- right: operator select + PIN -->
+      <div class="lg-panel">
+        <div class="lg-sec-label">SELECT OPERATOR</div>
+        <div class="lg-users" id="login-users"></div>
+        <div class="lg-pin-wrap">
+          <div class="lg-sec-label" style="padding:4px 0 0;border:none">ACCESS CODE</div>
+          <div class="login-pin-dots" id="login-dots">
+            <div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div>
+          </div>
+          <div class="login-err" id="login-err"></div>
+          <div class="login-pad">
+            <button onclick="loginDigit('1')">1</button>
+            <button onclick="loginDigit('2')">2</button>
+            <button onclick="loginDigit('3')">3</button>
+            <button onclick="loginDigit('4')">4</button>
+            <button onclick="loginDigit('5')">5</button>
+            <button onclick="loginDigit('6')">6</button>
+            <button onclick="loginDigit('7')">7</button>
+            <button onclick="loginDigit('8')">8</button>
+            <button onclick="loginDigit('9')">9</button>
+            <button onclick="loginClearPin()">CLR</button>
+            <button onclick="loginDigit('0')">0</button>
+            <button onclick="loginBackspace()">&#9003;</button>
+          </div>
+          <div class="login-hint">
+            ALL OPERATORS HAVE FULL ACCESS<br>
+            SIGN-IN TRACKS WHO CHANGED WHAT
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- status strip -->
+    <div class="lg-panel lg-status">
+      <div class="lg-stat">
+        <div class="k">CORE</div><div class="v">VIMLA VAULT</div>
+        <div class="lg-bar"><i style="width:100%"></i></div>
+      </div>
+      <div class="lg-stat">
+        <div class="k">FLEET</div><div class="v" id="lg-fleet">—</div>
+        <div class="lg-bar"><i style="width:82%"></i></div>
+      </div>
+      <div class="lg-stat">
+        <div class="k">NETWORK</div><div class="v">STABLE</div>
+        <div class="lg-bar"><i style="width:94%"></i></div>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <header class="topbar">
   <div class="topbar-row">
@@ -1217,6 +1584,7 @@
       <span><b id="stat-rec">0</b>records</span>
       <span id="sync-status" style="font-size:11px;cursor:help;padding-left:8px;border-left:1px solid rgba(255,255,255,.2);margin-left:4px"><span style="color:#94a3b8;font-weight:600">◌ Local only</span></span>
       <span id="app-version" title="App version — if two laptops show different versions, hard-refresh (Ctrl+Shift+R) the older one" style="font-size:10px;color:#64748b;padding-left:8px;border-left:1px solid rgba(255,255,255,.2);margin-left:4px;letter-spacing:0.03em;font-variant-numeric:tabular-nums"></span>
+      <span class="user-chip" id="user-chip" style="display:none"></span>
     </div>
   </div>
 </header>
@@ -1231,6 +1599,8 @@
     <button class="tab" data-tab="merged"><span class="num">6</span>Merged Report</button>
     <button class="tab" data-tab="filllog"><span class="num">7</span>Fill Log</button>
     <button class="tab" data-tab="milabn"><span class="num">8</span>Mileage Trend</button>
+    <button class="tab" data-tab="analysed"><span class="num">9</span>Analysed Page 2</button>
+    <button class="tab" data-tab="monthly" id="tab-monthly" style="display:none"><span class="num">10</span>Monthly Output</button>
     <button class="tab tab-admin" data-tab="admin"><span class="num">🔒</span>Admin</button>
   </div>
 </nav>
@@ -1341,11 +1711,11 @@
       <div class="toolbar">
         <div class="field">
           <label>From date</label>
-          <input type="date" id="veh-from" onchange="renderVehicles()" />
+          <input type="date" id="veh-from" autocomplete="off" onchange="renderVehiclesD()" />
         </div>
         <div class="field">
           <label>To date</label>
-          <input type="date" id="veh-to" onchange="renderVehicles()" />
+          <input type="date" id="veh-to" autocomplete="off" onchange="renderVehiclesD()" />
         </div>
         <div class="field" style="flex:0 0 auto;min-width:auto">
           <label style="visibility:hidden">.</label>
@@ -1362,13 +1732,69 @@
             <option value="5day">Every 5 days (6/month)</option>
           </select>
         </div>
+        <div class="field" style="flex:0 0 auto;min-width:auto">
+          <label style="visibility:hidden">.</label>
+          <div class="actions">
+            <button class="btn sm" id="btn-miss-hmr" onclick="toggleMissingHmr()">⚠ Missing HMR</button>
+          </div>
+        </div>
         <div class="field" style="flex:1 1 200px">
           <label>Search vehicle / site / branch</label>
-          <input type="text" id="veh-search" placeholder="Search…" oninput="renderVehicles()" />
+          <input type="text" id="veh-search" placeholder="Search…" oninput="renderVehiclesSearchD()" />
         </div>
       </div>
+      <div id="vp-hmr-summary" style="display:none"></div>
       <div id="vp-remark-summary" style="display:none"></div>
       <div id="vehicles-body"></div>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 9: ANALYSED PAGE 2 (raw + analysis-team corrected, side by side) ============ -->
+  <section class="page" id="page-analysed">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title"><span class="icon">🔍</span>Analysed Page 2 — Raw vs Corrected</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn sm" onclick="exportAnalysedXLSX()">Export Excel</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="field">
+          <label>From date</label>
+          <input type="date" id="an-from" autocomplete="off" onchange="renderAnalysedPage2D()" />
+        </div>
+        <div class="field">
+          <label>To date</label>
+          <input type="date" id="an-to" autocomplete="off" onchange="renderAnalysedPage2D()" />
+        </div>
+        <div class="field" style="flex:0 0 auto;min-width:auto">
+          <label style="visibility:hidden">.</label>
+          <div class="actions">
+            <button class="btn sm" onclick="setAnRange(7)">Last 7d</button>
+            <button class="btn sm" onclick="setAnRange(30)">Last 30d</button>
+            <button class="btn sm" onclick="setAnRangeAll()">All</button>
+          </div>
+        </div>
+        <div class="field" style="flex:0 0 auto;min-width:180px">
+          <label>Remark frequency</label>
+          <select id="an-rem-gran" onchange="setRemarkGranularity(this.value)">
+            <option value="half">Half-month (2/month)</option>
+            <option value="5day">Every 5 days (6/month)</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1 1 200px">
+          <label>Search vehicle / site / branch</label>
+          <input type="text" id="an-search" placeholder="Search…" oninput="renderAnalysedSearchD()" />
+        </div>
+      </div>
+      <div style="padding:8px 16px;font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--line)">
+        Each cell shows the <b>raw</b> value (as uploaded / site-reported) on top, and an editable <b>corrected</b> value below.
+        Leave corrected blank to keep using raw. Corrected values become the source of truth for Mileage Trend, Fill Log, Abnormalities and Merged Report.
+      </div>
+      <div id="an-remark-summary" style="display:none"></div>
+      <div id="analysed-body"></div>
     </div>
   </section>
 
@@ -1597,11 +2023,11 @@
       <div class="toolbar">
         <div class="field">
           <label>From date</label>
-          <input type="date" id="fl-from" onchange="renderFillLog()" />
+          <input type="date" id="fl-from" autocomplete="off" onchange="renderFillLogD()" />
         </div>
         <div class="field">
           <label>To date</label>
-          <input type="date" id="fl-to" onchange="renderFillLog()" />
+          <input type="date" id="fl-to" autocomplete="off" onchange="renderFillLogD()" />
         </div>
         <div class="field" style="flex:0 0 auto;min-width:auto">
           <label style="visibility:hidden">.</label>
@@ -1613,7 +2039,7 @@
         </div>
         <div class="field" style="flex:0 0 auto;min-width:180px">
           <label>Show</label>
-          <select id="fl-mode" onchange="renderFillLog()">
+          <select id="fl-mode" onchange="renderFillLogD()">
             <option value="all">All rows with any fill</option>
             <option value="site-only">Only site fills</option>
             <option value="online-only">Only online fills</option>
@@ -1623,7 +2049,7 @@
         </div>
         <div class="field" style="flex:1 1 200px">
           <label>Search vehicle / site / branch</label>
-          <input type="text" id="fl-search" placeholder="Search…" oninput="renderFillLog()" />
+          <input type="text" id="fl-search" placeholder="Search…" oninput="renderFillLogSearchD()" />
         </div>
       </div>
 
@@ -1647,11 +2073,11 @@
       <div class="toolbar">
         <div class="field">
           <label>From date</label>
-          <input type="date" id="ma-from" onchange="renderMilAbn()" />
+          <input type="date" id="ma-from" autocomplete="off" onchange="renderMilAbnD()" />
         </div>
         <div class="field">
           <label>To date</label>
-          <input type="date" id="ma-to" onchange="renderMilAbn()" />
+          <input type="date" id="ma-to" autocomplete="off" onchange="renderMilAbnD()" />
         </div>
         <div class="field" style="flex:0 0 auto;min-width:auto">
           <label style="visibility:hidden">.</label>
@@ -1663,7 +2089,7 @@
         </div>
         <div class="field" style="flex:0 0 auto;min-width:130px">
           <label>Sensitivity</label>
-          <select id="ma-sensitivity" onchange="renderMilAbn()">
+          <select id="ma-sensitivity" onchange="renderMilAbnD()">
             <option value="20">Low (±20%)</option>
             <option value="30" selected>Medium (±30%)</option>
             <option value="50">High (±50%)</option>
@@ -1754,6 +2180,51 @@
           </div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 10: MONTHLY OUTPUT (admin only) ============ -->
+  <section class="page" id="page-monthly">
+    <!-- Shown when a non-admin somehow lands here -->
+    <div id="monthly-lock" style="display:none;padding:60px 20px;text-align:center">
+      <div style="font-size:40px;margin-bottom:12px">🔒</div>
+      <h2 style="margin:0 0 6px;font-size:18px;color:var(--ink)">Admin only</h2>
+      <p style="color:var(--muted);font-size:13px;margin:0">Sign in as Admin to view the Monthly Output report.</p>
+    </div>
+
+    <div class="card" id="monthly-content">
+      <div class="card-head">
+        <div>
+          <div class="card-title"><span class="icon">📋</span>Monthly Output — Site vs Online</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn sm" onclick="exportMonthlyXLSX()">Export Excel</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="field">
+          <label>From date</label>
+          <input type="date" id="mo-from" autocomplete="off" onchange="renderMonthlyOutputD()" />
+        </div>
+        <div class="field">
+          <label>To date</label>
+          <input type="date" id="mo-to" autocomplete="off" onchange="renderMonthlyOutputD()" />
+        </div>
+        <div class="field" style="flex:0 0 auto;min-width:auto">
+          <label style="visibility:hidden">.</label>
+          <div class="actions">
+            <button class="btn sm" onclick="setMoRange(30)">Last 30d</button>
+            <button class="btn sm" onclick="setMoThisMonth()">This month</button>
+            <button class="btn sm" onclick="setMoRangeAll()">All</button>
+          </div>
+        </div>
+        <div class="field" style="flex:1 1 200px">
+          <label>Search vehicle / site / branch</label>
+          <input type="text" id="mo-search" placeholder="Search…" oninput="renderMonthlySearchD()" />
+        </div>
+      </div>
+      <div id="mo-summary" style="padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel-2);font-size:12.5px;color:var(--ink-2)"></div>
+      <div id="monthly-body"></div>
     </div>
   </section>
 
@@ -1871,6 +2342,13 @@ let state = {
   siteHMRs: {},         // {`${v}|${d}`: number}    — manual Site HMR entered with Site Fill
   fillOverrides: {},    // {`${v}|${d}`: number}    — overrides upload's Fill (Online Fill correction)
   workHourOverrides: {},// {`${v}|${d}`: number}    — overrides upload's Work Hour (Online HMR correction)
+  siteFillOverrides: {},// {`${v}|${d}`: number}    — analysis-team correction of Site Fill (raw stays in siteFills)
+  siteHmrOverrides: {}, // {`${v}|${d}`: number}    — analysis-team correction of Site HMR (raw stays in siteHMRs)
+  // Who touched each editable cell. Key: `${v}|${d}|${field}` where field is
+  // online | sitefill | sitehmr, or `${v}|${periodKey}|remark` for remarks.
+  // Value: {first: <userId>, last: <userId>} — first = who originally set it,
+  // last = who set the value currently stored. Drives the admin-override highlight.
+  cellAuthors: {},
   progress: {},         // {`${v}|${d}|${type}`: progress label} — Page 5 abnormality tracking
   uploads: [],
   columnOrder: []
@@ -1889,6 +2367,9 @@ function loadState(){
     if(s.siteHMRs) state.siteHMRs = s.siteHMRs;
     if(s.fillOverrides) state.fillOverrides = s.fillOverrides;
     if(s.workHourOverrides) state.workHourOverrides = s.workHourOverrides;
+    if(s.siteFillOverrides) state.siteFillOverrides = s.siteFillOverrides;
+    if(s.siteHmrOverrides) state.siteHmrOverrides = s.siteHmrOverrides;
+    if(s.cellAuthors) state.cellAuthors = s.cellAuthors;
     if(s.progress) state.progress = s.progress;
     if(s.uploads) state.uploads = s.uploads;
     if(s.columnOrder) state.columnOrder = s.columnOrder;
@@ -1907,7 +2388,7 @@ function loadState(){
 /* App version — bump on any deploy. Shows in the top-right header as "v2.5"
    so you can compare across laptops. If two devices show different versions,
    the older one is running cached HTML — hard-refresh (Ctrl+Shift+R) it. */
-const APP_VERSION = 'v2.20 · 2026-09-01';
+const APP_VERSION = 'v2.37 · 2026-10-13';
 
 // Populate version badge as soon as DOM is ready + log to console for debugging
 document.addEventListener('DOMContentLoaded', () => {
@@ -1969,7 +2450,7 @@ const cloud = {
     try { return JSON.stringify(e); } catch { return String(e); }
   },
 
-  setStatus(s){
+  setStatus(s, detail){
     const el = document.getElementById('sync-status');
     if(!el) return;
     const map = {
@@ -1982,7 +2463,9 @@ const cloud = {
     const [color, text, tip] = map[s] || map.local;
     // Make "Sync error" clickable so user sees the full diagnostic + retry option
     const clickable = (s === 'error') ? ' onclick="cloud.showErrorDetails()" style="cursor:pointer;text-decoration:underline dotted"' : '';
-    el.innerHTML = `<span${clickable} style="color:${color};font-weight:600">${text}</span>`;
+    const extra = detail
+      ? ` <span style="color:#64748b;font-weight:400;font-size:10px">${detail}</span>` : '';
+    el.innerHTML = `<span${clickable} style="color:${color};font-weight:600">${text}</span>${extra}`;
     el.title = tip;
   },
 
@@ -2043,42 +2526,90 @@ Click OK to retry the sync now, or Cancel to keep working locally.`;
   },
 
   // Supabase silently caps any .select() at 1000 rows unless you paginate.
-  // For tables that can grow past 1000 (records, cells, vehicles eventually),
-  // we page through with .range() until a short page comes back. Page size
-  // 1000 keeps each request under the cap and minimises round-trips.
-  async fetchAllPages(tableName, selectStr = '*', orderCol = null){
+  //
+  // This used to be a plain loop: ask for rows 0-999, wait, ask for 1000-1999,
+  // wait... With 13k records that is 14 full round trips one after another, and
+  // on a slow link it was the single biggest chunk of the minutes-long load.
+  // Now we ask Postgres for the row count once, then fetch every page at the
+  // same time (6 in flight — enough to saturate a link without tripping rate
+  // limits) and stitch the pages back together in order.
+  //
+  // orderCols matters more than it looks: .range() over an unordered query has
+  // no guaranteed row order in Postgres, so parallel pages could overlap or
+  // skip rows. Every caller passes its primary key, which makes the slices
+  // deterministic.
+  async fetchAllPages(tableName, selectStr = '*', orderCols = null){
     if(!this.enabled) return { data: [], error: null };
     const PAGE = 1000;
-    const out = [];
-    let from = 0;
-    let totalSeen = 0;
-    // Safety cap so a runaway table can't loop forever — 50 pages = 50k rows,
-    // well beyond anything realistic for a fleet of <500 vehicles × years of data.
-    for(let i = 0; i < 50; i++){
-      let q = this.client.from(tableName).select(selectStr).range(from, from + PAGE - 1);
-      if(orderCol) q = q.order(orderCol);
-      const { data, error } = await q;
-      if(error) return { data: out, error };
-      if(!data || !data.length) break;
-      out.push(...data);
-      totalSeen += data.length;
-      if(data.length < PAGE) break;   // last page (short)
-      from += PAGE;
+    const cols = Array.isArray(orderCols) ? orderCols : (orderCols ? [orderCols] : []);
+    const ordered = q => { cols.forEach(c => { q = q.order(c, { ascending: true }); }); return q; };
+
+    const { count, error: cErr } = await this.client
+      .from(tableName).select('*', { count: 'exact', head: true });
+
+    // No count (older PostgREST, or the table is missing) — fall back to the
+    // old sequential walk so a surprise never costs us the whole dataset.
+    if(cErr || count === null || count === undefined){
+      const out = [];
+      for(let i = 0; i < 50; i++){
+        const { data, error } = await ordered(
+          this.client.from(tableName).select(selectStr).range(i*PAGE, i*PAGE + PAGE - 1));
+        if(error) return { data: out, error };
+        if(!data || !data.length) break;
+        out.push(...data);
+        if(data.length < PAGE) break;
+      }
+      return { data: out, error: null };
     }
-    if(totalSeen >= 50 * 1000) console.warn(`[fetchAllPages] ${tableName}: hit safety cap of 50k rows`);
-    return { data: out, error: null };
+
+    if(count === 0) return { data: [], error: null };
+    const pages = Math.ceil(count / PAGE);
+    if(pages > 200){
+      return { data: [], error: { message: `${tableName}: ${count} rows exceeds this tool's 200k limit` } };
+    }
+
+    const buckets = new Array(pages);
+    let nextPage = 0, failure = null;
+    const worker = async () => {
+      while(nextPage < pages && !failure){
+        const i = nextPage++;
+        const { data, error } = await ordered(
+          this.client.from(tableName).select(selectStr).range(i*PAGE, i*PAGE + PAGE - 1));
+        if(error){ failure = error; return; }
+        buckets[i] = data || [];
+        this._noteFetchProgress(tableName, (data || []).length, count);
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(6, pages) }, worker));
+    if(failure) return { data: [], error: failure };
+    return { data: buckets.flat(), error: null };
+  },
+
+  // Feeds the "Syncing… 7,000 / 13,051 rows" line next to the cloud badge, so a
+  // long first load looks like progress rather than a hang.
+  _fetchSeen: 0,
+  _fetchTotal: 0,
+  _noteFetchProgress(table, got, total){
+    if(table === 'records'){
+      this._fetchSeen += got;
+      this._fetchTotal = total;
+      this.setStatus('syncing', `${this._fetchSeen.toLocaleString('en-IN')} / ${total.toLocaleString('en-IN')} rows`);
+    }
   },
 
   async fetchAll(){
     if(!this.enabled) return;
+    this._fetchSeen = 0; this._fetchTotal = 0;
     const [rec, veh, cells, ups, prog] = await Promise.all([
       // These tables grow with usage — paginate to dodge Supabase's 1000-row cap
-      this.fetchAllPages('records', '*'),
-      this.fetchAllPages('vehicles', '*'),
-      this.fetchAllPages('cells', '*'),
+      // Order column = each table's primary key, so the parallel page slices
+      // line up deterministically (see fetchAllPages).
+      this.fetchAllPages('records', 'vehicle,date,km,hmr,fuel,branch,data', ['id']),
+      this.fetchAllPages('vehicles', '*', ['vehicle']),
+      this.fetchAllPages('cells', '*', ['vehicle','date']),
       // Uploads are capped explicitly (most recent 100) — never grows unbounded for us
       this.client.from('uploads').select('*').order('uploaded_at', {ascending: false}).limit(100),
-      this.fetchAllPages('abnormality_progress', '*')
+      this.fetchAllPages('abnormality_progress', '*', ['vehicle','entry_date','issue_type'])
     ]);
     if(rec.error) throw rec.error;
     if(veh.error) throw veh.error;
@@ -2096,6 +2627,10 @@ Click OK to retry the sync now, or Cancel to keep working locally.`;
       km: r.km, hmr: r.hmr, fuel: r.fuel,
       branch: r.branch, data: r.data || {}
     })).sort((a,b)=> a.date.localeCompare(b.date) || a.vehicle.localeCompare(b.vehicle));
+    const repaired = normalizeCountSuffixValues(state.records);
+    if(repaired){
+      console.log(`[fetchAll] repaired ${repaired} "total(count)" values (e.g. "247.94(1)")`);
+    }
 
     // Vehicles
     state.sites = {}; state.models = {}; state.remarks = {}; state.periodRemarks = {};
@@ -2114,11 +2649,15 @@ Click OK to retry the sync now, or Cancel to keep working locally.`;
     // Cell overrides
     state.fillOverrides = {}; state.workHourOverrides = {};
     state.siteFills = {}; state.siteHMRs = {};
+    state.siteFillOverrides = {}; state.siteHmrOverrides = {};
     (cells.data || []).forEach(c => {
       const k = `${c.vehicle}|${c.date}`;
       if(c.fill_override !== null && c.fill_override !== undefined) state.fillOverrides[k] = +c.fill_override;
       if(c.wh_override !== null && c.wh_override !== undefined) state.workHourOverrides[k] = +c.wh_override;
       if(c.site_fill !== null && c.site_fill !== undefined) state.siteFills[k] = +c.site_fill;
+      // site_fill_override / site_hmr_override columns may not exist yet on older schemas — safely ignored if absent
+      if(c.site_fill_override !== null && c.site_fill_override !== undefined) state.siteFillOverrides[k] = +c.site_fill_override;
+      if(c.site_hmr_override !== null && c.site_hmr_override !== undefined) state.siteHmrOverrides[k] = +c.site_hmr_override;
       if(c.site_hmr !== null && c.site_hmr !== undefined) state.siteHMRs[k] = +c.site_hmr;
     });
 
@@ -2135,11 +2674,27 @@ Click OK to retry the sync now, or Cancel to keep working locally.`;
       file: u.file,
       when: u.uploaded_at,
       count: u.count,
-      dates: u.dates || []
+      dates: u.dates || [],
+      by: u.by || null
     }));
+
+    // Cell authorship (who first entered / last changed each editable cell).
+    // Table may not exist yet on older schemas — treated as optional.
+    try{
+      const ca = await this.client.from('cell_authors').select('key,first_by,last_by');
+      if(!ca.error && ca.data){
+        state.cellAuthors = {};
+        ca.data.forEach(r => { state.cellAuthors[r.key] = { first: r.first_by, last: r.last_by }; });
+      }
+    }catch(e){ console.warn('cell_authors not available:', e?.message || e); }
 
     saveLocal();
     refreshAll();
+    // Re-apply "last 30 days" defaults now that the FULL cloud dataset has landed.
+    // Without this, a page that computed its default range at initial paint — using
+    // only the local-cache snapshot (which can be much smaller/older than the cloud
+    // truth) — would keep showing that stale, too-small range even after full sync.
+    applyDefaultDateRanges();
   },
 
   schedulePush(){
@@ -2195,7 +2750,9 @@ Click OK to retry the sync now, or Cancel to keep working locally.`;
         ...Object.keys(state.fillOverrides),
         ...Object.keys(state.workHourOverrides),
         ...Object.keys(state.siteFills),
-        ...Object.keys(state.siteHMRs)
+        ...Object.keys(state.siteHMRs),
+        ...Object.keys(state.siteFillOverrides || {}),
+        ...Object.keys(state.siteHmrOverrides || {})
       ]);
       const cellRows = [];
       keys.forEach(k => {
@@ -2206,12 +2763,37 @@ Click OK to retry the sync now, or Cancel to keep working locally.`;
           fill_override: state.fillOverrides[k] ?? null,
           wh_override: state.workHourOverrides[k] ?? null,
           site_fill: state.siteFills[k] ?? null,
-          site_hmr: state.siteHMRs[k] ?? null
+          site_hmr: state.siteHMRs[k] ?? null,
+          site_fill_override: state.siteFillOverrides?.[k] ?? null,
+          site_hmr_override: state.siteHmrOverrides?.[k] ?? null
         });
       });
       for(let i=0; i<cellRows.length; i+=500){
-        const { error } = await this.client.from('cells').upsert(cellRows.slice(i, i+500), {onConflict: 'vehicle,date'});
-        if(error) throw error;
+        const batch = cellRows.slice(i, i+500);
+        const { error } = await this.client.from('cells').upsert(batch, {onConflict: 'vehicle,date'});
+        if(error){
+          // If the new override columns don't exist yet (migration not run), retry without them
+          if(String(error.message || '').toLowerCase().includes('site_fill_override') || String(error.message || '').toLowerCase().includes('site_hmr_override')){
+            console.warn('site_fill_override/site_hmr_override columns not found — falling back. Run 04_site_override_migration.sql');
+            const fallback = batch.map(r => { const { site_fill_override, site_hmr_override, ...rest } = r; return rest; });
+            const retry = await this.client.from('cells').upsert(fallback, {onConflict: 'vehicle,date'});
+            if(retry.error) throw retry.error;
+          } else {
+            throw error;
+          }
+        }
+      }
+      // Cell authorship — who first entered / last changed each editable cell.
+      // Optional table: if the migration hasn't run, skip without failing the sync.
+      const caRows = Object.entries(state.cellAuthors || {}).map(([key, a]) => ({
+        key, first_by: a.first || null, last_by: a.last || null
+      }));
+      for(let i=0; i<caRows.length; i+=500){
+        const { error } = await this.client.from('cell_authors').upsert(caRows.slice(i, i+500), {onConflict: 'key'});
+        if(error){
+          console.warn('cell_authors push skipped — run 05_user_attribution_migration.sql:', error.message);
+          break;
+        }
       }
       this.setStatus('synced');
     }catch(e){
@@ -2247,9 +2829,13 @@ Click OK to retry the sync now, or Cancel to keep working locally.`;
   async pushUploadEntry(u){
     if(!this.enabled) return;
     try{
-      await this.client.from('uploads').insert({
-        file: u.file, uploaded_at: u.when, count: u.count, dates: u.dates || []
-      });
+      const row = { file: u.file, uploaded_at: u.when, count: u.count, dates: u.dates || [], by: u.by || null };
+      const { error } = await this.client.from('uploads').insert(row);
+      if(error && String(error.message||'').toLowerCase().includes('by')){
+        // `by` column not migrated yet — retry without it
+        const { by, ...rest } = row;
+        await this.client.from('uploads').insert(rest);
+      } else if(error){ throw error; }
     }catch(e){ console.error('Push upload entry failed:', e); }
   },
 
@@ -2281,7 +2867,7 @@ Click OK to retry the sync now, or Cancel to keep working locally.`;
         report(`Records ${Math.min(i+500, recRows.length)}/${recRows.length}`);
       }
 
-      // 2. Cells — site fills + HMR + fill overrides, keyed by "vehicle|date"
+      // 2. Cells — site fills + HMR + all overrides, keyed by "vehicle|date"
       const cellsMap = {};
       Object.entries(state.siteFills || {}).forEach(([k,v]) => {
         const [vehicle, date] = k.split('|');
@@ -2295,11 +2881,33 @@ Click OK to retry the sync now, or Cancel to keep working locally.`;
         const [vehicle, date] = k.split('|');
         (cellsMap[k] = cellsMap[k] || {vehicle, date}).fill_override = v;
       });
+      Object.entries(state.workHourOverrides || {}).forEach(([k,v]) => {
+        const [vehicle, date] = k.split('|');
+        (cellsMap[k] = cellsMap[k] || {vehicle, date}).wh_override = v;
+      });
+      Object.entries(state.siteFillOverrides || {}).forEach(([k,v]) => {
+        const [vehicle, date] = k.split('|');
+        (cellsMap[k] = cellsMap[k] || {vehicle, date}).site_fill_override = v;
+      });
+      Object.entries(state.siteHmrOverrides || {}).forEach(([k,v]) => {
+        const [vehicle, date] = k.split('|');
+        (cellsMap[k] = cellsMap[k] || {vehicle, date}).site_hmr_override = v;
+      });
       const cellRows = Object.values(cellsMap);
       report(`Pushing ${cellRows.length} cells…`);
       for(let i=0; i<cellRows.length; i+=500){
-        const { error } = await this.client.from('cells').upsert(cellRows.slice(i, i+500), {onConflict: 'vehicle,date'});
-        if(error) throw error;
+        const batch = cellRows.slice(i, i+500);
+        const { error } = await this.client.from('cells').upsert(batch, {onConflict: 'vehicle,date'});
+        if(error){
+          if(String(error.message || '').toLowerCase().includes('site_fill_override') || String(error.message || '').toLowerCase().includes('site_hmr_override')){
+            console.warn('site_fill_override/site_hmr_override columns not found — falling back. Run 04_site_override_migration.sql');
+            const fallback = batch.map(r => { const { site_fill_override, site_hmr_override, ...rest } = r; return rest; });
+            const retry = await this.client.from('cells').upsert(fallback, {onConflict: 'vehicle,date'});
+            if(retry.error) throw retry.error;
+          } else {
+            throw error;
+          }
+        }
         report(`Cells ${Math.min(i+500, cellRows.length)}/${cellRows.length}`);
       }
 
@@ -2530,9 +3138,107 @@ Click OK to retry the sync now, or Cancel to keep working locally.`;
   }
 };
 
+/* ============================================================
+   LOCAL CACHE  (v2.34)
+   13k records with their full Excel payload blow straight past
+   localStorage's ~5 MB quota. Once setItem throws, NOTHING is cached —
+   so every page load re-downloaded the entire dataset from Supabase,
+   which is what made Page 2 take minutes to appear.
+   IndexedDB has no practical size cap and stores objects directly (no
+   JSON.stringify of 30 MB), so repeat loads come from disk instantly.
+   localStorage stays as a small synchronous fallback holding everything
+   EXCEPT records, so manual entries and remarks survive even where
+   IndexedDB is unavailable (private windows, locked-down browsers).
+============================================================ */
+const IDB = {
+  DB: 'fet_cache', STORE: 'state', KEY: 'main',
+  _open: null,
+  open(){
+    if(this._open) return this._open;
+    this._open = new Promise((res, rej) => {
+      if(!window.indexedDB) return rej(new Error('IndexedDB not available'));
+      const rq = indexedDB.open(this.DB, 1);
+      rq.onupgradeneeded = () => {
+        const db = rq.result;
+        if(!db.objectStoreNames.contains(this.STORE)) db.createObjectStore(this.STORE);
+      };
+      rq.onsuccess = () => res(rq.result);
+      rq.onerror   = () => rej(rq.error || new Error('IndexedDB open failed'));
+    });
+    this._open.catch(() => { this._open = null; });
+    return this._open;
+  },
+  async put(value){
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const tx = db.transaction(this.STORE, 'readwrite');
+      // put() structured-clones the value synchronously, so later mutations
+      // to `state` can't corrupt what gets committed.
+      tx.objectStore(this.STORE).put(value, this.KEY);
+      tx.oncomplete = () => res(true);
+      tx.onerror = tx.onabort = () => rej(tx.error || new Error('IndexedDB write failed'));
+    });
+  },
+  async get(){
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const tx = db.transaction(this.STORE, 'readonly');
+      const rq = tx.objectStore(this.STORE).get(this.KEY);
+      rq.onsuccess = () => res(rq.result || null);
+      rq.onerror   = () => rej(rq.error || new Error('IndexedDB read failed'));
+    });
+  }
+};
+
+let _idbTimer = null, _idbWarned = false, _lsWarned = false;
+
+// Everything except the bulky record list — small enough that localStorage
+// never chokes on it.
+function slimStateForLocalStorage(){
+  const out = {};
+  Object.keys(state).forEach(k => { if(k !== 'records') out[k] = state[k]; });
+  return out;
+}
+
 function saveLocal(){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-  catch(e){ console.warn('localStorage full — relying on cloud only', e); }
+  // 1) small + synchronous: manual entries, remarks, overrides, authorship
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(slimStateForLocalStorage())); }
+  catch(e){
+    if(!_lsWarned){ _lsWarned = true; console.warn('localStorage unavailable:', e.name); }
+  }
+  // 2) full state incl. records, coalesced so a burst of realtime events
+  //    doesn't write it over and over
+  clearTimeout(_idbTimer);
+  _idbTimer = setTimeout(() => {
+    IDB.put({ savedAt: Date.now(), version: APP_VERSION, state: state })
+      .catch(e => {
+        if(!_idbWarned){ _idbWarned = true; console.warn('IndexedDB cache unavailable — cloud only:', e.message); }
+      });
+  }, 1200);
+}
+
+// Pulls the record list out of the IndexedDB cache at boot so the first paint
+// has real data instead of waiting on the network. Only fills in what
+// localStorage cannot hold — the editable maps there are always fresher,
+// because they are written synchronously on every edit.
+async function hydrateFromCache(){
+  try{
+    const row = await IDB.get();
+    const c = row && row.state;
+    if(!c) return 0;
+    if(Array.isArray(c.records) && c.records.length > state.records.length){
+      state.records = c.records;
+      if(Array.isArray(c.columnOrder) && c.columnOrder.length && !state.columnOrder.length){
+        state.columnOrder = c.columnOrder;
+      }
+      if(Array.isArray(c.uploads) && c.uploads.length && !state.uploads.length){
+        state.uploads = c.uploads;
+      }
+    }
+    return state.records.length;
+  }catch(e){
+    return 0;
+  }
 }
 function saveState(){
   saveLocal();
@@ -2587,6 +3293,36 @@ function fmtInt(n){
   return Number(n).toLocaleString('en-IN',{maximumFractionDigits:0});
 }
 // Round numeric value to 1 decimal for input value attributes
+/* ============================================================
+   "total(count)" VALUES  (v2.34)
+   Some telematics exports write the fill column as total(count):
+   "247.94(1)", "125.97(3)", "0.0(0)". Stored as a string, that value
+   fails <input type="number"> (the cell renders EMPTY) and — worse —
+   +"247.94(1)" is NaN, so those litres were skipped by every Diff,
+   mileage and Page 10 total. We split it into the number the app needs
+   plus the source system's own fill count, kept alongside under a
+   "<col> Count" key for reference.
+============================================================ */
+const COUNT_SUFFIX_RE = /^\s*(-?\d+(?:\.\d+)?)\s*\(\s*(\d+)\s*\)\s*$/;
+
+function normalizeCountSuffixValues(records){
+  let fixed = 0;
+  (records || []).forEach(r => {
+    const d = r && r.data;
+    if(!d || typeof d !== 'object') return;
+    Object.keys(d).forEach(col => {
+      const v = d[col];
+      if(typeof v !== 'string') return;
+      const m = v.match(COUNT_SUFFIX_RE);
+      if(!m) return;
+      d[col] = parseFloat(m[1]);
+      d[col + ' Count'] = +m[2];     // the export's own count for that day
+      fixed++;
+    });
+  });
+  return fixed;
+}
+
 function r1(v){
   if(v === null || v === undefined || v === '') return '';
   if(typeof v !== 'number' || isNaN(v)) return v;
@@ -2628,6 +3364,7 @@ function normaliseCellValue(v){
 }
 function toast(msg, kind=''){
   const t = document.getElementById('toast');
+  if(!t) return;   // called before the shell exists (early boot) — nothing to show on
   t.textContent = msg;
   t.className = 'toast show ' + kind;
   clearTimeout(toast._t);
@@ -2761,7 +3498,7 @@ function setupUpload(){
         if(!obj.records) throw new Error('Invalid backup');
         const confirmMsg = `Restore ${obj.records.length} records? This will:\n\n• Replace local data with the JSON contents\n• Push everything to cloud so all devices see it\n\nCancel if unsure.`;
         if(!confirm(confirmMsg)) return;
-        state = Object.assign({records:[],sites:{},models:{},remarks:{},periodRemarks:{},siteFills:{},siteHMRs:{},fillOverrides:{},workHourOverrides:{},progress:{},uploads:[],columnOrder:[]}, obj);
+        state = Object.assign({records:[],sites:{},models:{},remarks:{},periodRemarks:{},siteFills:{},siteHMRs:{},fillOverrides:{},workHourOverrides:{},siteFillOverrides:{},siteHmrOverrides:{},cellAuthors:{},progress:{},uploads:[],columnOrder:[]}, obj);
         saveState(); refreshAll();
         toast('Local restore done · pushing to cloud…','good');
         // Push to cloud so other devices see the new data. Before this fix,
@@ -2923,7 +3660,9 @@ function processRows(rows, filename){
       data[name] = normaliseCellValue(raw);
     }
 
-    newRecs.push({date, vehicle:veh, km, hmr, fuel, kmpl, branch:branchValue, data});
+    // `by` records who uploaded this row — used as the original author when
+    // deciding whether an admin correction counts as overriding someone else.
+    newRecs.push({date, vehicle:veh, km, hmr, fuel, kmpl, branch:branchValue, data, by: currentUser || 'unknown'});
     datesSeen.add(date);
   }
 
@@ -2942,7 +3681,8 @@ function processRows(rows, filename){
     file: filename,
     when: new Date().toISOString(),
     count: newRecs.length,
-    dates: [...datesSeen].sort()
+    dates: [...datesSeen].sort(),
+    by: currentUser || 'unknown'
   });
   state.uploads = state.uploads.slice(0,30);
 
@@ -3188,14 +3928,539 @@ function setVehRange(days){
   const fromD = new Date(to); fromD.setDate(fromD.getDate()-days+1);
   document.getElementById('veh-from').value = fmtDate(fromD);
   document.getElementById('veh-to').value = to;
-  renderVehicles();
+  renderVehiclesD();
 }
 function setVehRangeAll(){
   const all = [...new Set(state.records.map(r=>r.date))].sort();
   if(!all.length) return;
   document.getElementById('veh-from').value = all[0];
   document.getElementById('veh-to').value = all[all.length-1];
-  renderVehicles();
+  renderVehiclesD();
+}
+
+/* ============================================================
+   DEFERRED RENDERING WITH A SPINNER
+   The big pivot tables are built synchronously, so painting a
+   spinner and calling the renderer in the same tick shows nothing
+   — the main thread is already blocked. Two rAF hops let the
+   browser actually paint the spinner before the work starts.
+============================================================ */
+// Sequence number PER CONTAINER, not one global counter.
+//
+// This was a single shared number, and it is why Page 2 sat on "Building daily
+// data grid…" forever. applyDefaultDateRanges() fires five deferred renders
+// back to back — Fill Log, Mileage Trend, Page 2, Page 9, Page 10. Each one
+// painted its spinner, bumped the shared counter, then waited two frames. By
+// the time Page 2's callback ran the counter had moved on to Page 10, so Page 2
+// decided it had been superseded and returned — leaving its spinner up with
+// nothing left to replace it. Only the last page of the five ever rendered.
+// Keyed by container, a render is only ever cancelled by another render of the
+// SAME view, which always paints over it.
+const _renderSeq = {};
+
+function spinnerMarkup(label, sub){
+  return `<div class="loading-pane">
+    <div class="loading-spin"></div>
+    <div class="loading-text">${escapeHtml(label || 'Loading…')}</div>
+    ${sub ? `<div class="loading-sub">${escapeHtml(sub)}</div>` : ''}
+  </div>`;
+}
+
+// containerId — element whose contents get replaced by the spinner while rendering.
+// toolbarSel  — optional toolbar to dim, so the controls read as busy.
+function renderWithSpinner(containerId, renderFn, opts){
+  opts = opts || {};
+  const el = document.getElementById(containerId);
+  if(!el){ renderFn(); return; }
+  const seq = _renderSeq[containerId] = (_renderSeq[containerId] || 0) + 1;
+  const tb = opts.toolbarSel ? document.querySelector(opts.toolbarSel) : null;
+  el.innerHTML = spinnerMarkup(opts.label, opts.sub);
+  if(tb) tb.classList.add('is-busy');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    // A newer request for THIS SAME view came in while this one waited — that
+    // one will paint over the spinner, so this one can safely drop out.
+    if(seq !== _renderSeq[containerId]){ return; }
+    try { renderFn(); }
+    catch(e){
+      console.error('Render failed:', e);
+      el.innerHTML = `<div class="loading-pane"><div class="loading-text" style="color:#991b1b">Could not render this view</div><div class="loading-sub">${escapeHtml(String(e && e.message || e))}</div></div>`;
+    }
+    finally { if(tb) tb.classList.remove('is-busy'); }
+  }));
+}
+
+// Debounce helper for search boxes — avoids re-rendering on every keystroke.
+const _debTimers = {};
+function debounced(key, fn, ms){
+  clearTimeout(_debTimers[key]);
+  _debTimers[key] = setTimeout(fn, ms == null ? 260 : ms);
+}
+
+/* ---- Deferred entry points used by the date/search/filter controls ----
+   Internal callers (refreshAll, cloud sync, cell edits) keep calling the
+   plain renderers synchronously, so nothing downstream changes order. */
+
+function renderVehiclesD(){
+  renderWithSpinner('vehicles-body', renderVehicles, {
+    toolbarSel: '#page-vehicles .toolbar',
+    label: 'Building daily data grid…',
+    sub: 'Large date ranges take a moment'
+  });
+}
+function renderVehiclesSearchD(){
+  debounced('vehSearch', renderVehiclesD, 300);
+}
+
+function renderAnalysedPage2D(){
+  renderWithSpinner('analysed-body', renderAnalysedPage2, {
+    toolbarSel: '#page-analysed .toolbar',
+    label: 'Building raw vs corrected grid…',
+    sub: 'Large date ranges take a moment'
+  });
+}
+function renderAnalysedSearchD(){
+  debounced('anSearch', renderAnalysedPage2D, 300);
+}
+
+function renderMonthlyOutputD(){
+  renderWithSpinner('monthly-body', renderMonthlyOutput, {
+    toolbarSel: '#page-monthly .toolbar',
+    label: 'Compiling monthly output…'
+  });
+}
+function renderMonthlySearchD(){
+  debounced('moSearch', renderMonthlyOutputD, 300);
+}
+
+function renderFillLogD(){
+  renderWithSpinner('fillog-body', renderFillLog, {
+    toolbarSel: '#page-filllog .toolbar',
+    label: 'Building fill log…'
+  });
+}
+function renderFillLogSearchD(){
+  debounced('flSearch', renderFillLogD, 300);
+}
+
+function renderMilAbnD(){
+  renderWithSpinner('ma-sub-fleet', renderMilAbn, {
+    toolbarSel: '#page-milabn .toolbar',
+    label: 'Computing mileage trends…'
+  });
+}
+
+/* ============================================================
+   PAGE 10: MONTHLY OUTPUT (admin only)
+   One row per vehicle for the chosen range:
+     Site HMR   = last Site HMR in range − first Site HMR in range
+     Online Fill= Σ online fill (upload value, or its correction)
+     Site Fill  = Σ site fill (mobile value, or its correction)
+     Fill Diff  = Online − Site        No of Fill = dates with any fill > 0
+     Analysis Remark = Page 2 period remarks in range, concatenated
+     Remark 2   = VERIFIED when the analysis remark says MATCH
+============================================================ */
+
+function setMoRange(days){
+  const all = [...new Set(state.records.map(r=>r.date))].sort();
+  if(!all.length) return;
+  const to = all[all.length-1];
+  const f = new Date(to); f.setDate(f.getDate()-days+1);
+  document.getElementById('mo-from').value = fmtDate(f);
+  document.getElementById('mo-to').value = to;
+  renderMonthlyOutputD();
+}
+function setMoRangeAll(){
+  const all = [...new Set(state.records.map(r=>r.date))].sort();
+  if(!all.length) return;
+  document.getElementById('mo-from').value = all[0];
+  document.getElementById('mo-to').value = all[all.length-1];
+  renderMonthlyOutputD();
+}
+function setMoThisMonth(){
+  const all = [...new Set(state.records.map(r=>r.date))].sort();
+  if(!all.length) return;
+  const last = all[all.length-1];               // anchor on the latest data, not the clock
+  const ym = last.slice(0,7);
+  const lastDay = new Date(+ym.slice(0,4), +ym.slice(5,7), 0).getDate();
+  document.getElementById('mo-from').value = `${ym}-01`;
+  document.getElementById('mo-to').value   = `${ym}-${String(lastDay).padStart(2,'0')}`;
+  renderMonthlyOutputD();
+}
+
+// How Page 10 lays out the Analysis Remark: one column per period when the
+// range produces a readable number of them, otherwise a single combined column.
+// Shared by the screen and the Excel export so the two always match.
+const MO_MAX_REMARK_COLS = 6;      // 1 month of 5-day remarks = 6; half-month = 2
+function monthlyRemarkCols(){
+  const from = document.getElementById('mo-from')?.value || '';
+  const to   = document.getElementById('mo-to')?.value   || '';
+  const periods = periodsInRange(from, to, state.remarkGranularity || 'half');
+  const split = periods.length > 1 && periods.length <= MO_MAX_REMARK_COLS;
+  return { periods, split, count: split ? periods.length : 1 };
+}
+
+// Builds one report row per vehicle. Shared by the on-screen table and the Excel export.
+function buildMonthlyRows(){
+  const from = document.getElementById('mo-from')?.value || '';
+  const to   = document.getElementById('mo-to')?.value   || '';
+  const q    = (document.getElementById('mo-search')?.value || '').trim().toLowerCase();
+
+  const recs = state.records.filter(r => (!from || r.date >= from) && (!to || r.date <= to));
+  // Exactly the same scope as Page 2 / Page 9 since v2.33
+  const dates = pivotDatesInRange(recs, from, to);
+  const inRange = d => (!from || d >= from) && (!to || d <= to);
+
+  // Every vehicle that has a record, a site fill or a site HMR inside the range
+  const vehSet = new Set(recs.map(r => r.vehicle));
+  forEachSiteEntry((v, d) => { if(inRange(d)) vehSet.add(v); });
+
+  const branchOf = {};
+  recs.forEach(r => { if(!branchOf[r.vehicle]) branchOf[r.vehicle] = r.branch || (r.data && r.data['Branch']) || ''; });
+
+  const periods = periodsInRange(from, to, state.remarkGranularity || 'half');
+
+  const rows = [];
+  vehSet.forEach(v => {
+    const branch = branchOf[v] || '';
+    const site   = state.sites[v] || '';
+    const model  = state.models[v] || (recs.find(r => r.vehicle === v)?.data?.['Object Model']) || '';
+
+    // Site HMR span: last reading in range − first reading in range
+    const hmrPts = [];
+    dates.forEach(d => {
+      const h = getEffectiveSiteHMR(v, d);
+      if(h != null && !isNaN(+h)) hmrPts.push({ d, h: +h });
+    });
+    // `dates` already covers site-only days, so there is nothing extra to sweep up.
+    hmrPts.sort((a,b) => a.d.localeCompare(b.d));
+    const siteHmrSpan = hmrPts.length >= 2 ? (hmrPts[hmrPts.length-1].h - hmrPts[0].h) : null;
+
+    // Fill totals — same "fill event" rule as Page 2's Diff/Fill
+    let online = 0, siteF = 0, fills = 0, anyData = false;
+    // Cells where Page 9 holds a DIFFERENT value. Flagged, never applied — the
+    // totals below are exactly Page 2's. (Online Fill can't differ: Page 2 and
+    // Page 9 write the same fillOverrides store.)
+    let cSf = 0, cSh = 0;
+    dates.forEach(d => {
+      const k = `${v}|${d}`;
+      const rec = recs.find(r => r.vehicle === v && r.date === d);
+      const o = (k in state.fillOverrides) ? state.fillOverrides[k]
+              : ((rec && rec.data && 'Fill' in rec.data) ? rec.data['Fill'] : null);
+      const sf = getEffectiveSiteFill(v, d);
+      if(page9Differs(sf, getCorrectedSiteFill(v, d))) cSf++;
+      if(page9Differs(getEffectiveSiteHMR(v, d), getCorrectedSiteHMR(v, d))) cSh++;
+      let hasFill = false;
+      if(o  != null && !isNaN(+o )){ online += +o;  anyData = true; if(+o  > 0) hasFill = true; }
+      if(sf != null && !isNaN(+sf)){ siteF  += +sf; anyData = true; if(+sf > 0) hasFill = true; }
+      if(hasFill) fills++;
+    });
+
+    const diff = anyData ? (online - siteF) : null;
+    const dpf  = (diff != null && fills > 0) ? (diff / fills) : null;
+
+    // Analysis remark — Page 2's period remarks inside the range. Kept BOTH as
+    // one entry per period (so Page 10 can give each period its own column) and
+    // as the old concatenated string (used when the range has too many periods
+    // to split, and by anything still reading analysisRemark).
+    const remarkByPeriod = periods.map(pd => (state.periodRemarks[`${v}|${pd.key}`] || '').trim());
+    const analysisRemark = remarkByPeriod
+      .map((t, i) => t ? (periods.length > 1 ? `${periods[i].short}: ${t}` : t) : '')
+      .filter(Boolean)
+      .join(' | ');
+    const verified = /\bmatch\b/i.test(analysisRemark);
+
+    rows.push({
+      branch, vehicle: v, site, model,
+      siteHmr: siteHmrSpan, hmrReadings: hmrPts.length,
+      online: anyData ? online : null,
+      siteFill: anyData ? siteF : null,
+      diff, fills, dpf,
+      corrSite: cSf, corrHmr: cSh, corr: cSf + cSh,
+      analysisRemark, remarkByPeriod, remark2: verified ? 'VERIFIED' : ''
+    });
+  });
+
+  let out = rows;
+  if(q){
+    out = out.filter(r =>
+      r.vehicle.toLowerCase().includes(q) ||
+      (r.branch  || '').toLowerCase().includes(q) ||
+      (r.site    || '').toLowerCase().includes(q) ||
+      (r.model   || '').toLowerCase().includes(q));
+  }
+  out.sort((a,b) => (a.branch||'').localeCompare(b.branch||'') || a.vehicle.localeCompare(b.vehicle));
+  return out;
+}
+
+function renderMonthlyOutput(){
+  // Admin-only gate
+  const lock = document.getElementById('monthly-lock');
+  const content = document.getElementById('monthly-content');
+  if(!lock || !content) return;
+  if(!isCurrentUserAdmin()){
+    lock.style.display = ''; content.style.display = 'none';
+    return;
+  }
+  lock.style.display = 'none'; content.style.display = '';
+
+  const body = document.getElementById('monthly-body');
+  const sum  = document.getElementById('mo-summary');
+  if(!body) return;
+  if(!state.records.length){
+    body.innerHTML = emptyState('No data yet','Upload a fuel economy file from Page 1 to get started.');
+    if(sum) sum.textContent = '';
+    return;
+  }
+
+  const rows = buildMonthlyRows();
+  const from = document.getElementById('mo-from').value;
+  const to   = document.getElementById('mo-to').value;
+
+  const tOnline = rows.reduce((a,r) => a + (r.online   || 0), 0);
+  const tSite   = rows.reduce((a,r) => a + (r.siteFill || 0), 0);
+  const tDiff   = tOnline - tSite;
+  const nVer    = rows.filter(r => r.remark2 === 'VERIFIED').length;
+  const tCorr   = rows.reduce((a,r) => a + (r.corr || 0), 0);
+  const nCorrVeh= rows.filter(r => (r.corr || 0) > 0).length;
+  const diffNote = tCorr
+    ? `Page&nbsp;9 has a different value in <b>${tCorr}</b> cell${tCorr===1?'':'s'} across
+       <b>${nCorrVeh}</b> vehicle${nCorrVeh===1?'':'s'} (marked <span class="mo-corr-key">●</span>) —
+       those are shown on Page&nbsp;9 only and are <b>not</b> counted here.`
+    : 'Page&nbsp;9 holds no value that differs from Page&nbsp;2 in this range.';
+  if(sum){
+    sum.innerHTML = `<b>${rows.length}</b> vehicles &nbsp;·&nbsp; ${fmtNiceDate(from)} → ${fmtNiceDate(to)}
+      &nbsp;·&nbsp; Online <b>${fmtNum(tOnline,1)} L</b>
+      &nbsp;·&nbsp; Site <b>${fmtNum(tSite,1)} L</b>
+      &nbsp;·&nbsp; Diff <b style="color:${Math.abs(tDiff)<0.5?'#065f46':(tDiff>0?'#065f46':'#991b1b')}">${tDiff>0?'+':''}${fmtNum(tDiff,1)} L</b>
+      &nbsp;·&nbsp; Verified <b>${nVer}</b>/${rows.length}
+      <div class="mo-legend">Every figure here is exactly what <b>Page&nbsp;2</b> shows for this date range. ${diffNote}</div>`;
+  }
+
+  if(!rows.length){
+    body.innerHTML = emptyState('No matches','Try a different date range or search.');
+    return;
+  }
+
+  let html = '<div class="table-wrap"><table class="mo-tbl"><thead><tr>';
+  html += '<th>Site</th><th>Machine</th><th>Model</th>';
+  html += '<th class="num h-hmr">Site HMR<span class="sub">last − first</span></th>';
+  html += '<th class="num h-online">Total Online Fill</th>';
+  html += '<th class="num h-site">Total Site Fill</th>';
+  html += '<th class="num h-diff">Fill Diff</th>';
+  html += '<th class="num">No of Fill</th>';
+  html += '<th class="num">Diff per Fill</th>';
+  const remCols = monthlyRemarkCols();
+  if(remCols.split){
+    remCols.periods.forEach(p => {
+      html += `<th class="mo-rem-h">${escapeHtml(p.short)}<span class="sub">analysis remark</span></th>`;
+    });
+  } else {
+    html += '<th>Analysis Remark</th>';
+  }
+  html += '<th>Remark 2</th>';
+  html += '</tr></thead><tbody>';
+
+  let prevBranch = null;
+  rows.forEach(r => {
+    if(r.branch !== prevBranch){
+      const grp = rows.filter(x => x.branch === r.branch);
+      const gO = grp.reduce((a,x) => a + (x.online||0), 0);
+      const gS = grp.reduce((a,x) => a + (x.siteFill||0), 0);
+      const gD = gO - gS;
+      html += `<tr class="mo-grp"><td colspan="${10 + remCols.count}">▸ ${escapeHtml(r.branch || 'Unassigned')}
+        &nbsp;(${grp.length} vehicle${grp.length===1?'':'s'} · Online ${fmtNum(gO,1)}L · Site ${fmtNum(gS,1)}L ·
+        Diff ${gD>0?'+':''}${fmtNum(gD,1)}L)</td></tr>`;
+      prevBranch = r.branch;
+    }
+    const dCls = r.diff == null ? '' : (Math.abs(r.diff) < 0.5 ? 'mo-dzero' : (r.diff > 0 ? 'mo-dpos' : 'mo-dneg'));
+    const hmrTitle = r.hmrReadings < 2
+      ? `Needs at least 2 Site HMR readings in range (found ${r.hmrReadings})` : '';
+    html += '<tr>';
+    html += `<td>${escapeHtml(r.branch) || '<span style="color:var(--muted)">—</span>'}</td>`;
+    html += `<td><span class="mo-pill">${escapeHtml(r.vehicle)}</span></td>`;
+    html += `<td style="font-size:11.5px;color:var(--ink-2)">${escapeHtml(r.model) || '<span style="color:var(--muted)">—</span>'}</td>`;
+    const cShCls = r.corrHmr ? ' mo-corr' : '';
+    const shTip = hmrTitle || (r.corrHmr
+      ? `Page 9 has a different Site HMR on ${r.corrHmr} day${r.corrHmr===1?'':'s'} — this figure follows Page 2` : '');
+    html += `<td class="num mo-cell-hmr${cShCls}"${shTip?` title="${escapeAttr(shTip)}"`:''}>${r.siteHmr != null ? fmtNum(r.siteHmr,2) : '<span style="color:var(--muted);font-weight:400">—</span>'}</td>`;
+    const cSfCls = r.corrSite ? ' mo-corr' : '';
+    const cSfTip = r.corrSite
+      ? ` title="Page 9 has a different Site Fill on ${r.corrSite} day${r.corrSite===1?'':'s'} — this total follows Page 2"` : '';
+    html += `<td class="num mo-cell-online">${r.online   != null ? fmtNum(r.online,2)   : '—'}</td>`;
+    html += `<td class="num mo-cell-site${cSfCls}"${cSfTip}>${r.siteFill   != null ? fmtNum(r.siteFill,2) : '—'}</td>`;
+    html += `<td class="num ${dCls}">${r.diff != null ? (r.diff>0?'+':'')+fmtNum(r.diff,2) : '—'}</td>`;
+    html += `<td class="num">${r.fills}</td>`;
+    html += `<td class="num ${dCls}">${r.dpf != null ? (r.dpf>0?'+':'')+fmtNum(r.dpf,2) : '—'}</td>`;
+    if(remCols.split){
+      remCols.periods.forEach((p, i) => {
+        const t = (r.remarkByPeriod || [])[i] || '';
+        html += `<td class="mo-rem">${t ? escapeHtml(t) : '<span style="color:var(--muted)">—</span>'}</td>`;
+      });
+    } else {
+      html += `<td class="mo-rem">${escapeHtml(r.analysisRemark) || '<span style="color:var(--muted)">—</span>'}</td>`;
+    }
+    html += `<td>${r.remark2 ? '<span class="mo-verified">✓ VERIFIED</span>' : '<span class="mo-unverified">—</span>'}</td>`;
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  body.innerHTML = html;
+}
+
+function exportMonthlyXLSX(){
+  if(typeof XLSX === 'undefined'){ toast('Excel library not loaded','warn'); return; }
+  if(!isCurrentUserAdmin()){ toast('Admin only','warn'); return; }
+  const rows = buildMonthlyRows();
+  if(!rows.length){ toast('Nothing to export','warn'); return; }
+  const from = document.getElementById('mo-from').value || 'all';
+  const to   = document.getElementById('mo-to').value   || 'all';
+
+  // Same remark layout as the screen — one column per period, or one combined
+  const remCols = monthlyRemarkCols();
+  const remHeads = remCols.split
+    ? remCols.periods.map(p => `Analysis Remark ${p.short}`)
+    : ['Analysis Remark'];
+
+  const ws = {};
+  const heads = ['Site','Machine','Model','Site HMR (last − first)','Total Online Fill','Total Site Fill',
+                 'Fill Diff','No of Fill','Diff per Fill', ...remHeads, 'Remark 2'];
+  const REM0 = 9;                       // first remark column
+  const COL_R2 = REM0 + remHeads.length;  // Remark 2 sits after them
+  ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:rows.length, c:COL_R2}});
+  heads.forEach((h,c) => xCell(ws, 0, c, h, XS.hdr));
+
+  rows.forEach((r,i) => {
+    const rr = i + 1;
+    const dStyle = r.diff == null ? XS.bodyNum
+                 : (Math.abs(r.diff) < 0.5 ? XS.diffZero : (r.diff > 0 ? XS.diffPos : XS.diffNeg));
+    xCell(ws, rr, 0, r.branch  || '', XS.body);
+    xCell(ws, rr, 1, r.vehicle || '', XS.vehPill);
+    xCell(ws, rr, 2, r.model   || '', XS.body);
+    // No red here: every figure is Page 2's, so the red "corrected" convention
+    // would be a lie. Page 9's own export is where corrected values live.
+    xCell(ws, rr, 3, r.siteHmr  != null ? +r.siteHmr.toFixed(2)  : '', XS.cellHmr);
+    xCell(ws, rr, 4, r.online   != null ? +r.online.toFixed(2)   : '', XS.cellOnline);
+    xCell(ws, rr, 5, r.siteFill != null ? +r.siteFill.toFixed(2) : '', XS.cellSite);
+    xCell(ws, rr, 6, r.diff     != null ? +r.diff.toFixed(2)     : '', dStyle);
+    xCell(ws, rr, 7, r.fills, XS.bodyNum);
+    xCell(ws, rr, 8, r.dpf      != null ? +r.dpf.toFixed(2)      : '', dStyle);
+    if(remCols.split){
+      remCols.periods.forEach((p, j) => {
+        xCell(ws, rr, REM0 + j, (r.remarkByPeriod || [])[j] || '', XS.body);
+      });
+    } else {
+      xCell(ws, rr, REM0, r.analysisRemark || '', XS.body);
+    }
+    xCell(ws, rr, COL_R2, r.remark2 || '', r.remark2 ? XS.diffZero : XS.body);
+  });
+
+  ws['!cols'] = [{wch:16},{wch:20},{wch:26},{wch:16},{wch:15},{wch:14},{wch:12},{wch:11},{wch:13},
+                 ...remHeads.map(() => ({wch: remCols.split ? 30 : 46})), {wch:12}];
+  ws['!rows'] = [{hpt:30}];
+  ws['!views'] = [{xSplit:3, ySplit:1, state:'frozen'}];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Monthly Output');
+  XLSX.writeFile(wb, `SJP_MonthlyOutput_${from}_to_${to}.xlsx`);
+  toast('Exported ✓','good');
+}
+
+// Shows/hides the Monthly Output tab based on who is signed in.
+function syncMonthlyTabVisibility(){
+  const tab = document.getElementById('tab-monthly');
+  if(!tab) return;
+  const show = isCurrentUserAdmin();
+  tab.style.display = show ? '' : 'none';
+  // If a non-admin is sitting on the page when they sign out, bounce them to Upload
+  if(!show && document.getElementById('page-monthly')?.classList.contains('active')){
+    document.querySelector('.tab[data-tab="upload"]')?.click();
+  }
+}
+
+/* ============================================================
+   MISSING-HMR AUDIT (Page 2)
+   A Site Fill with no paired Site HMR can't produce a Full-to-Full
+   mileage figure, so these gaps are worth catching at entry time.
+============================================================ */
+let highlightMissingHmr = false;
+
+// A fill of 0 means "no fuel added", so no HMR reading is expected for it.
+function isHmrMissing(siteFill, siteHMR){
+  const f = (siteFill === null || siteFill === undefined || siteFill === '') ? null : +siteFill;
+  const h = (siteHMR  === null || siteHMR  === undefined || siteHMR  === '') ? null : +siteHMR;
+  return (f !== null && !isNaN(f) && f > 0) && (h === null || isNaN(h));
+}
+
+function toggleMissingHmr(){
+  highlightMissingHmr = !highlightMissingHmr;
+  const btn = document.getElementById('btn-miss-hmr');
+  if(btn) btn.classList.toggle('on', highlightMissingHmr);
+  renderVehiclesD();
+}
+
+function renderHmrSummary(cells, vehCount){
+  const bar = document.getElementById('vp-hmr-summary');
+  const btn = document.getElementById('btn-miss-hmr');
+  if(btn) btn.textContent = cells ? `\u26a0 Missing HMR (${cells})` : '\u26a0 Missing HMR';
+  if(!bar) return;
+  if(!highlightMissingHmr){ bar.style.display = 'none'; return; }
+  bar.style.display = 'block';
+  if(!cells){
+    bar.style.background = '#f0fdf4';
+    bar.style.borderColor = '#86efac';
+    bar.style.color = '#065f46';
+    bar.innerHTML = '\u2713 Every Site Fill in this range has a Site HMR.';
+    return;
+  }
+  bar.style.background = '#fef2f2';
+  bar.style.borderColor = '#fca5a5';
+  bar.style.color = '#991b1b';
+  bar.innerHTML = `\u26a0 <b>${cells}</b> Site Fill${cells===1?'':'s'} without a Site HMR, across <b>${vehCount}</b> vehicle${vehCount===1?'':'s'} &nbsp;\u00b7&nbsp; showing only these rows \u2014 click <b>\u26a0 Missing HMR</b> again to show all.`;
+}
+
+/* ============================================================
+   SHARED PIVOT SCOPE  (Pages 2, 9, 10)  — v2.33
+   A day belongs in the pivot if an Excel record was uploaded for it OR
+   somebody entered a Site Fill / Site HMR on it. Until v2.33 the columns
+   came from uploaded records alone, so a manual entry made on a day whose
+   Excel never arrived had no column here — invisible on screen, impossible
+   to correct, and silently dropped out of Page 2's Diff while Page 10 still
+   counted it. That was the entire Page 2 vs Page 10 "Diff per Fill" gap.
+============================================================ */
+function hasNumVal(x){
+  return x !== null && x !== undefined && x !== '' && !isNaN(+x);
+}
+
+// Walks every manual-entry store and calls fn(vehicle, date) for each key that
+// holds a real value. One place to extend if another store is ever added.
+function forEachSiteEntry(fn){
+  [state.siteFills, state.siteHMRs, state.siteFillOverrides, state.siteHmrOverrides]
+  .forEach(store => {
+    Object.keys(store || {}).forEach(k => {
+      const i = k.lastIndexOf('|');
+      if(i < 1) return;
+      const d = k.slice(i + 1);
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) return;   // ignores period-remark style keys
+      if(!hasNumVal(store[k])) return;
+      fn(k.slice(0, i), d);
+    });
+  });
+}
+
+// Date columns for the pivot: record days UNION manual-entry days, inside range.
+function pivotDatesInRange(recs, fromD, toD){
+  const set = new Set(recs.map(r => r.date));
+  forEachSiteEntry((v, d) => {
+    if((!fromD || d >= fromD) && (!toD || d <= toD)) set.add(d);
+  });
+  return [...set].sort();
+}
+
+// Adds vehicles whose only presence in the range is a manual entry, so the row
+// exists to be seen and corrected. Mutates and returns the map it is given.
+function addSiteOnlyVehicles(vehMap, dates){
+  const inView = new Set(dates);
+  forEachSiteEntry((v, d) => { if(inView.has(d) && !vehMap[v]) vehMap[v] = {}; });
+  return vehMap;
 }
 
 function renderVehicles(){
@@ -3218,17 +4483,21 @@ function renderVehicles(){
   const recs = state.records.filter(r=>
     (!fromD || r.date >= fromD) && (!toD || r.date <= toD)
   );
-  if(!recs.length){
+  // Build pivot: vehicles × dates — record days UNION manual-entry days (v2.33)
+  const dates = pivotDatesInRange(recs, fromD, toD);
+  const recDates = new Set(recs.map(r=>r.date));   // days that really have an uploaded Excel
+  // Bail only when the range is empty of BOTH uploads and manual entries — a range
+  // made up purely of site entries still has to be reachable.
+  if(!dates.length){
     body.innerHTML = emptyState('No data in this range','Adjust the date filter or pick a different range.');
     return;
   }
-  // Build pivot: vehicles × dates
-  const dates = [...new Set(recs.map(r=>r.date))].sort();
   const vehMap = {};
   recs.forEach(r=>{
     if(!vehMap[r.vehicle]) vehMap[r.vehicle] = {};
     vehMap[r.vehicle][r.date] = r;
   });
+  addSiteOnlyVehicles(vehMap, dates);
   // Sort by Branch then vehicle name — matches Page 3 date-wise report ordering
   const vehBranch = {};
   recs.forEach(r=>{
@@ -3247,8 +4516,28 @@ function renderVehicles(){
       return v.toLowerCase().includes(search) || site.includes(search) || br.includes(search);
     });
   }
+  // Missing-HMR audit: count the offending cells, and (when the toggle is on)
+  // narrow the table to just the vehicles that have them, so they're findable
+  // without scrolling the whole fleet.
+  let hmrMissCells = 0;
+  const hmrMissVeh = new Set();
+  vehicles.forEach(v => {
+    dates.forEach(d => {
+      const k = `${v}|${d}`;
+      if(isHmrMissing(state.siteFills[k] ?? null, state.siteHMRs[k] ?? null)){
+        hmrMissCells++; hmrMissVeh.add(v);
+      }
+    });
+  });
+  if(highlightMissingHmr) vehicles = vehicles.filter(v => hmrMissVeh.has(v));
+  renderHmrSummary(hmrMissCells, hmrMissVeh.size);
+
   if(!vehicles.length){
-    body.innerHTML = emptyState('No matches','Try a different search.');
+    body.innerHTML = emptyState(
+      highlightMissingHmr ? 'No missing HMR' : 'No matches',
+      highlightMissingHmr
+        ? 'Every Site Fill in this range already has a Site HMR. Click the button again to show all rows.'
+        : 'Try a different search.');
     return;
   }
 
@@ -3258,11 +4547,12 @@ function renderVehicles(){
   html += `<th rowspan="2" class="sticky-branch">Branch</th>`;
   html += `<th rowspan="2" class="sticky-veh">Vehicle</th>`;
   html += `<th rowspan="2" class="sticky-site">Site Name</th>`;
-  html += `<th rowspan="2" class="sticky-diff" title="Sum of Online Fill − Sum of Site Fill across the visible date range">Diff (L)</th>`;
-  html += `<th rowspan="2" class="sticky-dpf" title="Average discrepancy per fill event (Diff ÷ number of dates with any fill activity in range)">Diff/Fill</th>`;
+  html += `<th rowspan="2" class="sticky-diff" title="Sum of Online Fill − Sum of Site Fill across the visible date range, using the values as entered (uncorrected). Page 9 and Page 10 use the corrected figures.">Diff (L)<br><span class="th-sub">raw</span></th>`;
+  html += `<th rowspan="2" class="sticky-dpf" title="Diff ÷ number of dates with any fill activity in range — raw values">Diff/Fill<br><span class="th-sub">raw</span></th>`;
   html += `<th rowspan="2" class="sticky-rem">Remark</th>`;
   dates.forEach(d=>{
-    html += `<th colspan="3" class="date-grp">${fmtShortDate(d)}</th>`;
+    const noUp = !recDates.has(d);
+    html += `<th colspan="3" class="date-grp${noUp?' no-upload':''}"${noUp?' title="No Excel uploaded for this day — site entries only"':''}>${fmtShortDate(d)}${noUp?'<span class="nu-tag">site only</span>':''}</th>`;
   });
   html += '</tr><tr>';
   dates.forEach(()=>{
@@ -3343,7 +4633,8 @@ function renderVehicles(){
         const hasData = vehicleHasDataInPeriod(v, p.key);
         const isMissing = hasData && !val.trim();
         const labelCls = isMissing ? 'rem-period-label needed' : 'rem-period-label';
-        const textareaCls = isMissing ? 'rem-inp rem-missing' : 'rem-inp';
+        const remOv = isAdminOverride(`${v}|${p.key}|remark`) ? ' admin-override' : '';
+        const textareaCls = (isMissing ? 'rem-inp rem-missing' : 'rem-inp') + remOv;
         const placeholder = isMissing ? 'REQUIRED — add remark…' : 'Add note…';
         remCell += `<div class="rem-period" data-vehicle="${escapeAttr(v)}" data-period="${p.key}" data-has-data="${hasData?'1':'0'}">
           <div class="${labelCls}"><span class="rem-warn-icon">${isMissing ? '⚠ ' : ''}</span>${escapeHtml(p.short)}</div>
@@ -3360,9 +4651,21 @@ function renderVehicles(){
       const siteFill   = (k in state.siteFills)     ? state.siteFills[k]     : null;
       const siteHMR    = (k in state.siteHMRs)      ? state.siteHMRs[k]      : null;
       const noRec = !r ? ' no-rec' : '';
-      html += `<td class="num metric-cell cell-fill${noRec}"><input type="number" step="0.01" class="fill-inp" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(onlineFill) ?? ''}" onchange="updateFillOverride(this)" placeholder="—" /></td>`;
-      html += `<td class="num metric-cell cell-sfill${noRec}"><input type="number" step="0.01" class="site-fill-inp" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(siteFill) ?? ''}" onchange="updateSiteFill(this)" placeholder="—" /></td>`;
-      html += `<td class="num metric-cell cell-shmr${noRec}"><input type="number" step="0.01" class="site-hmr-inp" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(siteHMR) ?? ''}" onchange="updateSiteHMR(this)" placeholder="—" /></td>`;
+      // Blue-and-white when Admin changed a value someone else had entered
+      const ovOnline = isAdminOverrideOnline(v, d, r) ? ' admin-override' : '';
+      const ovSFill  = isAdminOverride(`${v}|${d}|sitefill`) ? ' admin-override' : '';
+      const ovSHmr   = isAdminOverride(`${v}|${d}|sitehmr`)  ? ' admin-override' : '';
+      const tipOnline = authorTooltip(`${v}|${d}|online`);
+      const tipSFill  = authorTooltip(`${v}|${d}|sitefill`);
+      const tipSHmr   = authorTooltip(`${v}|${d}|sitehmr`);
+      html += `<td class="num metric-cell cell-fill${noRec}"><input type="number" step="0.01" class="fill-inp${ovOnline}"${tipOnline?` title="${escapeAttr(tipOnline)}"`:''} data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(onlineFill) ?? ''}" onchange="updateFillOverride(this)" placeholder="—" /></td>`;
+      html += `<td class="num metric-cell cell-sfill${noRec}"><input type="number" step="0.01" class="site-fill-inp${ovSFill}"${tipSFill?` title="${escapeAttr(tipSFill)}"`:''} data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(siteFill) ?? ''}" onchange="updateSiteFill(this)" placeholder="—" /></td>`;
+      // Site Fill entered but Site HMR left blank — flagged when the audit toggle is on
+      const hmrMissing = isHmrMissing(siteFill, siteHMR);
+      const hmrFlag = (highlightMissingHmr && hmrMissing) ? ' hmr-missing' : '';
+      const hmrCellFlag = (highlightMissingHmr && hmrMissing) ? ' hmr-missing-cell' : '';
+      const hmrPh = (highlightMissingHmr && hmrMissing) ? '⚠ MISSING' : '—';
+      html += `<td class="num metric-cell cell-shmr${noRec}${hmrCellFlag}"><input type="number" step="0.01" class="site-hmr-inp${ovSHmr}${hmrFlag}"${tipSHmr?` title="${escapeAttr(tipSHmr)}"`:''} data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${r1(siteHMR) ?? ''}" onchange="updateSiteHMR(this)" placeholder="${hmrPh}" /></td>`;
     });
     html += '</tr>';
   });
@@ -3515,10 +4818,13 @@ function updatePeriodRemark(input){
   const t = (input.value || '').trim();
   if(t) state.periodRemarks[key] = t;
   else  delete state.periodRemarks[key];
+  noteCellAuthor(`${v}|${p}|remark`, !t);
+  applyAdminOverrideStyle(input, `${v}|${p}|remark`);
   // Re-apply the live visual sync — border, label color, warning icon
   onRemarkTyping(input);
-  // Update the summary strip at top of page
-  updateRemarkSummary();
+  // Update the summary strip at top of THIS page (Page 2 or Analysed Page 2 — whichever
+  // rendered this textarea). Falls back to Page 2's IDs if not specified.
+  updateRemarkSummary(input.dataset.summaryBar, input.dataset.fromId, input.dataset.toId);
   saveState();
 }
 
@@ -3542,11 +4848,12 @@ function onRemarkTyping(input){
 }
 
 // Update the summary bar at top of Page 2 that shows how many vehicles still need remarks
-function updateRemarkSummary(){
-  const bar = document.getElementById('vp-remark-summary');
+function updateRemarkSummary(barId, fromId, toId){
+  barId = barId || 'vp-remark-summary'; fromId = fromId || 'veh-from'; toId = toId || 'veh-to';
+  const bar = document.getElementById(barId);
   if(!bar) return;
-  const from = document.getElementById('veh-from')?.value;
-  const to   = document.getElementById('veh-to')?.value;
+  const from = document.getElementById(fromId)?.value;
+  const to   = document.getElementById(toId)?.value;
   if(!from || !to){ bar.style.display = 'none'; return; }
   const periods = periodsInRange(from, to, state.remarkGranularity || 'half');
   if(!periods.length){ bar.style.display = 'none'; return; }
@@ -3724,14 +5031,46 @@ function getSiteFill(vehicle, date){
   // Per spec: Site Fill on reports requires user to enter BOTH Site Fill AND Site HMR
   // (the manual pair) on Page 2. Either missing → Site Fill column on report stays empty.
   // Online HMR (state.workHourOverrides / r.hmr) is NOT the gating field — that's telematics.
+  // Gating checks EFFECTIVE presence (raw OR analysis-team correction) so a corrected entry
+  // that fills in a previously-missing value also satisfies the pair requirement.
   const k = `${vehicle}|${date}`;
-  if(!(k in state.siteFills)) return null;
-  if(!(k in state.siteHMRs)) return null;
-  return state.siteFills[k];
+  // Gating follows Page 2 as well (v2.36) — a value that exists only as a Page 9
+  // correction must not make a Site Fill appear on a report Page 2 shows as empty.
+  const hasFill = (k in state.siteFills);
+  const hasHmr  = (k in state.siteHMRs);
+  if(!hasFill) return null;
+  if(!hasHmr) return null;
+  return getEffectiveSiteFill(vehicle, date);
 }
 function getRawSiteFill(vehicle, date){
   const k = `${vehicle}|${date}`;
   return (k in state.siteFills) ? state.siteFills[k] : null;
+}
+// THE source of truth for every calculation and report: whatever Page 2 shows.
+//
+// Until v2.36 this preferred the Page 9 correction, which meant Page 10 (and
+// Pages 5, 6, 7, 8) could report a number that appears nowhere on Page 2 — and
+// an older Page 9 correction silently outranked a newer Page 2 edit. Page 2 is
+// now the single truth; Page 9 keeps its own corrected view through
+// getCorrectedSiteFill() below, but those corrections stay on Page 9.
+function getEffectiveSiteFill(vehicle, date){
+  return getRawSiteFill(vehicle, date);
+}
+
+// Page 9 ONLY — the analysis-team correction, falling back to the Page 2 value.
+// Nothing outside Page 9 should call this; totals must match Page 2.
+function getCorrectedSiteFill(vehicle, date){
+  const k = `${vehicle}|${date}`;
+  if(k in (state.siteFillOverrides || {})) return state.siteFillOverrides[k];
+  return getRawSiteFill(vehicle, date);
+}
+
+// True when Page 9 holds a value that disagrees with Page 2 for this cell.
+// Page 10 uses it to flag the disagreement without letting it change the number.
+function page9Differs(raw, corrected){
+  if(corrected === null || corrected === undefined) return false;
+  if(raw === null || raw === undefined) return true;   // Page 9 added a value Page 2 has not got
+  return Math.abs(+corrected - +raw) > 0.001;
 }
 // Click NA → swap the cell to an editable input so the user can override the value.
 function editNAWorkHour(span, v, d){
@@ -3746,6 +5085,17 @@ function editNAWorkHour(span, v, d){
 function getRawSiteHMR(vehicle, date){
   const k = `${vehicle}|${date}`;
   return (k in state.siteHMRs) ? state.siteHMRs[k] : null;
+}
+// Page 2's Site HMR — see getEffectiveSiteFill above for why this is raw.
+function getEffectiveSiteHMR(vehicle, date){
+  return getRawSiteHMR(vehicle, date);
+}
+
+// Page 9 ONLY — the analysis-team corrected Site HMR.
+function getCorrectedSiteHMR(vehicle, date){
+  const k = `${vehicle}|${date}`;
+  if(k in (state.siteHmrOverrides || {})) return state.siteHmrOverrides[k];
+  return getRawSiteHMR(vehicle, date);
 }
 
 // Page 3 Work Hour display logic (NA rules):
@@ -3804,16 +5154,32 @@ function updateFillOverride(input){
   // Online Fill — overrides upload's Fill value, syncs Page 2 ↔ Page 3 inputs
   const v = input.dataset.vehicle, d = input.dataset.date, k = `${v}|${d}`;
   const num = input.value === '' ? null : parseFloat(input.value);
-  if(num === null || isNaN(num)) delete state.fillOverrides[k];
+  const ofCleared = (num === null || isNaN(num));
+  if(ofCleared) delete state.fillOverrides[k];
   else state.fillOverrides[k] = num;
+  noteCellAuthor(`${v}|${d}|online`, ofCleared);
+  // Online Fill's "original" author is the uploader of that record
+  const ofRec = state.records.find(r => r.vehicle === v && r.date === d);
+  document.querySelectorAll('.fill-inp').forEach(inp=>{
+    if(inp.dataset.vehicle === v && inp.dataset.date === d){
+      inp.classList.toggle('admin-override', !ofCleared && isAdminOverrideOnline(v, d, ofRec));
+    }
+  });
   saveState();
   // Sync other Online Fill inputs on screen for this v×d (Page 2 pivot ↔ Page 3 reports)
   const synced = (num !== null && !isNaN(num)) ? num : '';
   document.querySelectorAll('.fill-inp').forEach(inp=>{
     if(inp !== input && inp.dataset.vehicle === v && inp.dataset.date === d) inp.value = synced;
   });
+  // Analysed Page 2's Online Fill inputs also carry the corrected-value highlight
+  document.querySelectorAll('.fill-inp.an-corr-inp').forEach(inp=>{
+    if(inp.dataset.vehicle === v && inp.dataset.date === d){
+      inp.classList.toggle('an-modified', num !== null && !isNaN(num));
+    }
+  });
   refreshDiffCells(v, d);
   refreshPage2RowAggregates(v);
+  refreshAnalysedRowAggregates(v);
   if(typeof renderSiteCalendar === 'function') renderSiteCalendar();
 }
 function updateWorkHourOverride(input){
@@ -3834,8 +5200,11 @@ function updateSiteHMR(input){
   // Gates Site Fill display on Page 3: both Site Fill AND Site HMR must be present.
   const v = input.dataset.vehicle, d = input.dataset.date, k = `${v}|${d}`;
   const num = input.value === '' ? null : parseFloat(input.value);
-  if(num === null || isNaN(num)) delete state.siteHMRs[k];
+  const shCleared = (num === null || isNaN(num));
+  if(shCleared) delete state.siteHMRs[k];
   else state.siteHMRs[k] = num;
+  noteCellAuthor(`${v}|${d}|sitehmr`, shCleared);
+  applyAdminOverrideStyle(input, `${v}|${d}|sitehmr`);
   saveState();
   const synced = (num !== null && !isNaN(num)) ? num : '';
   document.querySelectorAll('.site-hmr-inp').forEach(inp=>{
@@ -3843,6 +5212,72 @@ function updateSiteHMR(input){
   });
   // Site HMR change toggles Site Fill visibility on Page 3 → refresh
   refreshSiteFillAndDiff(v, d);
+}
+
+// ============ DATA REVIEW PAGE — analysis-team correction handlers ============
+// These write to the OVERRIDE stores (separate from siteFills/siteHMRs, which
+// remain the untouched raw values reported by the mobile PWA / bulk upload).
+// Leaving the input blank clears the override, reverting to the raw value.
+function updateSiteFillOverride(input){
+  const v = input.dataset.vehicle, d = input.dataset.date, k = `${v}|${d}`;
+  const num = input.value === '' ? null : parseFloat(input.value);
+  if(num === null || isNaN(num)) delete state.siteFillOverrides[k];
+  else state.siteFillOverrides[k] = num;
+  saveState();
+  // Targeted DOM update only — re-rendering the whole table here would destroy and
+  // recreate every input, which blows away focus and jumps the cursor to the first cell.
+  input.classList.toggle('an-modified', num !== null && !isNaN(num));
+  refreshAnalysedRowAggregates(v);
+}
+function updateSiteHmrOverride(input){
+  const v = input.dataset.vehicle, d = input.dataset.date, k = `${v}|${d}`;
+  const num = input.value === '' ? null : parseFloat(input.value);
+  if(num === null || isNaN(num)) delete state.siteHmrOverrides[k];
+  else state.siteHmrOverrides[k] = num;
+  saveState();
+  input.classList.toggle('an-modified', num !== null && !isNaN(num));
+  refreshAnalysedRowAggregates(v);
+}
+
+// Recomputes just one vehicle row's Diff (L) / Diff/Fill cells on Analysed Page 2,
+// using the same effective-value logic as the full render. Keeps the rest of the
+// DOM (and therefore the user's cursor) untouched.
+function refreshAnalysedRowAggregates(v){
+  const table = document.querySelector('.pivot.an-pivot');
+  if(!table) return;                       // Analysed Page 2 not currently rendered
+  const row = table.querySelector(`tbody tr[data-vehicle="${CSS.escape(v)}"]`);
+  if(!row) return;
+
+  const dates = [...row.querySelectorAll('td.an-cell.m-fill .an-corr-inp')].map(i => i.dataset.date);
+  const vehRecs = {};
+  state.records.forEach(r => { if(r.vehicle === v) vehRecs[r.date] = r; });
+
+  let onlineSum = 0, siteSum = 0, anyData = false, fillEvents = 0;
+  dates.forEach(d => {
+    const k = `${v}|${d}`;
+    const r = vehRecs[d];
+    const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k]
+                     : ((r && r.data && 'Fill' in r.data) ? r.data['Fill'] : null);
+    const siteFill = getCorrectedSiteFill(v, d);   // Page 9 shows its own corrected Diff
+    let dayHasFill = false;
+    if(onlineFill != null && !isNaN(+onlineFill)){ onlineSum += +onlineFill; anyData = true; if(+onlineFill > 0) dayHasFill = true; }
+    if(siteFill   != null && !isNaN(+siteFill)  ){ siteSum   += +siteFill;   anyData = true; if(+siteFill   > 0) dayHasFill = true; }
+    if(dayHasFill) fillEvents++;
+  });
+  const diffVal = anyData ? (onlineSum - siteSum) : null;
+  const dpfVal  = (diffVal != null && fillEvents > 0) ? (diffVal / fillEvents) : null;
+  const diffCls = diffVal == null ? '' : (Math.abs(diffVal) < 0.5 ? 'diff-ok' : (diffVal > 0 ? 'diff-bad' : 'diff-warn'));
+
+  const diffCell = row.querySelector('td.sticky-diff');
+  const dpfCell  = row.querySelector('td.sticky-dpf');
+  if(diffCell){
+    diffCell.className = `sticky-diff num ${diffCls}`;
+    diffCell.textContent = diffVal != null ? fmtNum(diffVal,1) : '—';
+  }
+  if(dpfCell){
+    dpfCell.className = `sticky-dpf num ${diffCls}`;
+    dpfCell.textContent = dpfVal != null ? fmtNum(dpfVal,1) : '—';
+  }
 }
 function refreshDiffCells(v, d){
   const rec = state.records.find(r=>r.vehicle===v && r.date===d);
@@ -3877,8 +5312,11 @@ function updateSiteFill(input){
   const k = `${v}|${d}`;
   const raw = input.value;
   const num = raw === '' ? null : parseFloat(raw);
-  if(num === null || isNaN(num)) delete state.siteFills[k];
+  const sfCleared = (num === null || isNaN(num));
+  if(sfCleared) delete state.siteFills[k];
   else state.siteFills[k] = num;
+  noteCellAuthor(`${v}|${d}|sitefill`, sfCleared);
+  applyAdminOverrideStyle(input, `${v}|${d}|sitefill`);
   saveState();
   // Sync Site Fill inputs across pages
   const synced = (num !== null && !isNaN(num)) ? num : '';
@@ -4238,6 +5676,22 @@ const XS = {
     numFmt:'#,##0.0',
     border: XBORDER
   },
+  // Analysed Page 2 — a cell holding an analysis-team CORRECTED value.
+  // Red fill + white bold text so every manual change is unmistakable at a glance.
+  corrected: {
+    font:{color:{rgb:'FFFFFF'}, sz:10, bold:true, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'DC2626'}},
+    alignment:{horizontal:'right', vertical:'center'},
+    numFmt:'#,##0.0',
+    border: XBORDER
+  },
+  // Same, for text cells (corrected remarks) — left aligned, wraps
+  correctedText: {
+    font:{color:{rgb:'FFFFFF'}, sz:10, bold:true, name:'Calibri'},
+    fill:{patternType:'solid', fgColor:{rgb:'DC2626'}},
+    alignment:{vertical:'center', wrapText:true},
+    border: XBORDER
+  },
   // Diff positive (orange tint)
   diffPos: {
     font:{color:{rgb:'92400E'}, sz:10, bold:true, name:'Calibri'},
@@ -4453,15 +5907,19 @@ function exportVehiclesXLSX(){
   const fromD = document.getElementById('veh-from').value;
   const toD   = document.getElementById('veh-to').value;
   const recs = state.records.filter(r=>(!fromD||r.date>=fromD)&&(!toD||r.date<=toD));
-  if(!recs.length){ toast('Nothing to export','warn'); return; }
-  const dates = [...new Set(recs.map(r=>r.date))].sort();
+  // Same scope as the screen: record days UNION manual-entry days (v2.33)
+  const dates = pivotDatesInRange(recs, fromD, toD);
+  if(!dates.length){ toast('Nothing to export','warn'); return; }
   const vehBranchE = {};
   recs.forEach(r=>{
     if(!(r.vehicle in vehBranchE)){
       vehBranchE[r.vehicle] = r.branch || (r.data && r.data['Branch']) || '';
     }
   });
-  const vehicles = [...new Set(recs.map(r=>r.vehicle))].sort((a,b)=>{
+  const vehSetE = {};
+  recs.forEach(r=>{ vehSetE[r.vehicle] = 1; });
+  addSiteOnlyVehicles(vehSetE, dates);
+  const vehicles = Object.keys(vehSetE).sort((a,b)=>{
     const ba = vehBranchE[a] || '', bb = vehBranchE[b] || '';
     return ba.localeCompare(bb) || a.localeCompare(b);
   });
@@ -4469,10 +5927,13 @@ function exportVehiclesXLSX(){
   recs.forEach(r=>{ lookup[`${r.vehicle}|${r.date}`] = r; });
 
   // Column layout:
-  // 0: Branch | 1: Vehicle | 2: Site Name | 3: Diff (FORMULA) | 4: Remark
-  // 5..: Date1 Online | Date1 Site | Date1 HMR | Date2 Online | Date2 Site | Date2 HMR | ...
+  // 0: Branch | 1: Vehicle | 2: Site Name | 3: Diff (FORMULA) | 4: Diff/Fill
+  // 5..(5+P-1): Period remarks (one per period in visible date range — H1/H2 or C1-C6)
+  // then: Date1 Online | Date1 Site | Date1 HMR | Date2 Online | ...
   const N = dates.length;
-  const FIXED_COLS = 6;   // Branch, Vehicle, Site, Diff, Diff/Fill, Remark
+  const periods = periodsInRange(fromD, toD, state.remarkGranularity || 'half');
+  const P = periods.length;
+  const FIXED_COLS = 5 + P;   // Branch, Vehicle, Site, Diff, Diff/Fill + P period remark columns
   const totalCols = FIXED_COLS + N * 3;
 
   const ws = {};
@@ -4484,7 +5945,11 @@ function exportVehiclesXLSX(){
   xCell(ws, 0, 2, 'Site Name', XS.hdr);
   xCell(ws, 0, 3, 'Diff (L)', XS.hdr);
   xCell(ws, 0, 4, 'Diff/Fill', XS.hdr);
-  xCell(ws, 0, 5, 'Remark', XS.hdr);
+  // Period-specific remark headers — label depends on how many periods there are
+  periods.forEach((p, i) => {
+    const label = periods.length === 1 ? 'Remark' : `Remark ${p.short}`;
+    xCell(ws, 0, 5 + i, label, XS.hdr);
+  });
   for(let i=0; i<N; i++){
     xCell(ws, 0, FIXED_COLS + i*3, fmtShortDate(dates[i]), XS.dateHdr);
     xCell(ws, 0, FIXED_COLS + i*3 + 1, '', XS.dateHdr);
@@ -4580,7 +6045,11 @@ function exportVehiclesXLSX(){
       : `""`;
     xCell(ws, r0, 4, dpfVal != null ? dpfVal : '', applyBreak(dpfStyle), {f: dpfFormula});
 
-    xCell(ws, r0, 5, state.remarks[v] || '', applyBreak(XS.body));
+    // Period-specific remarks — one column per period covered by date range
+    periods.forEach((p, i) => {
+      const val = state.periodRemarks[`${v}|${p.key}`] || '';
+      xCell(ws, r0, 5 + i, val, applyBreak(XS.body));
+    });
 
     // Date cells
     dates.forEach((d, i)=>{
@@ -4609,21 +6078,341 @@ function exportVehiclesXLSX(){
       e:{r:0, c:FIXED_COLS + i*3 + 2}
     });
   }
-  // Column widths
+  // Column widths — 5 fixed + P period columns + 3 per date
   const cols = [
-    {wch:14}, {wch:16}, {wch:22}, {wch:11}, {wch:11}, {wch:22}
+    {wch:14}, {wch:16}, {wch:22}, {wch:11}, {wch:11}
   ];
+  for(let i=0; i<P; i++){ cols.push({wch:26}); }   // period remark column
   for(let i=0; i<N; i++){ cols.push({wch:11}, {wch:11}, {wch:11}); }
   ws['!cols'] = cols;
   // Row heights — header rows a bit taller
   ws['!rows'] = [{hpt:24}, {hpt:20}];
-  // Freeze first 6 columns and 2 header rows
-  ws['!views'] = [{xSplit:6, ySplit:2, state:'frozen'}];
+  // Freeze all fixed columns (branch..last period remark) and 2 header rows
+  ws['!views'] = [{xSplit:FIXED_COLS, ySplit:2, state:'frozen'}];
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Vehicles & Sites');
   XLSX.writeFile(wb, `SJP_Vehicles_${fromD||'all'}_to_${toD||'all'}.xlsx`);
   toast('Exported with formulas + colors ✓','good');
+}
+
+/* ============================================================
+   PAGE 9: ANALYSED PAGE 2 — duplicate of Page 2's grid, but every
+   numeric metric shows RAW (as uploaded / site-reported, read-only)
+   stacked above an editable CORRECTED value. Page 2 itself is
+   completely unchanged — this page is a separate analysis overlay.
+   Corrected values are stored in fillOverrides (existing, shared
+   with Page 2/3) and the new siteFillOverrides/siteHmrOverrides,
+   and are what Mileage Trend, Fill Log, Abnormalities and Merged
+   Report read via getEffective*() helpers.
+============================================================ */
+
+function setAnRange(days){
+  const to = fmtDate(new Date());
+  const fromD = new Date(); fromD.setDate(fromD.getDate() - (days-1));
+  document.getElementById('an-from').value = fmtDate(fromD);
+  document.getElementById('an-to').value = to;
+  renderAnalysedPage2D();
+}
+function setAnRangeAll(){
+  const dates = state.records.map(r=>r.date).filter(Boolean).sort();
+  if(!dates.length){ document.getElementById('an-from').value=''; document.getElementById('an-to').value=''; renderAnalysedPage2(); return; }
+  document.getElementById('an-from').value = dates[0];
+  document.getElementById('an-to').value = dates[dates.length-1];
+  renderAnalysedPage2D();
+}
+
+function renderAnalysedPage2(){
+  const body = document.getElementById('analysed-body');
+  if(!body) return;
+  if(!state.records.length){
+    body.innerHTML = emptyState('No data yet','Upload a fuel economy file from Page 1 to get started.');
+    return;
+  }
+  const fromD = document.getElementById('an-from').value;
+  const toD   = document.getElementById('an-to').value;
+  const search = (document.getElementById('an-search').value||'').toLowerCase().trim();
+
+  const granularity = state.remarkGranularity || 'half';
+  const granSel = document.getElementById('an-rem-gran');
+  if(granSel && granSel.value !== granularity) granSel.value = granularity;
+  const periodsForRemarks = periodsInRange(fromD, toD, granularity);
+
+  const recs = state.records.filter(r=>
+    (!fromD || r.date >= fromD) && (!toD || r.date <= toD)
+  );
+  const dates = pivotDatesInRange(recs, fromD, toD);
+  const recDates = new Set(recs.map(r=>r.date));
+  if(!dates.length){
+    body.innerHTML = emptyState('No data in this range','Adjust the date filter or pick a different range.');
+    return;
+  }
+  const vehMap = {};
+  recs.forEach(r=>{
+    if(!vehMap[r.vehicle]) vehMap[r.vehicle] = {};
+    vehMap[r.vehicle][r.date] = r;
+  });
+  addSiteOnlyVehicles(vehMap, dates);
+  const vehBranch = {};
+  recs.forEach(r=>{
+    if(!(r.vehicle in vehBranch)){
+      vehBranch[r.vehicle] = r.branch || (r.data && r.data['Branch']) || '';
+    }
+  });
+  let vehicles = Object.keys(vehMap).sort((a,b)=>{
+    const ba = vehBranch[a] || '', bb = vehBranch[b] || '';
+    return ba.localeCompare(bb) || a.localeCompare(b);
+  });
+  if(search){
+    vehicles = vehicles.filter(v=>{
+      const site = (state.sites[v]||'').toLowerCase();
+      const br = (vehBranch[v]||'').toLowerCase();
+      return v.toLowerCase().includes(search) || site.includes(search) || br.includes(search);
+    });
+  }
+  if(!vehicles.length){
+    body.innerHTML = emptyState('No matches','Try a different search.');
+    return;
+  }
+
+  let html = '<div class="table-wrap"><table class="pivot pivot3 an-pivot">';
+  html += '<thead><tr>';
+  html += `<th rowspan="2" class="sticky-branch">Branch</th>`;
+  html += `<th rowspan="2" class="sticky-veh">Vehicle</th>`;
+  html += `<th rowspan="2" class="sticky-site">Site Name</th>`;
+  html += `<th rowspan="2" class="sticky-diff" title="Sum of Corrected Online Fill − Sum of Corrected Site Fill (falls back to raw where no correction exists)">Diff (L)<br><span style="font-weight:400;font-size:9px">corrected</span></th>`;
+  html += `<th rowspan="2" class="sticky-dpf">Diff/Fill<br><span style="font-weight:400;font-size:9px">corrected</span></th>`;
+  html += `<th rowspan="2" class="sticky-rem">Remark</th>`;
+  dates.forEach(d=>{
+    const noUp = !recDates.has(d);
+    html += `<th colspan="3" class="date-grp${noUp?' no-upload':''}"${noUp?' title="No Excel uploaded for this day — site entries only"':''}>${fmtShortDate(d)}${noUp?'<span class="nu-tag">site only</span>':''}</th>`;
+  });
+  html += '</tr><tr>';
+  dates.forEach(()=>{
+    html += `<th class="metric num m-fill">Online&nbsp;Fill</th>`;
+    html += `<th class="metric num m-sfill">Site&nbsp;Fill</th>`;
+    html += `<th class="metric num m-hmr">Site&nbsp;HMR</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  let prevBranch = null;
+  vehicles.forEach(v=>{
+    const branch = vehBranch[v] || '';
+    const isNewBranchGroup = (branch !== prevBranch);
+    prevBranch = branch;
+
+    // Diff computed off CORRECTED (effective) values — shows whether the correction
+    // resolved the mismatch, unlike Page 2's Diff which stays raw-based.
+    let onlineSum = 0, siteSum = 0, anyData = false, fillEvents = 0;
+    dates.forEach(d=>{
+      const r = vehMap[v][d];
+      const k = `${v}|${d}`;
+      const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k] : ((r && r.data && 'Fill' in r.data) ? r.data['Fill'] : null);
+      const siteFill = getCorrectedSiteFill(v, d);   // Page 9's own corrected Diff
+      let dayHasFill = false;
+      if(onlineFill != null && !isNaN(+onlineFill)){ onlineSum += +onlineFill; anyData = true; if(+onlineFill > 0) dayHasFill = true; }
+      if(siteFill != null && !isNaN(+siteFill)){ siteSum += +siteFill; anyData = true; if(+siteFill > 0) dayHasFill = true; }
+      if(dayHasFill) fillEvents++;
+    });
+    const diffVal = anyData ? (onlineSum - siteSum) : null;
+    const dpfVal = (diffVal != null && fillEvents > 0) ? (diffVal / fillEvents) : null;
+    const diffCls = diffVal == null ? '' : (Math.abs(diffVal) < 0.5 ? 'diff-ok' : (diffVal > 0 ? 'diff-bad' : 'diff-warn'));
+
+    html += `<tr data-vehicle="${escapeAttr(v)}"${isNewBranchGroup ? ' class="branch-start"' : ''}>`;
+    html += `<td class="sticky-branch">${escapeHtml(branch) || '<span style="color:var(--muted)">—</span>'}</td>`;
+    html += `<td class="sticky-veh"><span class="veh-pill">${escapeHtml(v)}</span></td>`;
+    html += `<td class="sticky-site">${escapeHtml(state.sites[v] || '') || '<span style="color:var(--muted)">—</span>'}</td>`;
+    html += `<td class="sticky-diff num ${diffCls}">${diffVal != null ? fmtNum(diffVal,1) : '—'}</td>`;
+    html += `<td class="sticky-dpf num ${diffCls}">${dpfVal != null ? fmtNum(dpfVal,1) : '—'}</td>`;
+
+    // Remark cell — SAME period-remark editor as Page 2 (shared state.periodRemarks),
+    // but tagged with this page's own summary-bar/date-input IDs so the top banner
+    // updates correctly regardless of which page the edit happened on.
+    let remCell = '<td class="sticky-rem">';
+    if(!periodsForRemarks.length){
+      remCell += `<textarea class="rem-inp" data-vehicle="${escapeAttr(v)}" oninput="autoResizeRemark(this)" onchange="updateRemark(this)" placeholder="Add note…" rows="1">${escapeHtml(state.remarks[v]||'')}</textarea>`;
+    } else {
+      periodsForRemarks.forEach(p => {
+        const key = `${v}|${p.key}`;
+        const val = state.periodRemarks[key] || '';
+        const hasData = vehicleHasDataInPeriod(v, p.key);
+        const isMissing = hasData && !val.trim();
+        const labelCls = isMissing ? 'rem-period-label needed' : 'rem-period-label';
+        const remOv = isAdminOverride(`${v}|${p.key}|remark`) ? ' admin-override' : '';
+        const textareaCls = (isMissing ? 'rem-inp rem-missing' : 'rem-inp') + remOv;
+        const placeholder = isMissing ? 'REQUIRED — add remark…' : 'Add note…';
+        remCell += `<div class="rem-period" data-vehicle="${escapeAttr(v)}" data-period="${p.key}" data-has-data="${hasData?'1':'0'}">
+          <div class="${labelCls}"><span class="rem-warn-icon">${isMissing ? '⚠ ' : ''}</span>${escapeHtml(p.short)}</div>
+          <textarea class="${textareaCls}" data-vehicle="${escapeAttr(v)}" data-period="${p.key}" data-summary-bar="an-remark-summary" data-from-id="an-from" data-to-id="an-to" oninput="onRemarkTyping(this)" onchange="updatePeriodRemark(this)" placeholder="${placeholder}" rows="1">${escapeHtml(val)}</textarea>
+        </div>`;
+      });
+    }
+    remCell += '</td>';
+    html += remCell;
+
+    dates.forEach(d=>{
+      const r = vehMap[v][d];
+      const k = `${v}|${d}`;
+      const noRec = !r ? ' no-rec' : '';
+
+      // --- Online Fill: raw = bulk-uploaded record.data.Fill · corrected = fillOverrides (shared with Page 2/3) ---
+      const rawOnline = (r && r.data && 'Fill' in r.data) ? r.data['Fill'] : null;
+      const corrOnline = (k in state.fillOverrides) ? state.fillOverrides[k] : null;
+      const onlineModified = corrOnline != null;
+      html += `<td class="num metric-cell an-cell m-fill${noRec}">
+        <div class="an-raw">${rawOnline != null ? fmtNum(rawOnline,1) : '—'}</div>
+        <input type="number" step="0.01" class="an-corr-inp fill-inp${onlineModified?' an-modified':''}" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${corrOnline != null ? r1(corrOnline) : ''}" onchange="updateFillOverride(this)" placeholder="${rawOnline != null ? fmtNum(rawOnline,1) : '—'}" />
+      </td>`;
+
+      // --- Site Fill: raw = state.siteFills (mobile-reported) · corrected = siteFillOverrides (NEW) ---
+      const rawSiteFill = getRawSiteFill(v, d);
+      const corrSiteFill = (k in state.siteFillOverrides) ? state.siteFillOverrides[k] : null;
+      const sfModified = corrSiteFill != null;
+      html += `<td class="num metric-cell an-cell m-sfill${noRec}">
+        <div class="an-raw">${rawSiteFill != null ? fmtNum(rawSiteFill,1) : '—'}</div>
+        <input type="number" step="0.01" class="an-corr-inp${sfModified?' an-modified':''}" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${corrSiteFill != null ? r1(corrSiteFill) : ''}" onchange="updateSiteFillOverride(this)" placeholder="${rawSiteFill != null ? fmtNum(rawSiteFill,1) : '—'}" />
+      </td>`;
+
+      // --- Site HMR: raw = state.siteHMRs (mobile-reported) · corrected = siteHmrOverrides (NEW) ---
+      const rawSiteHmr = getRawSiteHMR(v, d);
+      const corrSiteHmr = (k in state.siteHmrOverrides) ? state.siteHmrOverrides[k] : null;
+      const shModified = corrSiteHmr != null;
+      html += `<td class="num metric-cell an-cell m-hmr${noRec}">
+        <div class="an-raw">${rawSiteHmr != null ? fmtNum(rawSiteHmr,1) : '—'}</div>
+        <input type="number" step="0.01" class="an-corr-inp${shModified?' an-modified':''}" data-vehicle="${escapeAttr(v)}" data-date="${d}" value="${corrSiteHmr != null ? r1(corrSiteHmr) : ''}" onchange="updateSiteHmrOverride(this)" placeholder="${rawSiteHmr != null ? fmtNum(rawSiteHmr,1) : '—'}" />
+      </td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  body.innerHTML = html;
+  body.querySelectorAll('textarea.rem-inp').forEach(autoResizeRemark);
+  updateRemarkSummary('an-remark-summary', 'an-from', 'an-to');
+}
+
+function exportAnalysedXLSX(){
+  const fromD = document.getElementById('an-from').value;
+  const toD   = document.getElementById('an-to').value;
+  const recs = state.records.filter(r=>(!fromD||r.date>=fromD)&&(!toD||r.date<=toD));
+  const dates = pivotDatesInRange(recs, fromD, toD);
+  if(!dates.length){ toast('Nothing to export','warn'); return; }
+  const vehBranchE = {};
+  recs.forEach(r=>{
+    if(!(r.vehicle in vehBranchE)) vehBranchE[r.vehicle] = r.branch || (r.data && r.data['Branch']) || '';
+  });
+  const vehSetE = {};
+  recs.forEach(r=>{ vehSetE[r.vehicle] = 1; });
+  addSiteOnlyVehicles(vehSetE, dates);
+  const vehicles = Object.keys(vehSetE).sort((a,b)=>{
+    const ba = vehBranchE[a] || '', bb = vehBranchE[b] || '';
+    return ba.localeCompare(bb) || a.localeCompare(b);
+  });
+
+  const periods = periodsInRange(fromD, toD, state.remarkGranularity || 'half');
+  const P = periods.length;
+  const FIXED_COLS = 5 + P;
+  const N = dates.length;
+  // Each date has 6 sub-columns: Online Raw/Corrected, Site Raw/Corrected, HMR Raw/Corrected
+  const totalCols = FIXED_COLS + N * 6;
+
+  const ws = {};
+  ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:1+vehicles.length, c:totalCols-1}});
+
+  // === Header row 0 ===
+  xCell(ws, 0, 0, 'Branch', XS.hdr);
+  xCell(ws, 0, 1, 'Vehicle', XS.hdr);
+  xCell(ws, 0, 2, 'Site Name', XS.hdr);
+  xCell(ws, 0, 3, 'Diff (L, corrected)', XS.hdr);
+  xCell(ws, 0, 4, 'Diff/Fill', XS.hdr);
+  periods.forEach((p, i) => {
+    xCell(ws, 0, 5 + i, periods.length === 1 ? 'Remark' : `Remark ${p.short}`, XS.hdr);
+  });
+  for(let i=0; i<N; i++){
+    for(let j=0; j<6; j++){
+      xCell(ws, 0, FIXED_COLS + i*6 + j, j === 0 ? fmtShortDate(dates[i]) : '', XS.dateHdr);
+    }
+  }
+
+  // === Header row 1 — Raw / Corrected sub-labels ===
+  for(let c=0; c<FIXED_COLS; c++) xCell(ws, 1, c, '', XS.hdr);
+  for(let i=0; i<N; i++){
+    xCell(ws, 1, FIXED_COLS + i*6,     'Online Raw',       XS.hdrOnline);
+    xCell(ws, 1, FIXED_COLS + i*6 + 1, 'Online Corrected', XS.hdrOnline);
+    xCell(ws, 1, FIXED_COLS + i*6 + 2, 'Site Raw',         XS.hdrSite);
+    xCell(ws, 1, FIXED_COLS + i*6 + 3, 'Site Corrected',   XS.hdrSite);
+    xCell(ws, 1, FIXED_COLS + i*6 + 4, 'HMR Raw',          XS.hdrHmr);
+    xCell(ws, 1, FIXED_COLS + i*6 + 5, 'HMR Corrected',    XS.hdrHmr);
+  }
+
+  // === Body rows ===
+  vehicles.forEach((v, vi)=>{
+    const r0 = 2 + vi;
+    const branch = vehBranchE[v] || '';
+    let onlineSum=0, siteSum=0, anyData=false, fillEvents=0;
+    dates.forEach(d=>{
+      const k = `${v}|${d}`;
+      const rec = recs.find(r=>r.vehicle===v && r.date===d);
+      const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k] : ((rec && rec.data && 'Fill' in rec.data) ? rec.data['Fill'] : null);
+      const siteFill = getCorrectedSiteFill(v, d);   // Page 9 export mirrors Page 9's screen
+      let dayHasFill = false;
+      if(onlineFill != null && !isNaN(+onlineFill)){ onlineSum += +onlineFill; anyData = true; if(+onlineFill>0) dayHasFill = true; }
+      if(siteFill != null && !isNaN(+siteFill)){ siteSum += +siteFill; anyData = true; if(+siteFill>0) dayHasFill = true; }
+      if(dayHasFill) fillEvents++;
+    });
+    const diffVal = anyData ? (onlineSum - siteSum) : null;
+    const dpfVal = (diffVal != null && fillEvents > 0) ? (diffVal / fillEvents) : null;
+    const diffStyle = diffVal == null ? XS.bodyNum : (Math.abs(diffVal) < 0.5 ? XS.diffZero : (diffVal > 0 ? XS.diffPos : XS.diffNeg));
+
+    xCell(ws, r0, 0, branch, XS.body);
+    xCell(ws, r0, 1, v, XS.body);
+    xCell(ws, r0, 2, state.sites[v] || '', XS.body);
+    xCell(ws, r0, 3, diffVal != null ? +diffVal.toFixed(2) : '', diffStyle);
+    xCell(ws, r0, 4, dpfVal  != null ? +dpfVal.toFixed(2)  : '', diffStyle);
+    periods.forEach((p, i) => {
+      xCell(ws, r0, 5 + i, state.periodRemarks[`${v}|${p.key}`] || '', XS.body);
+    });
+
+    dates.forEach((d, di)=>{
+      const k = `${v}|${d}`;
+      const base = FIXED_COLS + di*6;
+      const rec = recs.find(r=>r.vehicle===v && r.date===d);
+
+      const rawOnline  = (rec && rec.data && 'Fill' in rec.data) ? rec.data['Fill'] : null;
+      const corrOnline = (k in state.fillOverrides) ? state.fillOverrides[k] : null;
+      const rawSF  = getRawSiteFill(v, d);
+      const corrSF = (k in state.siteFillOverrides) ? state.siteFillOverrides[k] : null;
+      const rawSH  = getRawSiteHMR(v, d);
+      const corrSH = (k in state.siteHmrOverrides) ? state.siteHmrOverrides[k] : null;
+
+      // Raw columns keep their normal metric tint; a Corrected column that actually
+      // holds a value gets XS.corrected (red fill + white bold) so every manual
+      // change stands out immediately. Empty corrected cells stay plain.
+      xCell(ws, r0, base,     rawOnline  != null ? +(+rawOnline ).toFixed(2) : '', XS.cellOnline);
+      xCell(ws, r0, base + 1, corrOnline != null ? +(+corrOnline).toFixed(2) : '', corrOnline != null ? XS.corrected : XS.cellOnline);
+      xCell(ws, r0, base + 2, rawSF  != null ? +(+rawSF ).toFixed(2) : '', XS.cellSite);
+      xCell(ws, r0, base + 3, corrSF != null ? +(+corrSF).toFixed(2) : '', corrSF != null ? XS.corrected : XS.cellSite);
+      xCell(ws, r0, base + 4, rawSH  != null ? +(+rawSH ).toFixed(2) : '', XS.cellHmr);
+      xCell(ws, r0, base + 5, corrSH != null ? +(+corrSH).toFixed(2) : '', corrSH != null ? XS.corrected : XS.cellHmr);
+    });
+  });
+
+  // Column widths
+  const cols = [{wch:14},{wch:16},{wch:22},{wch:16},{wch:11}];
+  for(let i=0;i<P;i++) cols.push({wch:22});
+  for(let i=0;i<N;i++) cols.push({wch:11},{wch:14},{wch:11},{wch:14},{wch:11},{wch:14});
+  ws['!cols'] = cols;
+  ws['!rows'] = [{hpt:24},{hpt:20}];
+
+  // Merges — fixed columns span both header rows; each date spans its 6 sub-columns
+  ws['!merges'] = [];
+  for(let c=0;c<FIXED_COLS;c++) ws['!merges'].push({s:{r:0,c},e:{r:1,c}});
+  for(let i=0;i<N;i++) ws['!merges'].push({s:{r:0,c:FIXED_COLS+i*6},e:{r:0,c:FIXED_COLS+i*6+5}});
+  ws['!views'] = [{xSplit:FIXED_COLS, ySplit:2, state:'frozen'}];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Analysed Page 2');
+  XLSX.writeFile(wb, `SJP_AnalysedPage2_${fromD||'all'}_to_${toD||'all'}.xlsx`);
+  toast('Exported — corrected cells highlighted in red ✓','good');
 }
 
 /* ============================================================
@@ -4668,14 +6457,21 @@ function computeSiteMileageMap(vehicles){
   vehicles.forEach(v => {
     const isRoad = MILEAGE_DISTANCE_BASED.has(v);
     const events = [];
-    Object.keys(state.siteFills).forEach(k => {
+    // Union of raw AND override keys, so a corrected entry that fills a gap the
+    // mobile app never reported is also picked up.
+    const allKeys = new Set([
+      ...Object.keys(state.siteFills),
+      ...Object.keys(state.siteFillOverrides || {})
+    ]);
+    allKeys.forEach(k => {
       const idx = k.indexOf('|');
       if(idx < 0) return;
       const veh = k.substring(0, idx);
       const date = k.substring(idx+1);
       if(veh !== v) return;
-      if(!(k in state.siteHMRs)) return;          // need both Fill AND HMR
-      events.push({date, fill: state.siteFills[k], hmr: state.siteHMRs[k]});
+      const hmr = getEffectiveSiteHMR(veh, date);
+      if(hmr == null) return;          // need both Fill AND HMR
+      events.push({date, fill: getEffectiveSiteFill(veh, date), hmr});
     });
     events.sort((a,b)=> a.date.localeCompare(b.date));
     events.forEach((e, i) => {
@@ -5044,7 +6840,7 @@ function clearAllData(){
     if(!confirm('Cloud sync is ON — this will also wipe ALL data on the server. Proceed?')) return;
     cloud.clearAll();
   }
-  state = {records:[], sites:{}, models:{}, remarks:{}, siteFills:{}, siteHMRs:{}, fillOverrides:{}, workHourOverrides:{}, progress:{}, uploads:[], columnOrder:[]};
+  state = {records:[], sites:{}, models:{}, remarks:{}, periodRemarks:{}, siteFills:{}, siteHMRs:{}, fillOverrides:{}, workHourOverrides:{}, siteFillOverrides:{}, siteHmrOverrides:{}, cellAuthors:{}, progress:{}, uploads:[], columnOrder:[]};
   saveState();
   refreshAll();
   toast('All data cleared','warn');
@@ -5496,6 +7292,10 @@ function setupTabs(){
         populateMergedFilters();
         renderMerged();
       }
+      // Re-render on entry so raw values edited on Page 2 (which writes the same
+      // siteFills/siteHMRs this page reads) are never shown stale here.
+      if(t.dataset.tab==='analysed'){ renderAnalysedPage2(); }
+      if(t.dataset.tab==='monthly'){ renderMonthlyOutput(); }
       if(t.dataset.tab==='admin'){ syncAdminLockState(); }
     });
   });
@@ -5504,8 +7304,259 @@ function setupTabs(){
 /* ============================================================
    ADMIN PAGE — PIN gate (PIN = 3456, persisted for the session)
 ============================================================ */
-const ADMIN_PIN = '3456';
+/* ============================================================
+   USERS & SIGN-IN
+   Three accounts, all with full access. Sign-in exists so every
+   edit can be attributed — that's what powers the "Admin changed
+   someone else's value" highlight (blue cell, white text).
+   To change a PIN, edit it here and redeploy.
+============================================================ */
+const APP_USERS = {
+  admin:   { label: 'Admin',   pin: '3456', isAdmin: true  },
+  analyst: { label: 'Analyst', pin: '1111', isAdmin: false },
+  akash:   { label: 'Akash',   pin: '2222', isAdmin: false },
+};
+const ADMIN_PIN = APP_USERS.admin.pin;   // kept for the legacy Admin-tab lock
 let pinBuffer = '';
+
+// Currently signed-in user id ('admin' | 'analyst' | 'akash'), or null when signed out
+let currentUser = null;
+function currentUserLabel(){ return APP_USERS[currentUser]?.label || '—'; }
+function isCurrentUserAdmin(){ return !!APP_USERS[currentUser]?.isAdmin; }
+
+let loginPickedUser = null;
+let loginPin = '';
+
+function renderLoginUsers(){
+  const box = document.getElementById('login-users');
+  if(!box) return;
+  box.innerHTML = Object.entries(APP_USERS).map(([id, u], i) => {
+    const initials = u.label.slice(0, 2).toUpperCase();
+    return `
+    <div class="login-user${loginPickedUser === id ? ' sel' : ''}" onclick="pickLoginUser('${id}')">
+      <div class="lu-id">OP-0${i + 1}</div>
+      <div class="lu-hex">${escapeHtml(initials)}</div>
+      <div class="lu-name">${escapeHtml(u.label.toUpperCase())}</div>
+      <span class="lu-role">${u.isAdmin ? 'LEVEL 9' : 'LEVEL 5'}</span>
+    </div>`;
+  }).join('');
+}
+
+// Live clock on the sign-in deck
+let lgClockTimer = null;
+function startLoginClock(){
+  const tick = () => {
+    const el = document.getElementById('lg-clock');
+    const dl = document.getElementById('lg-date');
+    if(!el) return;
+    const n = new Date();
+    const p2 = x => String(x).padStart(2, '0');
+    el.textContent = `${p2(n.getHours())}:${p2(n.getMinutes())}:${p2(n.getSeconds())}`;
+    const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const mons = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    if(dl) dl.textContent = `${days[n.getDay()]}, ${p2(n.getDate())} ${mons[n.getMonth()]} ${n.getFullYear()}`;
+  };
+  tick();
+  clearInterval(lgClockTimer);
+  lgClockTimer = setInterval(tick, 1000);
+}
+
+// Boot sequence in the SYSTEM LOG panel — purely cosmetic, types itself out.
+function runLoginBootLog(){
+  const box = document.getElementById('lg-log');
+  if(!box) return;
+  const vehCount = new Set((state.records || []).map(r => r.vehicle)).size;
+  const fleetEl = document.getElementById('lg-fleet');
+  if(fleetEl) fleetEl.textContent = vehCount ? `${vehCount} UNITS` : 'STANDBY';
+  const lines = [
+    '&gt; initializing command deck&hellip;',
+    '&gt; loading interface modules &hellip;&hellip;&hellip; <span class="ok">OK</span>',
+    '&gt; secure link: vimla vault &hellip;&hellip;&hellip; <span class="ok">OK</span>',
+    `&gt; fleet records &hellip;&hellip;&hellip; <span class="ok">${(state.records || []).length} ROWS</span>`,
+    '&gt; <span class="pend">awaiting operator identity&hellip;</span>',
+  ];
+  box.innerHTML = '';
+  let i = 0;
+  const step = () => {
+    if(i >= lines.length){
+      box.insertAdjacentHTML('beforeend', '<span class="lg-caret"></span>');
+      return;
+    }
+    box.insertAdjacentHTML('beforeend', `<div>${lines[i++]}</div>`);
+    setTimeout(step, 230);
+  };
+  step();
+}
+
+// Appends a line to the boot log (used when an operator is picked / PIN fails)
+function loginLog(html){
+  const box = document.getElementById('lg-log');
+  if(!box) return;
+  box.querySelector('.lg-caret')?.remove();
+  box.insertAdjacentHTML('beforeend', `<div>${html}</div>`);
+  box.insertAdjacentHTML('beforeend', '<span class="lg-caret"></span>');
+}
+function pickLoginUser(id){
+  loginPickedUser = id;
+  loginPin = '';
+  renderLoginUsers();
+  renderLoginDots();
+  document.getElementById('login-err').textContent = '';
+  loginLog(`&gt; operator selected &hellip; <span class="ok">${escapeHtml((APP_USERS[id]?.label || id).toUpperCase())}</span>`);
+}
+function renderLoginDots(){
+  document.querySelectorAll('#login-dots .d').forEach((d, i) => {
+    d.classList.toggle('filled', i < loginPin.length);
+    d.classList.remove('err');
+  });
+}
+function loginDigit(n){
+  if(!loginPickedUser){
+    document.getElementById('login-err').textContent = '>> SELECT OPERATOR FIRST';
+    return;
+  }
+  if(loginPin.length >= 4) return;
+  loginPin += n;
+  renderLoginDots();
+  if(loginPin.length === 4) setTimeout(tryLogin, 120);
+}
+function loginBackspace(){ loginPin = loginPin.slice(0, -1); renderLoginDots(); }
+function loginClearPin(){ loginPin = ''; renderLoginDots(); document.getElementById('login-err').textContent = ''; }
+
+function tryLogin(){
+  const u = APP_USERS[loginPickedUser];
+  if(u && loginPin === u.pin){
+    currentUser = loginPickedUser;
+    localStorage.setItem('fet_current_user', currentUser);
+    // Signing in as Admin also unlocks the Admin tab for this session
+    if(u.isAdmin) sessionStorage.setItem('fet_admin_unlocked', '1');
+    document.getElementById('login-overlay').style.display = 'none';
+    renderUserChip();
+    if(typeof syncAdminLockState === 'function') syncAdminLockState();
+    syncMonthlyTabVisibility();
+    toast(`Signed in as ${u.label}`, 'good');
+  } else {
+    document.querySelectorAll('#login-dots .d').forEach(d => d.classList.add('err'));
+    document.getElementById('login-err').textContent = '>> ACCESS DENIED';
+    loginLog('&gt; <span style="color:#fca5a5">access denied &mdash; invalid code</span>');
+    setTimeout(() => { loginPin = ''; renderLoginDots(); }, 550);
+  }
+}
+
+function renderUserChip(){
+  const chip = document.getElementById('user-chip');
+  if(!chip) return;
+  if(!currentUser){ chip.style.display = 'none'; return; }
+  const u = APP_USERS[currentUser];
+  chip.style.display = '';
+  chip.innerHTML = `<b>${escapeHtml(u.label)}</b>${u.isAdmin ? '<span class="uc-admin">ADMIN</span>' : ''}<button onclick="signOut()">Sign out</button>`;
+}
+
+function signOut(){
+  currentUser = null;
+  localStorage.removeItem('fet_current_user');
+  sessionStorage.removeItem('fet_admin_unlocked');
+  loginPickedUser = null; loginPin = '';
+  renderLoginUsers(); renderLoginDots();
+  document.getElementById('login-err').textContent = '';
+  document.getElementById('login-overlay').style.display = '';
+  startLoginClock();
+  runLoginBootLog();
+  renderUserChip();
+  syncMonthlyTabVisibility();
+}
+
+// Restores a previous sign-in on load; shows the overlay when there isn't one.
+function initLogin(){
+  const saved = localStorage.getItem('fet_current_user');
+  if(saved && APP_USERS[saved]){
+    currentUser = saved;
+    if(APP_USERS[saved].isAdmin) sessionStorage.setItem('fet_admin_unlocked', '1');
+    document.getElementById('login-overlay').style.display = 'none';
+  } else {
+    document.getElementById('login-overlay').style.display = '';
+    startLoginClock();
+    runLoginBootLog();
+  }
+  renderLoginUsers();
+  renderLoginDots();
+  renderUserChip();
+  syncMonthlyTabVisibility();
+}
+
+/* ============================================================
+   EDIT ATTRIBUTION
+   Records who first set each editable cell and who set it last.
+   A cell is highlighted (blue bg, white text) when ADMIN changed
+   a value that someone else had originally entered.
+============================================================ */
+
+// Called by every edit handler right after the value is written to state.
+// `cleared` = the user emptied the field, so the attribution is dropped too.
+function noteCellAuthor(key, cleared){
+  if(!state.cellAuthors) state.cellAuthors = {};
+  if(cleared){ delete state.cellAuthors[key]; return; }
+  const who = currentUser || 'unknown';
+  const existing = state.cellAuthors[key];
+  if(existing) state.cellAuthors[key] = { first: existing.first, last: who };
+  else         state.cellAuthors[key] = { first: who, last: who };
+}
+
+// True when admin overwrote a value someone else originally entered.
+function isAdminOverride(key){
+  const a = state.cellAuthors?.[key];
+  return !!(a && a.last === 'admin' && a.first !== 'admin');
+}
+
+// Online Fill is special: its "original" value comes from the uploaded Excel,
+// so the original author is whoever uploaded that record (record.by), not a
+// cellAuthors entry. An admin correction on top of someone else's upload counts.
+function isAdminOverrideOnline(v, d, rec){
+  const key = `${v}|${d}|online`;
+  if(isAdminOverride(key)) return true;
+  const a = state.cellAuthors?.[key];
+  if(!a || a.last !== 'admin') return false;
+  // Prefer the stamp on the record itself; fall back to the upload-history entry
+  // covering that date (records sync without a `by` column, uploads carry it).
+  let uploader = rec && rec.by;
+  if(!uploader){
+    const up = (state.uploads || []).find(u => Array.isArray(u.dates) && u.dates.includes(d));
+    uploader = up && up.by;
+  }
+  return !!(uploader && uploader !== 'unknown' && uploader !== 'admin');
+}
+
+// Applies/removes the blue-and-white admin-override look on a single input,
+// and keeps the same cell's inputs on other pages in sync.
+function applyAdminOverrideStyle(input, key){
+  const on = isAdminOverride(key);
+  input.classList.toggle('admin-override', on);
+  const tip = authorTooltip(key);
+  if(tip) input.title = tip; else input.removeAttribute('title');
+  // Mirror onto any twin input for the same vehicle/date on another page
+  const v = input.dataset.vehicle, d = input.dataset.date, p = input.dataset.period;
+  document.querySelectorAll('input[data-vehicle], textarea[data-vehicle]').forEach(el => {
+    if(el === input) return;
+    if(el.dataset.vehicle !== v) return;
+    if(d && el.dataset.date !== d) return;
+    if(p && el.dataset.period !== p) return;
+    if(d && !el.dataset.date) return;
+    if(p && !el.dataset.period) return;
+    // Only mirror inputs of the same kind (same class signature)
+    if(el.className.replace(/admin-override|an-modified/g,'').trim() !==
+       input.className.replace(/admin-override|an-modified/g,'').trim()) return;
+    el.classList.toggle('admin-override', on);
+    if(tip) el.title = tip; else el.removeAttribute('title');
+  });
+}
+
+function authorTooltip(key){
+  const a = state.cellAuthors?.[key];
+  if(!a) return '';
+  const f = APP_USERS[a.first]?.label || a.first;
+  const l = APP_USERS[a.last]?.label  || a.last;
+  return a.first === a.last ? `Entered by ${f}` : `Entered by ${f}, changed by ${l}`;
+}
 
 function syncAdminLockState(){
   const unlocked = sessionStorage.getItem('fet_admin_unlocked') === '1';
@@ -5613,8 +7664,8 @@ function findAbnormalities(fromD, toD, search){
       if(!(veh.includes(q) || branch.includes(q) || site.includes(q))) continue;
     }
     const k = `${r.vehicle}|${r.date}`;
-    const siteFill = (k in state.siteFills) ? state.siteFills[k] : null;
-    const siteHMR  = (k in state.siteHMRs)  ? state.siteHMRs[k]  : null;
+    const siteFill = getEffectiveSiteFill(r.vehicle, r.date);
+    const siteHMR  = getEffectiveSiteHMR(r.vehicle, r.date);
     const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k]
                       : ((r.data && 'Fill' in r.data) ? r.data['Fill'] : null);
     const consumption = getRecField(r, 'Consumption');
@@ -5771,13 +7822,17 @@ function detectAbnormalities(from, to){
   });
 
   // === Type 1: POWER SOURCE — site fill present + telematics all zero ===
-  Object.keys(state.siteFills).forEach(k=>{
+  const allSiteFillKeys = new Set([
+    ...Object.keys(state.siteFills),
+    ...Object.keys(state.siteFillOverrides || {})
+  ]);
+  allSiteFillKeys.forEach(k=>{
     const sep = k.indexOf('|'); if(sep < 0) return;
     const v = k.substring(0, sep);
     const d = k.substring(sep+1);
     if(from && d < from) return;
     if(to && d > to) return;
-    const sf = state.siteFills[k];
+    const sf = getEffectiveSiteFill(v, d);
     if(sf == null || +sf <= 0) return;
     const r = recMap[k];
     if(!r) return;  // need a telematics record to check zero-state
@@ -5810,7 +7865,7 @@ function detectAbnormalities(from, to){
     // --- Type 2: FILL MISMATCH — both filled, |diff| > 10L ---
     const onlineRaw = (k in state.fillOverrides) ? state.fillOverrides[k]
                     : ((r.data && 'Fill' in r.data) ? r.data['Fill'] : null);
-    const siteRaw   = (k in state.siteFills) ? state.siteFills[k] : null;
+    const siteRaw   = getEffectiveSiteFill(v, d);
     if(onlineRaw != null && siteRaw != null){
       const oF = +onlineRaw, sF = +siteRaw;
       if(!isNaN(oF) && !isNaN(sF) && Math.abs(oF - sF) > 10){
@@ -6251,7 +8306,7 @@ function renderMerged(){
     const wh = getEffectiveWorkHour(r);
     if(wh !== 'NA' && wh != null && !isNaN(+wh)) totWH += +wh;
     const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k] : ((r.data && 'Fill' in r.data) ? r.data['Fill'] : null);
-    const siteFill = (k in state.siteFills) ? state.siteFills[k] : null;
+    const siteFill = getEffectiveSiteFill(v, r.date);
     if(onlineFill != null && !isNaN(+onlineFill)){ totOnline += +onlineFill; onlineHas++; }
     if(siteFill != null && !isNaN(+siteFill)){ totSite += +siteFill; siteHas++; }
     const cons = getRecField(r, 'Consumption');
@@ -6309,8 +8364,8 @@ function renderMerged(){
     const k = `${v}|${r.date}`;
     const wh = getEffectiveWorkHour(r);
     const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k] : ((r.data && 'Fill' in r.data) ? r.data['Fill'] : null);
-    const siteFill = (k in state.siteFills) ? state.siteFills[k] : null;
-    const siteHMR = (k in state.siteHMRs) ? state.siteHMRs[k] : null;
+    const siteFill = getEffectiveSiteFill(v, r.date);
+    const siteHMR = getEffectiveSiteHMR(v, r.date);
     const startFuel = r.data && r.data['Start Fuel Level'];
     const endFuel = r.data && r.data['End Fuel Level'];
     const cons = getRecField(r, 'Consumption');
@@ -6403,8 +8458,8 @@ function exportMergedXLSX(){
     const wh = getEffectiveWorkHour(r);
     const numWH = (wh === 'NA' || wh == null) ? null : +wh;
     const onlineFill = (k in state.fillOverrides) ? state.fillOverrides[k] : ((r.data && 'Fill' in r.data) ? r.data['Fill'] : null);
-    const siteFill = (k in state.siteFills) ? state.siteFills[k] : null;
-    const siteHMR = (k in state.siteHMRs) ? state.siteHMRs[k] : null;
+    const siteFill = getEffectiveSiteFill(v, r.date);
+    const siteHMR = getEffectiveSiteHMR(v, r.date);
     const startFuel = r.data && r.data['Start Fuel Level'];
     const endFuel = r.data && r.data['End Fuel Level'];
     const cons = getRecField(r, 'Consumption');
@@ -6550,13 +8605,26 @@ function buildFillLog(){
   const mode = document.getElementById('fl-mode')?.value || 'mismatch';
   const searchQ = (document.getElementById('fl-search')?.value || '').trim().toLowerCase();
 
-  // Index cells by vehicle|date so we can look up site fills quickly
+  // Index cells by vehicle|date so we can look up site fills quickly.
+  // Uses EFFECTIVE values (analysis-team correction if present, else raw mobile-reported)
+  // so a corrected Site Fill/HMR entry is reflected in the reconciliation report.
   const cellsByKey = new Map();
-  Object.entries(state.siteFills || {}).forEach(([k,v]) => {
-    (cellsByKey.get(k) || cellsByKey.set(k, {}).get(k)).site_fill = v;
-  });
-  Object.entries(state.siteHMRs || {}).forEach(([k,v]) => {
-    (cellsByKey.get(k) || cellsByKey.set(k, {}).get(k)).site_hmr = v;
+  const allCellKeys = new Set([
+    ...Object.keys(state.siteFills || {}),
+    ...Object.keys(state.siteHMRs || {}),
+    ...Object.keys(state.siteFillOverrides || {}),
+    ...Object.keys(state.siteHmrOverrides || {})
+  ]);
+  allCellKeys.forEach(k => {
+    const idx = k.indexOf('|'); if(idx < 0) return;
+    const vehicle = k.substring(0, idx);
+    const date = k.substring(idx+1);
+    const sf = getEffectiveSiteFill(vehicle, date);
+    const sh = getEffectiveSiteHMR(vehicle, date);
+    const entry = cellsByKey.get(k) || {};
+    if(sf != null) entry.site_fill = sf;
+    if(sh != null) entry.site_hmr = sh;
+    cellsByKey.set(k, entry);
   });
 
   // Collect all vehicle|date keys that could have fill activity — union of records with Fill>0 and cells with site_fill
@@ -6759,16 +8827,22 @@ function buildMileageSeries(vehicle, from, to, sensitivityPct){
 
   // Collect all SITE FILL events for this vehicle (dates where site_fill > 0)
   // We only care about actual fill events — not HMR-only entries.
+  // Uses EFFECTIVE values (analysis-team correction if present, else raw mobile-reported)
+  // so a corrected Site Fill/HMR entry is reflected in the mileage trend.
   const fillEvents = [];
   const prefix = vehicle + '|';
-  Object.entries(state.siteFills || {}).forEach(([key, fillVal]) => {
+  const allFillKeys = new Set([
+    ...Object.keys(state.siteFills || {}),
+    ...Object.keys(state.siteFillOverrides || {})
+  ]);
+  allFillKeys.forEach(key => {
     if(!key.startsWith(prefix)) return;
     const date = key.slice(prefix.length);
     if(from && date < from) return;
     if(to && date > to) return;
-    const fill = +fillVal;
+    const fill = +getEffectiveSiteFill(vehicle, date);
     if(!(fill > 0)) return;   // ignore zero/invalid fills
-    const hmrRaw = state.siteHMRs?.[key];
+    const hmrRaw = getEffectiveSiteHMR(vehicle, date);
     const hmr = (hmrRaw != null && !isNaN(+hmrRaw)) ? +hmrRaw : null;
     fillEvents.push({ date, fill, hmr });
   });
@@ -6860,6 +8934,10 @@ function num(v){
 // fleet-avg dashed line, ±10% threshold band, beyond-threshold red dots,
 // interactive hover tooltip with detailed breakdown.
 function renderMileageChart(container, series, stats, isRoad){
+  if(!stats || !series || !series.length){
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Not enough data to draw a trend</div>';
+    return;
+  }
   container.className = 'ma-chart';
   const validPoints = series.filter(s => s.mileage != null && s.mileage > 0);
   if(!validPoints.length){
@@ -7277,9 +9355,15 @@ function renderMilAbn(){
     return;
   }
   const vs = vehStats.find(v => v.vehicle === picked);
-  if(!vs){
+  // vs.stats is null when the vehicle has no usable mileage point in the range —
+  // every Site Fill missing its HMR, a machine retired mid-period, and so on.
+  // Reading .median off it used to throw, which aborted refreshAll() and with it
+  // the rest of the sync. Treated as "no data" instead.
+  if(!vs || !vs.stats){
     summaryEl.innerHTML = '';
-    chartWrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">No data</div>';
+    chartWrap.innerHTML = `<div style="padding:40px;text-align:center;color:var(--muted)">${
+      vs ? 'No mileage could be calculated for this vehicle in this range —<br>each Site Fill needs a Site HMR on the same day and on the fill before it.'
+         : 'No data'}</div>`;
     listEl.innerHTML = '';
     return;
   }
@@ -7913,26 +9997,47 @@ function exportMilAbnXLSX(){
   toast(`Exported ✓`,'good');
 }
 
+// Every page is rendered inside its own try/catch. Before v2.34 this was a flat
+// list of calls, so a single bad vehicle on Page 8 threw and silently killed
+// every render after it — plus applyDefaultDateRanges() and the sync-status
+// update that run after refreshAll() in fetchAll(). One broken page should cost
+// you that page, not the whole app.
 function refreshAll(){
-  renderCalendar();
-  renderSiteCalendar();
-  renderUploadList();
-  renderVehicles();
-  populateReportFilters();
-  renderReport();
-  if(document.getElementById('mil-from')) renderMileagePivot();
-  if(document.getElementById('ab-from')) renderAbnormalities();
-  if(document.getElementById('mer-vehicle')){ populateMergedFilters(); renderMerged(); }
-  if(document.getElementById('fl-from')) renderFillLog();
-  if(document.getElementById('ma-from')) renderMilAbn();
-  renderMasterListStats();
+  const steps = [
+    ['calendar',       () => renderCalendar()],
+    ['site calendar',  () => renderSiteCalendar()],
+    ['upload list',    () => renderUploadList()],
+    ['Page 2',         () => renderVehicles()],
+    ['report filters', () => populateReportFilters()],
+    ['Page 3',         () => renderReport()],
+    ['Page 4',         () => { if(document.getElementById('mil-from')) renderMileagePivot(); }],
+    ['Page 5',         () => { if(document.getElementById('ab-from')) renderAbnormalities(); }],
+    ['Page 6',         () => { if(document.getElementById('mer-vehicle')){ populateMergedFilters(); renderMerged(); } }],
+    ['Page 7',         () => { if(document.getElementById('fl-from')) renderFillLog(); }],
+    ['Page 8',         () => { if(document.getElementById('ma-from')) renderMilAbn(); }],
+    ['Page 9',         () => { if(document.getElementById('an-from')) renderAnalysedPage2(); }],
+    ['Page 10',        () => { if(document.getElementById('mo-from')) renderMonthlyOutput(); }],
+    ['master list',    () => renderMasterListStats()],
+  ];
+  const broke = [];
+  steps.forEach(([label, fn]) => {
+    try { fn(); }
+    catch(e){ broke.push(label); console.error(`[refreshAll] ${label} failed:`, e); }
+  });
+  if(broke.length) toast(`${broke.join(', ')} could not render — see console`, 'warn');
 }
 
 /* ============================================================
    INIT
 ============================================================ */
 document.addEventListener('DOMContentLoaded', async ()=>{
+  initLogin();   // show sign-in overlay (or restore a previous session)
   loadState();
+  // Records live in IndexedDB (localStorage can't hold 13k of them) — pull them
+  // in before the first paint so the page opens on cached data instead of
+  // sitting empty until the network finishes.
+  await hydrateFromCache();
+  normalizeCountSuffixValues(state.records);
   setupTabs();
   setupUpload();
   document.getElementById('upload-date').addEventListener('change', renderCalendar);
@@ -7947,17 +10052,30 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   }
   refreshAll();
   updateStats();
-  // Default fill log range = last 30 days so page 7 opens with useful content
-  if(document.getElementById('fl-from') && !document.getElementById('fl-from').value){
-    setFillLogRange(30);
-  }
-  // Default mileage abn range = last 30 days
-  if(document.getElementById('ma-from') && !document.getElementById('ma-from').value){
-    setMilAbnRange(30);
-  }
+  // Default date ranges = last 30 days on every fresh load, so pages open fast and
+  // show recent data. This is UNCONDITIONAL (not "only if empty") because some
+  // browsers restore previously-typed date values on refresh, which would otherwise
+  // silently skip this default and leave an old custom range in place.
+  // Use the date-range buttons any time to look at older data.
+  applyDefaultDateRanges();
   // Init cloud sync after first paint — pulls latest from server, then re-renders
+  // AND re-applies the defaults above (see fetchAll()) once the full dataset lands,
+  // since the very first call above only had the (possibly stale/incomplete) local
+  // cache to compute "last 30 days" from.
   cloud.init();
 });
+
+// Sets every page's date-range inputs to "last 30 days ending at the latest date
+// present in state.records" — called at initial load (using whatever data is
+// available then) AND again once cloud sync fully lands (see cloud.fetchAll()),
+// so the final range always reflects the complete, authoritative dataset.
+function applyDefaultDateRanges(){
+  if(document.getElementById('fl-from')) setFillLogRange(30);
+  if(document.getElementById('ma-from')) setMilAbnRange(30);
+  if(document.getElementById('veh-from')) setVehRange(30);
+  if(document.getElementById('an-from')) setAnRange(30);
+  if(document.getElementById('mo-from')) setMoRange(30);
+}
 </script>
 </body>
 </html>
